@@ -90,7 +90,7 @@ const Footer = () => {
           <div className="lg:col-span-2">
             <Image
               src="/eventzgo_logo.png"
-              alt="EVENTSGO"
+              alt="EVENTZGO"
               width={320}
               height={220}
               className="w-44 h-auto mb-4 brightness-0 invert"
@@ -106,7 +106,7 @@ const Footer = () => {
             <div className="space-y-2 mb-4">
               <div className="flex items-center space-x-2 text-gray-400 text-sm">
                 <Mail className="w-4 h-4" />
-                <span>support@eventsgo.com</span>
+                <span>support@eventzgo.com</span>
               </div>
               <div className="flex items-center space-x-2 text-gray-400 text-sm">
                 <Phone className="w-4 h-4" />
@@ -161,7 +161,7 @@ const Footer = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-2 md:space-y-0">
             <div className="text-gray-400 text-sm">
-              © 2025 EVENTSGO. All rights reserved.
+              © 2025 EVENTZGO. All rights reserved.
             </div>
             <div className="flex items-center space-x-4 text-sm">
               <a

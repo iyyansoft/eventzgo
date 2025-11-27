@@ -17,8 +17,12 @@ const Hero = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const router = useRouter();
 
-  // Fetch featured events from Convex
-  const featuredEvents = useQuery(api.events.getFeaturedEvents, { limit: 5 });
+  // Fetch featured events from Convex. Keep query result separate so we can
+  // treat the returned value as an array and avoid undefined during initial
+  // renders (prevents hooks/render mismatch caused by conditional paths).
+  const queryResult = useQuery(api.events.getFeaturedEvents, { limit: 5 });
+  const featuredEvents = queryResult ?? [];
+  const isLoading = queryResult === undefined;
 
   // Auto-slide effect
   useEffect(() => {
@@ -103,14 +107,14 @@ const Hero = () => {
   };
 
   // Loading state
-  if (!featuredEvents) {
+  if (isLoading) {
     return (
       <section className="relative min-h-screen w-full overflow-hidden">
         <div className="absolute inset-0">
           <div
             className="absolute inset-0 bg-cover bg-center bg-no-repeat"
             style={{
-              backgroundImage: `linear-gradient(135deg, #667eea 0%, #764ba2 100%)`,
+              backgroundImage: `url('/concert-background.png')`,
               clipPath: "polygon(0 0, 75% 0, 100% 100%, 0 100%)",
             }}
           />
@@ -125,19 +129,15 @@ const Hero = () => {
     );
   }
 
-  // No featured events state
-  if (featuredEvents.length === 0) {
+  // No featured events state (only when not loading)
+  if (!isLoading && featuredEvents.length === 0) {
     return (
       <section className="relative min-h-screen w-full overflow-hidden">
         <div className="absolute inset-0">
           <div
             className="absolute inset-0 bg-cover bg-center bg-no-repeat"
             style={{
-              backgroundImage: `
-                url('/concer-backround.png'),
-                url('https://images.pexels.com/photos/1190298/pexels-photo-1190298.jpeg?auto=compress&cs=tinysrgb&w=1600'),
-                linear-gradient(135deg, #667eea 0%, #764ba2 100%)
-              `,
+              backgroundImage: `url('/concert-background.png')`,
               clipPath: "polygon(0 0, 75% 0, 100% 100%, 0 100%)",
             }}
           />
@@ -184,12 +184,7 @@ const Hero = () => {
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{
-            backgroundImage: `
-              url('/concer-backround.png'),
-              url('https://images.pexels.com/photos/1190298/pexels-photo-1190298.jpeg?auto=compress&cs=tinysrgb&w=1600'),
-              url('https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg?auto=compress&cs=tinysrgb&w=1600'),
-              linear-gradient(135deg, #667eea 0%, #764ba2 100%)
-            `,
+            backgroundImage: `url('/concert-background.png')`,
             clipPath: "polygon(0 0, 75% 0, 100% 100%, 0 100%)",
           }}
         />
