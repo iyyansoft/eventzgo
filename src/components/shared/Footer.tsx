@@ -54,7 +54,7 @@ const Footer = () => {
   ];
 
   const handleManagementClick = () => {
-    router.push("/management");
+    router.push("/coming-soon");
   };
 
   return (
