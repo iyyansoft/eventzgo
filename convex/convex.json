@@ -1,0 +1,17 @@
+
+{
+    "httpRoutes": [
+      {
+        "method": "POST",
+        "path": "/api/razorpay/webhook",
+        "handler": "http:razorpayWebhook"
+      },
+      {
+        "method": "POST",
+        "path": "/api/clerk/webhook",
+        "handler": "http:clerkWebhook"
+      }
+    ]
+    
+  }
+  

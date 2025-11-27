@@ -1,0 +1,24 @@
+"use client";
+
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+
+export default function OrganiserPage() {
+  const router = useRouter();
+
+  useEffect(() => {
+    router.push("/management/organiser/dashboard");
+  }, [router]);
+
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="text-center">
+        <div className="relative w-16 h-16 mx-auto mb-4">
+          <div className="absolute inset-0 border-4 border-purple-200 rounded-full"></div>
+          <div className="absolute inset-0 border-4 border-transparent border-t-purple-600 rounded-full animate-spin"></div>
+        </div>
+        <p className="text-gray-600 font-medium">Redirecting...</p>
+      </div>
+    </div>
+  );
+}

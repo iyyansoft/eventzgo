@@ -1,0 +1,52 @@
+{
+  "name": "ticketshub",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "convex:dev": "convex dev",
+    "convex:deploy": "convex deploy"
+  },
+  "dependencies": {
+    "@clerk/nextjs": "^6.7.0",
+    "@supermemory/tools": "^1.3.11",
+    "@types/node": "^22.10.1",
+    "@types/react": "^19.0.1",
+    "@types/react-dom": "^19.0.1",
+    "canvas-confetti": "^1.9.4",
+    "cloudinary": "^2.5.1",
+    "clsx": "^2.1.1",
+    "date-fns": "^4.1.0",
+    "jspdf": "^2.5.2",
+    "lucide-react": "^0.460.0",
+    "next": "^15.1.0",
+    "nodemailer": "^7.0.10",
+    "qrcode": "^1.5.4",
+    "razorpay": "^2.9.6",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-qr-code": "^2.0.18",
+    "recharts": "^2.15.4",
+    "resend": "^4.0.1",
+    "supermemory": "^3.4.0",
+    "svix": "^1.81.0",
+    "tailwind-merge": "^2.5.4",
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5.7.2",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/forms": "^0.5.10",
+    "@tailwindcss/postcss": "^4.1.17",
+    "@types/canvas-confetti": "^1.9.0",
+    "@types/qrcode": "^1.5.6",
+    "autoprefixer": "^10.4.20",
+    "convex": "^1.29.3",
+    "eslint": "^9.17.0",
+    "eslint-config-next": "^15.1.0",
+    "postcss": "^8.4.49"
+  }
+}
