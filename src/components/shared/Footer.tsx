@@ -89,7 +89,7 @@ const Footer = () => {
           {/* Brand Section */}
           <div className="lg:col-span-2">
             <Image
-              src="/eventsgo_logo.png"
+              src="/eventzgo_logo.png"
               alt="EVENTSGO"
               width={320}
               height={220}

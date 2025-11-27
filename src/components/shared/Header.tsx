@@ -141,7 +141,7 @@ const Header = () => {
               }}
             >
               <Image
-                src="/eventsgo_logo.png"
+                src="/eventzgo_logo.png"
                 alt="EVENTSGO"
                 width={isScrolled ? 140 : 180}
                 height={isScrolled ? 60 : 72}
