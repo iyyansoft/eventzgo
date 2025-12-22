@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "npx convex codegen && next build",
+    "build": "set EXPERIMENTAL_TURBOPACK=0 && npx convex codegen && next build",
     "start": "next start",
     "lint": "eslint .",
     "convex:dev": "convex dev",
@@ -53,6 +53,7 @@
     "convex": "^1.30.0",
     "eslint": "^9.17.0",
     "eslint-config-next": "^15.1.0",
-    "postcss": "^8.4.49"
+    "postcss": "^8.4.49",
+    "prettier": "^3.7.4"
   }
 }
