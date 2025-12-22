@@ -1,5 +1,6 @@
 import React from 'react';
 import { X, Building, Briefcase, Mic, DollarSign, ArrowRight } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 interface RoleSelectionModalProps {
     isOpen: boolean;
@@ -12,6 +13,8 @@ const RoleSelectionModal: React.FC<RoleSelectionModalProps> = ({
     onClose,
     onRoleSelected
 }) => {
+    const router = useRouter();
+
     const roles = [
         {
             id: 'organizer' as const,
@@ -20,8 +23,7 @@ const RoleSelectionModal: React.FC<RoleSelectionModalProps> = ({
             icon: Building,
             color: 'from-blue-500 to-blue-600',
             bgColor: 'bg-blue-50',
-            features: ['Create Events', 'Manage Attendees', 'Connect with Partners', 'Analytics Dashboard'],
-            available: true
+            features: ['Create Events', 'Manage Attendees', 'Connect with Partners', 'Analytics Dashboard']
         },
         {
             id: 'vendor' as const,
@@ -30,8 +32,7 @@ const RoleSelectionModal: React.FC<RoleSelectionModalProps> = ({
             icon: Briefcase,
             color: 'from-green-500 to-green-600',
             bgColor: 'bg-green-50',
-            features: ['Service Listings', 'Booking Management', 'Client Communication', 'Portfolio Showcase'],
-            available: false
+            features: ['Service Listings', 'Booking Management', 'Client Communication', 'Portfolio Showcase']
         },
         {
             id: 'speaker' as const,
@@ -40,8 +41,7 @@ const RoleSelectionModal: React.FC<RoleSelectionModalProps> = ({
             icon: Mic,
             color: 'from-purple-500 to-purple-600',
             bgColor: 'bg-purple-50',
-            features: ['Speaking Opportunities', 'Profile Management', 'Event Invitations', 'Earnings Tracking'],
-            available: false
+            features: ['Speaking Opportunities', 'Profile Management', 'Event Invitations', 'Earnings Tracking']
         },
         {
             id: 'sponsor' as const,
@@ -50,20 +50,28 @@ const RoleSelectionModal: React.FC<RoleSelectionModalProps> = ({
             icon: DollarSign,
             color: 'from-yellow-500 to-yellow-600',
             bgColor: 'bg-yellow-50',
-            features: ['Sponsorship Opportunities', 'Brand Exposure', 'ROI Analytics', 'Partnership Management'],
-            available: false
+            features: ['Sponsorship Opportunities', 'Brand Exposure', 'ROI Analytics', 'Partnership Management']
         }
     ];
 
-    if (!isOpen) return null;
-
-    const handleRoleClick = (role: typeof roles[0]) => {
-        if (role.available) {
-            onRoleSelected(role.id);
-        } else {
-            alert(`${role.title} role is coming soon! Stay tuned.`);
-        }
+    const handleSignUp = (roleId: 'organizer' | 'vendor' | 'speaker' | 'sponsor') => {
+        onRoleSelected(roleId);
+        onClose();
     };
+
+    const handleSignIn = (roleId: 'organizer' | 'vendor' | 'speaker' | 'sponsor') => {
+        const roleMap = {
+            organizer: "organiser",
+            vendor: "vendor",
+            speaker: "speaker",
+            sponsor: "sponsor",
+        };
+        const schemaRole = roleMap[roleId];
+        router.push(`/management/sign-in?role=${schemaRole}`);
+        onClose();
+    };
+
+    if (!isOpen) return null;
 
     return (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -97,16 +105,8 @@ const RoleSelectionModal: React.FC<RoleSelectionModalProps> = ({
                         return (
                             <div
                                 key={role.id}
-                                onClick={() => handleRoleClick(role)}
-                                className={`${role.bgColor} rounded-2xl p-6 cursor-pointer hover:shadow-xl transition-all duration-300 hover:scale-105 border-2 border-transparent hover:border-gray-200 group relative ${!role.available ? 'opacity-75' : ''
-                                    }`}
+                                className={`${role.bgColor} rounded-2xl p-6 border-2 border-transparent hover:border-gray-200 group transition-all duration-300`}
                             >
-                                {!role.available && (
-                                    <div className="absolute top-4 right-4 bg-orange-500 text-white text-xs font-bold px-3 py-1 rounded-full">
-                                        Coming Soon
-                                    </div>
-                                )}
-
                                 <div className="flex items-center justify-between mb-4">
                                     <div className={`bg-gradient-to-r ${role.color} w-14 h-14 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
                                         <Icon className="w-7 h-7 text-white" />
@@ -117,7 +117,7 @@ const RoleSelectionModal: React.FC<RoleSelectionModalProps> = ({
                                 <h3 className="text-xl font-bold text-gray-900 mb-2">{role.title}</h3>
                                 <p className="text-gray-600 mb-4 leading-relaxed">{role.description}</p>
 
-                                <div className="space-y-2">
+                                <div className="space-y-2 mb-6">
                                     <h4 className="font-semibold text-gray-800 text-sm">Key Features:</h4>
                                     <ul className="space-y-1">
                                         {role.features.map((feature, index) => (
@@ -129,10 +129,20 @@ const RoleSelectionModal: React.FC<RoleSelectionModalProps> = ({
                                     </ul>
                                 </div>
 
-                                <div className="mt-6 pt-4 border-t border-gray-200">
-                                    <div className={`bg-gradient-to-r ${role.color} text-white px-4 py-2 rounded-lg text-center font-semibold group-hover:shadow-lg transition-all duration-300`}>
-                                        {role.available ? `Get Started as ${role.title}` : 'Notify Me'}
-                                    </div>
+                                {/* Action Buttons */}
+                                <div className="space-y-2 pt-4 border-t border-gray-200">
+                                    <button
+                                        onClick={() => handleSignUp(role.id)}
+                                        className={`w-full bg-gradient-to-r ${role.color} text-white px-4 py-3 rounded-lg text-center font-semibold hover:shadow-lg transition-all duration-300`}
+                                    >
+                                        Sign Up as {role.title}
+                                    </button>
+                                    <button
+                                        onClick={() => handleSignIn(role.id)}
+                                        className="w-full bg-white border-2 border-gray-300 text-gray-700 px-4 py-3 rounded-lg text-center font-semibold hover:bg-gray-50 hover:border-gray-400 transition-all duration-300"
+                                    >
+                                        Sign In as {role.title}
+                                    </button>
                                 </div>
                             </div>
                         );

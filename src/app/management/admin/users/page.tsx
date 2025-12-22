@@ -8,12 +8,14 @@ import UserManagement from "@/components/admin/UserManagement";
 
 export default function AdminUsersPage() {
   const [filter, setFilter] = useState<"all" | "user" | "organiser" | "admin">("all");
-  
-  const users = useQuery(api.users.getAllUsers, {
-    role: filter === "all" ? undefined : (filter as any),
-  });
 
-  if (!users) {
+  const usersData = useQuery(api.adminQueries.getAllUsers, {
+    role: filter === "all" ? undefined : (filter as any),
+    limit: 100
+  });
+  const userStats = useQuery(api.adminQueries.getUserStats);
+
+  if (!usersData || !userStats) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
@@ -34,10 +36,9 @@ export default function AdminUsersPage() {
     { key: "role", label: "Role" },
     { key: "status", label: "Status" },
     { key: "createdAt", label: "Joined" },
-    { key: "actions", label: "Actions" },
   ];
 
-  const tableData = users.map((user) => ({
+  const tableData = usersData.users.map((user) => ({
     ...user,
     name: `${user.firstName || ""} ${user.lastName || ""}`.trim() || "N/A",
     status: user.isActive ? "Active" : "Inactive",
@@ -61,41 +62,37 @@ export default function AdminUsersPage() {
         <div className="flex items-center space-x-4">
           <button
             onClick={() => setFilter("all")}
-            className={`px-4 py-2 rounded-lg font-medium transition ${
-              filter === "all"
+            className={`px-4 py-2 rounded-lg font-medium transition ${filter === "all"
                 ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white"
                 : "text-gray-600 hover:bg-gray-100"
-            }`}
+              }`}
           >
             All Users
           </button>
           <button
             onClick={() => setFilter("user")}
-            className={`px-4 py-2 rounded-lg font-medium transition ${
-              filter === "user"
+            className={`px-4 py-2 rounded-lg font-medium transition ${filter === "user"
                 ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white"
                 : "text-gray-600 hover:bg-gray-100"
-            }`}
+              }`}
           >
             Regular Users
           </button>
           <button
             onClick={() => setFilter("organiser")}
-            className={`px-4 py-2 rounded-lg font-medium transition ${
-              filter === "organiser"
+            className={`px-4 py-2 rounded-lg font-medium transition ${filter === "organiser"
                 ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white"
                 : "text-gray-600 hover:bg-gray-100"
-            }`}
+              }`}
           >
             Organisers
           </button>
           <button
             onClick={() => setFilter("admin")}
-            className={`px-4 py-2 rounded-lg font-medium transition ${
-              filter === "admin"
+            className={`px-4 py-2 rounded-lg font-medium transition ${filter === "admin"
                 ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white"
                 : "text-gray-600 hover:bg-gray-100"
-            }`}
+              }`}
           >
             Admins
           </button>
@@ -106,24 +103,24 @@ export default function AdminUsersPage() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-6 border border-purple-200">
           <p className="text-sm text-gray-600 mb-1">Total Users</p>
-          <p className="text-3xl font-bold text-gray-900">{users.length}</p>
+          <p className="text-3xl font-bold text-gray-900">{userStats.total}</p>
         </div>
         <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-200">
           <p className="text-sm text-gray-600 mb-1">Regular Users</p>
           <p className="text-3xl font-bold text-gray-900">
-            {users.filter((u) => u.role === "user").length}
+            {userStats.byRole.user}
           </p>
         </div>
         <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-6 border border-green-200">
           <p className="text-sm text-gray-600 mb-1">Organisers</p>
           <p className="text-3xl font-bold text-gray-900">
-            {users.filter((u) => u.role === "organiser").length}
+            {userStats.byRole.organiser}
           </p>
         </div>
         <div className="bg-gradient-to-br from-orange-50 to-red-50 rounded-xl p-6 border border-orange-200">
           <p className="text-sm text-gray-600 mb-1">Admins</p>
           <p className="text-3xl font-bold text-gray-900">
-            {users.filter((u) => u.role === "admin").length}
+            {userStats.byRole.admin}
           </p>
         </div>
       </div>
@@ -135,6 +132,11 @@ export default function AdminUsersPage() {
           data={tableData}
           emptyMessage="No users found"
         />
+      </div>
+
+      {/* Pagination Note */}
+      <div className="text-center text-sm text-gray-500 pb-4">
+        Showing top 100 users. Use search (coming soon) to find specific users.
       </div>
     </div>
   );

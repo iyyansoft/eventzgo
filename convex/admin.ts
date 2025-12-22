@@ -1,4 +1,4 @@
-import { query } from "./_generated/server";
+import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 
 /**
@@ -279,5 +279,143 @@ export const getCategoryDistribution = query({
       category,
       count,
     }));
+  },
+});
+
+/**
+ * Get all pending users for verification
+ */
+export const getPendingUsers = query({
+  args: {},
+  handler: async (ctx) => {
+    const pendingOrganisers = await ctx.db
+      .query('organisers')
+      .filter((q) => q.eq(q.field('approvalStatus'), 'pending'))
+      .collect();
+
+    const usersWithDetails = await Promise.all(
+      pendingOrganisers.map(async (organiser) => {
+        const user = await ctx.db
+          .query('users')
+          .filter((q) => q.eq(q.field('clerkId'), organiser.clerkId))
+          .first();
+
+        return {
+          id: organiser._id,
+          clerkId: organiser.clerkId,
+          name: organiser.institutionName,
+          email: user?.email || '',
+          role: 'organiser',
+          status: organiser.approvalStatus,
+          createdAt: organiser._creationTime,
+          institutionName: organiser.institutionName,
+          address: organiser.address,
+          gstNumber: organiser.gstNumber,
+          panNumber: organiser.panNumber,
+          bankDetails: organiser.bankDetails,
+          documents: organiser.documents,
+        };
+      })
+    );
+
+    return usersWithDetails;
+  },
+});
+
+/**
+ * Approve a pending user
+ */
+export const approveUser = mutation({
+  args: {
+    organiserId: v.id('organisers'),
+    adminNotes: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const organiser = await ctx.db.get(args.organiserId);
+
+    if (!organiser) {
+      throw new Error('Organiser not found');
+    }
+
+    // Update organiser status in database
+    await ctx.db.patch(args.organiserId, {
+      approvalStatus: 'approved',
+      approvedAt: Date.now(),
+    });
+
+    // Note: Clerk metadata will be automatically synced by the useOrganiserSync hook
+    // when the organiser signs in next time
+
+    return { success: true, organiserId: args.organiserId, clerkId: organiser.clerkId };
+  },
+});
+
+/**
+ * Reject a pending user
+ */
+export const rejectUser = mutation({
+  args: {
+    organiserId: v.id('organisers'),
+    reason: v.string(),
+    adminNotes: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const organiser = await ctx.db.get(args.organiserId);
+
+    if (!organiser) {
+      throw new Error('Organiser not found');
+    }
+
+    // Update organiser status in database
+    await ctx.db.patch(args.organiserId, {
+      approvalStatus: 'rejected',
+      rejectionReason: args.reason,
+    });
+
+    // Note: Clerk metadata will be automatically synced by the useOrganiserSync hook
+
+    return { success: true, organiserId: args.organiserId };
+  },
+});
+
+/**
+ * Get all users with pagination and filters
+ */
+export const getAllUsers = query({
+  args: {
+    limit: v.number(),
+    offset: v.number(),
+    role: v.optional(v.string()),
+    searchTerm: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    // Get all users
+    let users = await ctx.db.query("users").collect();
+
+    // Apply role filter
+    if (args.role && args.role !== 'all') {
+      users = users.filter(user => user.role === args.role);
+    }
+
+    // Apply search filter
+    if (args.searchTerm) {
+      const searchLower = args.searchTerm.toLowerCase();
+      users = users.filter(user =>
+        user.email?.toLowerCase().includes(searchLower) ||
+        user.firstName?.toLowerCase().includes(searchLower) ||
+        user.lastName?.toLowerCase().includes(searchLower)
+      );
+    }
+
+    const total = users.length;
+
+    // Apply pagination
+    const paginatedUsers = users.slice(args.offset, args.offset + args.limit);
+
+    return {
+      users: paginatedUsers,
+      total,
+      hasMore: args.offset + args.limit < total,
+    };
   },
 });

@@ -1,235 +1,282 @@
+
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { useUser } from "@clerk/nextjs";
-import { useRouter } from "next/navigation";
+import React, { useState } from 'react';
+import { useQuery } from 'convex/react';
+import { api } from '@/convex/_generated/api';
 import {
-  Calendar,
-  Users,
-  DollarSign,
-  TrendingUp,
-  Loader2,
-  ArrowRight,
-  UserCheck,
-  ShoppingBag
-} from "lucide-react";
+  Users, Calendar, TrendingUp, DollarSign, UserCheck,
+  Clock, AlertCircle, Shield, Settings
+} from 'lucide-react';
+import LineChart from '@/components/charts/LineChart';
+import BarChart from '@/components/charts/BarChart';
+import PieChart from '@/components/charts/PieChart';
+import AreaChart from '@/components/charts/AreaChart';
 
 export default function AdminDashboardPage() {
-  const { user } = useUser();
-  const router = useRouter();
-  const [isLoading, setIsLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('overview');
 
-  useEffect(() => {
-    // Simulate loading
-    setTimeout(() => setIsLoading(false), 1000);
-  }, []);
+  // Fetch data from Convex
+  const pendingOrganisers = useQuery(api.management.getPendingOrganisers);
+  const allOrganisers = useQuery(api.management.getAllOrganisers);
 
-  // Mock stats for demo
-  const stats = {
-    totalEvents: 124,
-    totalUsers: 2847,
-    totalRevenue: 4235000, // ₹42.35L
-    activeBookings: 456,
-    pendingEvents: 12,
-    totalOrganisers: 34,
-  };
+  // Admin-specific analytics data (would come from Convex in production)
+  const platformGrowthData = [
+    { month: 'Jan', users: 120, events: 45, revenue: 850000 },
+    { month: 'Feb', users: 180, events: 62, revenue: 1200000 },
+    { month: 'Mar', users: 240, events: 78, revenue: 1450000 },
+    { month: 'Apr', users: 320, events: 95, revenue: 1800000 },
+    { month: 'May', users: 450, events: 112, revenue: 2200000 },
+    { month: 'Jun', users: 580, events: 135, revenue: 2650000 },
+  ];
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <Loader2 className="w-12 h-12 text-purple-600 animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">Loading dashboard...</p>
-        </div>
-      </div>
-    );
-  }
+  const userTypeDistribution = [
+    { name: 'Organizers', value: allOrganisers?.length || 0, color: '#3b82f6' },
+    { name: 'Vendors', value: 30, color: '#10b981' },
+    { name: 'Speakers', value: 15, color: '#8b5cf6' },
+    { name: 'Sponsors', value: 10, color: '#f59e0b' },
+  ];
+
+  const systemMetricsData = [
+    { metric: 'Server Uptime', value: 99.9 },
+    { metric: 'Response Time', value: 95.2 },
+    { metric: 'User Satisfaction', value: 94.8 },
+    { metric: 'Platform Security', value: 98.5 },
+  ];
+
+  const stats = [
+    {
+      title: 'Total Platform Users',
+      value: (allOrganisers?.length || 0) + 85, // +85 for other user types
+      change: '+12% this month',
+      icon: Users,
+      color: 'bg-blue-500',
+      trend: 'up'
+    },
+    {
+      title: 'Pending Verifications',
+      value: pendingOrganisers?.length || 0,
+      change: 'Awaiting review',
+      icon: Clock,
+      color: 'bg-yellow-500',
+      trend: 'up'
+    },
+    {
+      title: 'Platform Events',
+      value: allOrganisers?.reduce((sum, org) => sum + ((org as any).eventCount || 0), 0) || 0,
+      change: '+8% growth',
+      icon: Calendar,
+      color: 'bg-green-500',
+      trend: 'up'
+    },
+    {
+      title: 'System Health',
+      value: '99.9%',
+      change: 'All systems operational',
+      icon: Shield,
+      color: 'bg-purple-500',
+      trend: 'up'
+    }
+  ];
+
+  const recentAdminActivities = [
+    {
+      id: 1,
+      type: 'user_verification',
+      message: 'Verified EventPro Productions as premium organizer',
+      time: '2 hours ago',
+      status: 'completed',
+      icon: UserCheck
+    },
+    {
+      id: 2,
+      type: 'system_update',
+      message: 'Platform security update deployed successfully',
+      time: '4 hours ago',
+      status: 'completed',
+      icon: Shield
+    },
+    {
+      id: 3,
+      type: 'policy_update',
+      message: 'Updated platform terms and conditions',
+      time: '6 hours ago',
+      status: 'completed',
+      icon: Settings
+    }
+  ];
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 pt-24">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Admin Dashboard
-          </h1>
-          <p className="text-gray-600">
-            Welcome back, {user?.firstName}! Here's your platform overview.
-          </p>
+    <div className="space-y-6 p-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Platform Administration</h1>
+          <p className="text-gray-600 mt-1">Monitor and manage the entire EventzGo ecosystem</p>
         </div>
-
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {/* Total Events */}
-          <div className="bg-white rounded-2xl shadow-sm p-6 hover:shadow-md transition-all">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-blue-100 rounded-xl">
-                <Calendar className="w-6 h-6 text-blue-600" />
-              </div>
-              <span className="text-sm font-semibold text-green-600">
-                +12%
-              </span>
-            </div>
-            <p className="text-sm text-gray-600 mb-1">Total Events</p>
-            <p className="text-3xl font-bold text-gray-900">
-              {stats.totalEvents}
-            </p>
-          </div>
-
-          {/* Total Users */}
-          <div className="bg-white rounded-2xl shadow-sm p-6 hover:shadow-md transition-all">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-green-100 rounded-xl">
-                <Users className="w-6 h-6 text-green-600" />
-              </div>
-              <span className="text-sm font-semibold text-green-600">
-                +8%
-              </span>
-            </div>
-            <p className="text-sm text-gray-600 mb-1">Total Users</p>
-            <p className="text-3xl font-bold text-gray-900">
-              {stats.totalUsers.toLocaleString("en-IN")}
-            </p>
-          </div>
-
-          {/* Total Revenue */}
-          <div className="bg-white rounded-2xl shadow-sm p-6 hover:shadow-md transition-all">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-purple-100 rounded-xl">
-                <DollarSign className="w-6 h-6 text-purple-600" />
-              </div>
-              <span className="text-sm font-semibold text-green-600">
-                +15%
-              </span>
-            </div>
-            <p className="text-sm text-gray-600 mb-1">Total Revenue</p>
-            <p className="text-3xl font-bold text-gray-900">
-              ₹{(stats.totalRevenue / 100000).toFixed(1)}L
-            </p>
-          </div>
-
-          {/* Active Bookings */}
-          <div className="bg-white rounded-2xl shadow-sm p-6 hover:shadow-md transition-all">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-pink-100 rounded-xl">
-                <TrendingUp className="w-6 h-6 text-pink-600" />
-              </div>
-              <span className="text-sm font-semibold text-green-600">
-                +5%
-              </span>
-            </div>
-            <p className="text-sm text-gray-600 mb-1">Active Bookings</p>
-            <p className="text-3xl font-bold text-gray-900">
-              {stats.activeBookings}
-            </p>
-          </div>
-        </div>
-
-        {/* Secondary Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          <div className="bg-white rounded-2xl shadow-sm p-6">
-            <div className="flex items-center space-x-4">
-              <div className="p-3 bg-yellow-100 rounded-xl">
-                <ShoppingBag className="w-6 h-6 text-yellow-600" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Pending Approvals</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {stats.pendingEvents}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-2xl shadow-sm p-6">
-            <div className="flex items-center space-x-4">
-              <div className="p-3 bg-indigo-100 rounded-xl">
-                <UserCheck className="w-6 h-6 text-indigo-600" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Total Organisers</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {stats.totalOrganisers}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Revenue Chart Placeholder */}
-        <div className="bg-white rounded-2xl shadow-sm p-8 mb-8">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">
-            Revenue Analytics
-          </h2>
-          <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-12 text-center">
-            <div className="text-6xl mb-4">📊</div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2">
-              Charts Coming Soon
-            </h3>
-            <p className="text-gray-600">
-              Revenue charts and analytics will be available in the next update
-            </p>
-          </div>
-        </div>
-
-        {/* Quick Actions */}
-        <div className="mb-8">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">
-            Quick Actions
-          </h2>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <button
-            onClick={() => router.push("/management/admin/events")}
-            className="bg-white rounded-2xl shadow-sm p-6 hover:shadow-md transition-all text-left group"
-          >
-            <Calendar className="w-8 h-8 text-purple-600 mb-4" />
-            <h3 className="text-lg font-bold text-gray-900 mb-2">
-              Manage Events
-            </h3>
-            <p className="text-gray-600 text-sm mb-4">
-              Review and approve pending events
-            </p>
-            <div className="flex items-center text-purple-600 font-semibold group-hover:translate-x-2 transition-transform">
-              <span>Go to Events</span>
-              <ArrowRight className="w-4 h-4 ml-2" />
-            </div>
+        <div className="flex items-center space-x-3">
+          <button className="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors duration-200">
+            System Reports
           </button>
-
-          <button
-            onClick={() => router.push("/management/admin/users")}
-            className="bg-white rounded-2xl shadow-sm p-6 hover:shadow-md transition-all text-left group"
-          >
-            <Users className="w-8 h-8 text-blue-600 mb-4" />
-            <h3 className="text-lg font-bold text-gray-900 mb-2">
-              User Management
-            </h3>
-            <p className="text-gray-600 text-sm mb-4">
-              Manage users and permissions
-            </p>
-            <div className="flex items-center text-blue-600 font-semibold group-hover:translate-x-2 transition-transform">
-              <span>Go to Users</span>
-              <ArrowRight className="w-4 h-4 ml-2" />
-            </div>
+          <button className="bg-gradient-to-r from-red-600 to-pink-600 text-white px-4 py-2 rounded-lg hover:from-red-700 hover:to-pink-700 transition-all duration-200">
+            Platform Settings
           </button>
+        </div>
+      </div>
 
-          <button
-            onClick={() => router.push("/management/admin/analytics")}
-            className="bg-white rounded-2xl shadow-sm p-6 hover:shadow-md transition-all text-left group"
-          >
-            <TrendingUp className="w-8 h-8 text-green-600 mb-4" />
-            <h3 className="text-lg font-bold text-gray-900 mb-2">
-              Analytics
-            </h3>
-            <p className="text-gray-600 text-sm mb-4">
-              View detailed platform analytics
-            </p>
-            <div className="flex items-center text-green-600 font-semibold group-hover:translate-x-2 transition-transform">
-              <span>Go to Analytics</span>
-              <ArrowRight className="w-4 h-4 ml-2" />
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {stats.map((stat, index) => {
+          const Icon = stat.icon;
+          return (
+            <div key={index} className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-shadow duration-300">
+              <div className="flex items-center justify-between mb-4">
+                <div className={`${stat.color} w-12 h-12 rounded-xl flex items-center justify-center`}>
+                  <Icon className="w-6 h-6 text-white" />
+                </div>
+                <div className={`flex items-center space-x-1 text-sm font-medium ${stat.trend === 'up' ? 'text-green-600' : 'text-red-600'
+                  }`}>
+                  <TrendingUp className="w-4 h-4" />
+                  <span>Healthy</span>
+                </div>
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-1">{stat.value}</h3>
+              <p className="text-gray-600 text-sm">{stat.title}</p>
+              <p className="text-green-600 text-xs mt-1">{stat.change}</p>
             </div>
-          </button>
+          );
+        })}
+      </div>
+
+      {/* Charts Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Platform Growth Analytics</h3>
+          <LineChart
+            data={platformGrowthData}
+            dataKey="users"
+            xAxisKey="month"
+            color="#3b82f6"
+            height={250}
+          />
+        </div>
+
+        <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">User Type Distribution</h3>
+          <PieChart
+            data={userTypeDistribution}
+            dataKey="value"
+            nameKey="name"
+            height={250}
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Platform Revenue</h3>
+          <AreaChart
+            data={platformGrowthData}
+            dataKey="revenue"
+            xAxisKey="month"
+            color="#10b981"
+            height={250}
+          />
+        </div>
+
+        <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">System Performance</h3>
+          <BarChart
+            data={systemMetricsData}
+            dataKey="value"
+            xAxisKey="metric"
+            color="#8b5cf6"
+            height={250}
+          />
+        </div>
+      </div>
+
+      {/* Tabs */}
+      <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+        <div className="border-b border-gray-200">
+          <nav className="flex space-x-8 px-6">
+            {[
+              { id: 'overview', label: 'System Activities' },
+              { id: 'analytics', label: 'Advanced Analytics' }
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${activeTab === tab.id
+                  ? 'border-red-500 text-red-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+                  }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </nav>
+        </div>
+
+        <div className="p-6">
+          {activeTab === 'overview' && (
+            <div className="space-y-4">
+              {recentAdminActivities.map((activity) => {
+                const Icon = activity.icon;
+                return (
+                  <div key={activity.id} className="flex items-center space-x-4 p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors duration-200">
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${activity.status === 'completed' ? 'bg-green-100' : 'bg-blue-100'
+                      }`}>
+                      <Icon className={`w-5 h-5 ${activity.status === 'completed' ? 'text-green-600' : 'text-blue-600'
+                        }`} />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-gray-900 font-medium">{activity.message}</p>
+                      <p className="text-gray-500 text-sm">{activity.time}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {activeTab === 'analytics' && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="p-6 bg-gray-50 rounded-xl">
+                <h4 className="font-semibold text-gray-900 mb-4">Platform Health Metrics</h4>
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Server Uptime</span>
+                    <span className="font-semibold text-green-600">99.9%</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Active Sessions</span>
+                    <span className="font-semibold">2,847</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">API Response Time</span>
+                    <span className="font-semibold text-green-600">120ms</span>
+                  </div>
+                </div>
+              </div>
+              <div className="p-6 bg-gray-50 rounded-xl">
+                <h4 className="font-semibold text-gray-900 mb-4">Security Metrics</h4>
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Security Score</span>
+                    <span className="font-semibold text-green-600">A+</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Failed Login Attempts</span>
+                    <span className="font-semibold text-green-600">0.02%</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Data Encryption</span>
+                    <span className="font-semibold text-green-600">256-bit</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

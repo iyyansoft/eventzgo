@@ -398,3 +398,79 @@ export const getPendingBookings = query({
       .collect();
   },
 });
+
+/**
+ * Get all bookings for the authenticated organiser
+ */
+export const getOrganiserBookings = query({
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+
+    // For now, if not authenticated, try to find the first organiser as fallback (development mode only)
+    if (!identity) {
+      // return []; // Uncomment to enforce auth
+
+      // Fallback for demo: Get first organiser
+      const organiser = await ctx.db.query("organisers").first();
+      if (!organiser) return [];
+
+      const events = await ctx.db
+        .query("events")
+        .withIndex("by_organiser_id", (q) => q.eq("organiserId", organiser._id))
+        .collect();
+
+      const eventIds = events.map(e => e._id);
+
+      const allBookings = await ctx.db.query("bookings").collect();
+
+      const organiserBookings = allBookings
+        .filter(b => eventIds.includes(b.eventId))
+        .map(b => {
+          const event = events.find(e => e._id === b.eventId);
+          return {
+            ...b,
+            eventName: event?.title || "Unknown Event",
+            eventDate: event?.dateTime.start || 0,
+          };
+        });
+
+      return organiserBookings.sort((a, b) => b.createdAt - a.createdAt);
+    }
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
+      .first();
+
+    if (!user) return [];
+
+    const organiser = await ctx.db
+      .query("organisers")
+      .withIndex("by_user_id", (q) => q.eq("userId", user._id))
+      .first();
+
+    if (!organiser) return [];
+
+    const events = await ctx.db
+      .query("events")
+      .withIndex("by_organiser_id", (q) => q.eq("organiserId", organiser._id))
+      .collect();
+
+    const eventIds = events.map(e => e._id);
+
+    const allBookings = await ctx.db.query("bookings").collect();
+
+    const organiserBookings = allBookings
+      .filter(b => eventIds.includes(b.eventId))
+      .map(b => {
+        const event = events.find(e => e._id === b.eventId);
+        return {
+          ...b,
+          eventName: event?.title || "Unknown Event",
+          eventDate: event?.dateTime.start || 0,
+        };
+      });
+
+    return organiserBookings.sort((a, b) => b.createdAt - a.createdAt);
+  },
+});

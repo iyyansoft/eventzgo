@@ -4,11 +4,15 @@ import { useUser } from "@clerk/nextjs";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useEffect, useRef } from "react";
+import { useOrganiserSync } from "./useOrganiserSync";
 
 export function useAuth() {
   const { user, isLoaded, isSignedIn } = useUser();
   const syncUser = useMutation(api.users.syncUser);
   const hasSynced = useRef(false);
+
+  // Auto-sync organiser metadata to Clerk
+  useOrganiserSync();
 
   // Get user from Convex
   const convexUser = useQuery(

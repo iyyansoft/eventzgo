@@ -9,10 +9,15 @@
  */
 
 import type * as admin from "../admin.js";
+import type * as adminNavigation from "../adminNavigation.js";
+import type * as adminQueries from "../adminQueries.js";
 import type * as analytics from "../analytics.js";
 import type * as bookings from "../bookings.js";
+import type * as clerk from "../clerk.js";
 import type * as events from "../events.js";
 import type * as http from "../http.js";
+import type * as management from "../management.js";
+import type * as managementApprovals from "../managementApprovals.js";
 import type * as managementUsers from "../managementUsers.js";
 import type * as notifications from "../notifications.js";
 import type * as organisers from "../organisers.js";
@@ -30,10 +35,15 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   admin: typeof admin;
+  adminNavigation: typeof adminNavigation;
+  adminQueries: typeof adminQueries;
   analytics: typeof analytics;
   bookings: typeof bookings;
+  clerk: typeof clerk;
   events: typeof events;
   http: typeof http;
+  management: typeof management;
+  managementApprovals: typeof managementApprovals;
   managementUsers: typeof managementUsers;
   notifications: typeof notifications;
   organisers: typeof organisers;

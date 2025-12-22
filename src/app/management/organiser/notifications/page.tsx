@@ -8,22 +8,22 @@ import { useState } from "react";
 export default function OrganiserNotificationsPage() {
   const { userId } = useAuth();
   const [filter, setFilter] = useState<"all" | "unread">("all");
-  
-  const notifications = useQuery(
-    api.notifications.getNotificationsByUser,
-    userId ? { userId: userId as any, unreadOnly: filter === "unread" } : "skip"
-  );
-  
-  const unreadCount = useQuery(
-    api.notifications.getUnreadCount,
+
+  const notificationsData = useQuery(
+    api.notifications.getUserNotifications,
     userId ? { userId: userId as any } : "skip"
   );
-  
+
+  const unreadCount = useQuery(
+    api.notifications.getUserUnreadCount,
+    userId ? { userId: userId as any } : "skip"
+  );
+
   const markAsRead = useMutation(api.notifications.markAsRead);
   const markAllAsRead = useMutation(api.notifications.markAllAsRead);
   const deleteNotification = useMutation(api.notifications.deleteNotification);
 
-  if (!notifications) {
+  if (!notificationsData) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
@@ -37,13 +37,17 @@ export default function OrganiserNotificationsPage() {
     );
   }
 
+  const notifications = notificationsData.notifications.filter(n =>
+    filter === 'unread' ? !n.isRead : true
+  );
+
   const handleMarkAsRead = async (notificationId: any) => {
     await markAsRead({ notificationId });
   };
 
   const handleMarkAllAsRead = async () => {
     if (userId) {
-      await markAllAsRead({ userId: userId as any });
+      await markAllAsRead();
     }
   };
 
@@ -79,21 +83,19 @@ export default function OrganiserNotificationsPage() {
         <div className="flex items-center space-x-4">
           <button
             onClick={() => setFilter("all")}
-            className={`px-4 py-2 rounded-lg font-medium transition ${
-              filter === "all"
-                ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white"
-                : "text-gray-600 hover:bg-gray-100"
-            }`}
+            className={`px-4 py-2 rounded-lg font-medium transition ${filter === "all"
+              ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white"
+              : "text-gray-600 hover:bg-gray-100"
+              }`}
           >
             All
           </button>
           <button
             onClick={() => setFilter("unread")}
-            className={`px-4 py-2 rounded-lg font-medium transition ${
-              filter === "unread"
-                ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white"
-                : "text-gray-600 hover:bg-gray-100"
-            }`}
+            className={`px-4 py-2 rounded-lg font-medium transition ${filter === "unread"
+              ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white"
+              : "text-gray-600 hover:bg-gray-100"
+              }`}
           >
             Unread {unreadCount ? `(${unreadCount})` : ""}
           </button>
@@ -114,17 +116,16 @@ export default function OrganiserNotificationsPage() {
           notifications.map((notification) => (
             <div
               key={notification._id}
-              className={`bg-white rounded-xl shadow-sm p-6 border-l-4 ${
-                notification.isRead
-                  ? "border-gray-300"
-                  : "border-purple-500 bg-purple-50"
-              }`}
+              className={`bg-white rounded-xl shadow-sm p-6 border-l-4 ${notification.isRead
+                ? "border-gray-300"
+                : "border-purple-500 bg-purple-50"
+                }`}
             >
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <div className="flex items-center space-x-2 mb-2">
                     <h3 className="font-semibold text-gray-900">
-                      {notification.title}
+                      {(notification as any).subject}
                     </h3>
                     {!notification.isRead && (
                       <span className="w-2 h-2 bg-purple-600 rounded-full"></span>

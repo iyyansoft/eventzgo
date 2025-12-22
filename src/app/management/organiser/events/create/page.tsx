@@ -4,17 +4,59 @@ import { useState } from "react";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useRouter } from "next/navigation";
+import { useUser } from "@clerk/nextjs";
 import EventForm from "@/components/organiser/EventForm";
 
 export default function CreateEventPage() {
   const router = useRouter();
+  const { user } = useUser();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const createEvent = useMutation(api.events.createEvent);
 
   const handleSubmit = async (eventData: any) => {
     setIsSubmitting(true);
     try {
-      const eventId = await createEvent(eventData);
+      // Transform form data to match Convex schema
+      const transformedData = {
+        title: eventData.title,
+        description: eventData.description,
+        category: eventData.category,
+        bannerImage: eventData.coverImage, // Map coverImage to bannerImage
+
+        // Convert dates and times to timestamps
+        dateTime: {
+          start: new Date(`${eventData.startDate}T${eventData.startTime}`).getTime(),
+          end: new Date(`${eventData.endDate}T${eventData.endTime}`).getTime(),
+        },
+
+        // Structure venue as object
+        venue: {
+          name: eventData.venue,
+          address: eventData.address,
+          city: eventData.city,
+          state: eventData.state,
+          pincode: eventData.pincode,
+        },
+
+        // Transform ticket types
+        ticketTypes: eventData.ticketTypes.map((ticket: any, index: number) => ({
+          id: `ticket-${Date.now()}-${index}`,
+          name: ticket.name,
+          price: ticket.price,
+          quantity: ticket.quantity,
+          sold: 0, // Initially 0 tickets sold
+          description: ticket.description || "",
+        })),
+
+        // Add required fields
+        tags: [], // Empty tags for now
+        status: "pending" as const, // Initial status - pending approval
+
+        // Include custom fields
+        customFields: eventData.customFields || [],
+      };
+
+      const eventId = await createEvent(transformedData);
       router.push(`/management/organiser/events/${eventId}`);
     } catch (error) {
       console.error("Error creating event:", error);

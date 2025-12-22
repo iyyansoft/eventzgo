@@ -9,6 +9,7 @@ export default defineSchema({
     firstName: v.optional(v.string()),
     lastName: v.optional(v.string()),
     phone: v.optional(v.string()),
+    city: v.optional(v.string()),
     role: v.union(
       v.literal("user"),
       v.literal("organiser"),
@@ -383,17 +384,23 @@ export default defineSchema({
     .index("by_event_id", ["eventId"])
     .index("by_status", ["status"]),
 
-  // Notifications table
+  // Notifications table (two-way communication)
   notifications: defineTable({
-    userId: v.id("users"),
-    type: v.string(),
-    title: v.string(),
+    senderId: v.id("users"),
+    recipientId: v.optional(v.id("users")), // Optional for broadcast messages
+    recipientType: v.string(), // "all", "user", "organiser", "vendor", "speaker", "sponsor", "admin", "individual"
+    subject: v.string(),
     message: v.string(),
-    metadata: v.optional(v.any()),
+    priority: v.string(), // "low", "normal", "high"
+    parentId: v.optional(v.id("notifications")), // For threading/replies
     isRead: v.boolean(),
+    readAt: v.optional(v.number()),
     createdAt: v.number(),
   })
-    .index("by_user_id", ["userId"])
+    .index("by_sender_id", ["senderId"])
+    .index("by_recipient_id", ["recipientId"])
+    .index("by_recipient_type", ["recipientType"])
+    .index("by_parent_id", ["parentId"])
     .index("by_is_read", ["isRead"]),
 
   // Email logs table
@@ -411,4 +418,16 @@ export default defineSchema({
     .index("by_to", ["to"])
     .index("by_status", ["status"])
     .index("by_type", ["type"]),
+
+  // Admin Navigation table
+  adminNavigation: defineTable({
+    label: v.string(),
+    path: v.string(),
+    icon: v.string(), // Icon name from lucide-react
+    order: v.number(),
+    category: v.union(v.literal("main"), v.literal("bottom")),
+    isActive: v.boolean(),
+  })
+    .index("by_category_order", ["category", "order"])
+    .index("by_is_active", ["isActive"]),
 });

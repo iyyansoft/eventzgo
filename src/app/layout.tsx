@@ -1,8 +1,7 @@
 import { ClerkProvider } from "@clerk/nextjs";
 import { ConvexClientProvider } from "@/components/shared/ConvexClientProvider";
 import { LocationProvider } from "@/contexts/LocationContext";
-import Header from "@/components/shared/Header";
-import Footer from "@/components/shared/Footer";
+import ConditionalLayout from "@/components/shared/ConditionalLayout";
 import "./globals.css";
 import type { Metadata } from "next";
 
@@ -22,11 +21,7 @@ export default function RootLayout({
         <body suppressHydrationWarning>
           <ConvexClientProvider>
             <LocationProvider>
-              <div className="flex min-h-screen flex-col">
-                <Header />
-                <main className="flex-1">{children}</main>
-                <Footer />
-              </div>
+              <ConditionalLayout>{children}</ConditionalLayout>
             </LocationProvider>
           </ConvexClientProvider>
         </body>

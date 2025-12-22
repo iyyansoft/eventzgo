@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { mutation, query, internalMutation } from "./_generated/server";
 
 /**
  * Create organiser profile
@@ -253,5 +253,50 @@ export const rejectOrganiser = mutation({
     });
 
     return args.organiserId;
+  },
+});
+
+/**
+ * Manual approve organiser by Clerk ID (for debugging)
+ * This will approve the organiser in Convex and return their info
+ * You'll need to manually update Clerk metadata separately
+ */
+export const manualApproveByClerkId = mutation({
+  args: {
+    clerkId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    // Find organiser by Clerk ID
+    const organiser = await ctx.db
+      .query("organisers")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", args.clerkId))
+      .first();
+
+    if (!organiser) {
+      throw new Error(`No organiser found with Clerk ID: ${args.clerkId}`);
+    }
+
+    const now = Date.now();
+
+    // Approve the organiser
+    await ctx.db.patch(organiser._id, {
+      approvalStatus: "approved",
+      approvedAt: now,
+      updatedAt: now,
+    });
+
+    // Update user role
+    await ctx.db.patch(organiser.userId, {
+      role: "organiser",
+      updatedAt: now,
+    });
+
+    return {
+      success: true,
+      organiserId: organiser._id,
+      userId: organiser.userId,
+      clerkId: args.clerkId,
+      message: "Organiser approved in Convex. Now update Clerk metadata with: role='organiser', status='approved', onboardingCompleted=true"
+    };
   },
 });

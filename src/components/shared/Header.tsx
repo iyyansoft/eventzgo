@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Search, MapPin, User, Menu, X, LogOut, Settings } from "lucide-react";
+import { Search, MapPin, User, Menu, X, LogOut, Settings, Bell } from "lucide-react";
 import { SignInButton, SignOutButton, useClerk } from "@clerk/nextjs";
 import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
@@ -19,6 +19,7 @@ const Header = () => {
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
 
   const { isSignedIn, isLoaded, role, fullName, imageUrl } = useAuth();
   const { city, openSelector } = useLocation();
@@ -26,11 +27,26 @@ const Header = () => {
   const router = useRouter();
   const lastScrollY = useRef<number>(0);
   const userMenuRef = useRef<HTMLDivElement>(null);
+  const notificationRef = useRef<HTMLDivElement>(null);
 
   // Search functionality with Convex
   const searchEventsQuery = useQuery(
     api.events.searchEvents,
     searchQuery.length >= 2 ? { searchTerm: searchQuery } : "skip"
+  );
+
+  // Get current user ID from Convex
+  const currentUser = useQuery(api.users.getCurrentUser, isSignedIn ? {} : "skip");
+
+  // Fetch user notifications
+  const userNotifications = useQuery(
+    api.notifications.getUserNotifications,
+    currentUser ? { userId: currentUser._id, limit: 5 } : "skip"
+  );
+
+  const unreadCount = useQuery(
+    api.notifications.getUserUnreadCount,
+    currentUser ? { userId: currentUser._id } : "skip"
   );
 
   useEffect(() => {
@@ -66,6 +82,9 @@ const Header = () => {
       if (showUserMenu && userMenuRef.current && !userMenuRef.current.contains(target)) {
         setShowUserMenu(false);
       }
+      if (showNotifications && notificationRef.current && !notificationRef.current.contains(target)) {
+        setShowNotifications(false);
+      }
     };
 
     if (isMenuOpen) {
@@ -82,7 +101,7 @@ const Header = () => {
       document.removeEventListener("mousedown", handleClickOutside);
       document.body.style.overflow = "unset";
     };
-  }, [isMenuOpen, showUserMenu]);
+  }, [isMenuOpen, showUserMenu, showNotifications]);
 
   const handleUserAction = () => {
     if (isSignedIn) setShowUserMenu(!showUserMenu);
@@ -215,6 +234,95 @@ const Header = () => {
                   <MapPin className="w-4 h-4" />
                   <span className="font-medium text-sm whitespace-nowrap">{city || "Select City"}</span>
                 </button>
+              )}
+
+              {/* Notification Bell */}
+              {isSignedIn && isLoaded && (
+                <div className="relative" ref={notificationRef}>
+                  <button
+                    onClick={() => setShowNotifications(!showNotifications)}
+                    className={`relative p-2 rounded-lg hover:bg-gray-100 transition-colors flex-shrink-0 ${isScrolled ? "" : ""}`}
+                  >
+                    <Bell className={`text-gray-700 ${isScrolled ? "w-4 h-4" : "w-5 h-5"}`} />
+                    {unreadCount !== undefined && unreadCount > 0 && (
+                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                        {unreadCount > 9 ? "9+" : unreadCount}
+                      </span>
+                    )}
+                  </button>
+
+                  {/* Notifications Dropdown */}
+                  {showNotifications && (
+                    <div className="absolute right-0 mt-2 w-80 rounded-xl bg-white shadow-xl border border-gray-200 z-50 max-h-96 overflow-hidden flex flex-col">
+                      <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+                        <h3 className="font-semibold text-gray-900">Notifications</h3>
+                        {unreadCount !== undefined && unreadCount > 0 && (
+                          <span className="text-xs text-gray-500">{unreadCount} unread</span>
+                        )}
+                      </div>
+                      <div className="overflow-y-auto flex-1">
+                        {!userNotifications || userNotifications.notifications.length === 0 ? (
+                          <div className="p-8 text-center">
+                            <Bell className="w-12 h-12 text-gray-300 mx-auto mb-2" />
+                            <p className="text-sm text-gray-500">No notifications yet</p>
+                          </div>
+                        ) : (
+                          <div className="divide-y divide-gray-100">
+                            {userNotifications.notifications.map((notification: any) => (
+                              <div
+                                key={notification._id}
+                                className={`p-4 hover:bg-gray-50 transition-colors cursor-pointer ${!notification.isRead ? "bg-blue-50" : ""
+                                  }`}
+                                onClick={() => {
+                                  // Mark as read and navigate to notifications page
+                                  router.push("/notifications");
+                                  setShowNotifications(false);
+                                }}
+                              >
+                                <div className="flex items-start space-x-3">
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center space-x-2 mb-1">
+                                      <p className="text-sm font-semibold text-gray-900 truncate">
+                                        {notification.subject}
+                                      </p>
+                                      {!notification.isRead && (
+                                        <span className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0"></span>
+                                      )}
+                                    </div>
+                                    <p className="text-xs text-gray-600 line-clamp-2 mb-1">
+                                      {notification.message}
+                                    </p>
+                                    <p className="text-xs text-gray-400">
+                                      {new Date(notification.createdAt).toLocaleDateString("en-IN", {
+                                        month: "short",
+                                        day: "numeric",
+                                        hour: "2-digit",
+                                        minute: "2-digit",
+                                      })}
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      {userNotifications && userNotifications.notifications.length > 0 && (
+                        <div className="px-4 py-3 border-t border-gray-100">
+                          <button
+                            onClick={() => {
+                              router.push("/notifications");
+                              setShowNotifications(false);
+                            }}
+                            className="w-full text-center text-sm text-purple-600 hover:text-purple-700 font-medium"
+                          >
+                            View All Notifications
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
               )}
 
               {/* User Profile Button */}

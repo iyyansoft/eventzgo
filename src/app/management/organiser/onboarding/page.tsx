@@ -17,7 +17,7 @@ export default function OrganiserOnboardingPage() {
     businessName: "",
     businessType: "individual",
     description: "",
-    
+
     // Contact Details
     phone: "",
     alternatePhone: "",
@@ -25,18 +25,18 @@ export default function OrganiserOnboardingPage() {
     city: "",
     state: "",
     pincode: "",
-    
+
     // GST Details
     gstNumber: "",
     panNumber: "",
-    
+
     // Bank Details
     accountHolderName: "",
     accountNumber: "",
     ifscCode: "",
     bankName: "",
     branchName: "",
-    
+
     // Documents
     gstCertificate: null as File | null,
     panCard: null as File | null,
@@ -51,7 +51,7 @@ export default function OrganiserOnboardingPage() {
     try {
       // Upload documents to Cloudinary
       const documentUrls: any = {};
-      
+
       if (formData.gstCertificate) {
         const formDataUpload = new FormData();
         formDataUpload.append("file", formData.gstCertificate);
@@ -59,10 +59,15 @@ export default function OrganiserOnboardingPage() {
           method: "POST",
           body: formDataUpload,
         });
+
+        if (!response.ok) {
+          throw new Error(`Failed to upload GST certificate: ${response.statusText}`);
+        }
+
         const data = await response.json();
         documentUrls.gstCertificate = data.url;
       }
-      
+
       if (formData.panCard) {
         const formDataUpload = new FormData();
         formDataUpload.append("file", formData.panCard);
@@ -70,10 +75,15 @@ export default function OrganiserOnboardingPage() {
           method: "POST",
           body: formDataUpload,
         });
+
+        if (!response.ok) {
+          throw new Error(`Failed to upload PAN card: ${response.statusText}`);
+        }
+
         const data = await response.json();
         documentUrls.panCard = data.url;
       }
-      
+
       if (formData.cancelledCheque) {
         const formDataUpload = new FormData();
         formDataUpload.append("file", formData.cancelledCheque);
@@ -81,6 +91,11 @@ export default function OrganiserOnboardingPage() {
           method: "POST",
           body: formDataUpload,
         });
+
+        if (!response.ok) {
+          throw new Error(`Failed to upload cancelled cheque: ${response.statusText}`);
+        }
+
         const data = await response.json();
         documentUrls.cancelledCheque = data.url;
       }

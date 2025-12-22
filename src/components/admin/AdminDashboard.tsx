@@ -23,31 +23,32 @@ export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('overview');
 
   // Fetch data from Convex
-  const allUsers = useQuery(api.users.getAllUsers, {});
-  const allEvents = useQuery(api.events.getAllEvents, {});
+  const userStats = useQuery(api.adminQueries.getUserStats);
+  const eventStats = useQuery(api.adminQueries.getEventStats);
+  const analytics = useQuery(api.adminQueries.getAnalytics, {});
+  const eventsData = useQuery(api.adminQueries.getAllEvents, { limit: 10 });
   const pendingOrganisers = useQuery(api.organisers.getPendingOrganisers, {});
-  const allBookings = useQuery(api.bookings.getAllBookings, {});
-
-  const pendingUsers = allUsers?.filter(user => user.role === "organiser") || [];
-  const verifiedUsers = allUsers?.filter(user => (user as any).emailVerified) || [];
 
   // Calculate platform metrics
-  const totalRevenue = allBookings?.reduce((sum, booking) =>
-    sum + (booking.status === "confirmed" ? booking.totalAmount : 0), 0
-  ) || 0;
+  const totalRevenue = analytics?.overview.totalRevenue || 0;
 
-  const platformGrowthData = [
-    { month: 'Jan', users: 120, events: 45, revenue: 850000 },
-    { month: 'Feb', users: 180, events: 62, revenue: 1200000 },
-    { month: 'Mar', users: 240, events: 78, revenue: 1450000 },
-    { month: 'Apr', users: 320, events: 95, revenue: 1800000 },
-    { month: 'May', users: 450, events: 112, revenue: 2200000 },
-    { month: 'Jun', users: 580, events: 135, revenue: 2650000 },
-  ];
+  const platformGrowthData = analytics?.userGrowth.map(d => ({
+    month: new Date(d.date).toLocaleDateString('en-US', { month: 'short' }),
+    users: d.count,
+    events: 0, // Placeholder as analytics doesn't return this historical data yet
+    revenue: 0 // Placeholder
+  })) || [
+      { month: 'Jan', users: 120, events: 45, revenue: 850000 },
+      { month: 'Feb', users: 180, events: 62, revenue: 1200000 },
+      { month: 'Mar', users: 240, events: 78, revenue: 1450000 },
+      { month: 'Apr', users: 320, events: 95, revenue: 1800000 },
+      { month: 'May', users: 450, events: 112, revenue: 2200000 },
+      { month: 'Jun', users: 580, events: 135, revenue: 2650000 },
+    ];
 
   const userTypeDistribution = [
-    { name: 'Organisers', value: pendingUsers.length, color: '#3b82f6' },
-    { name: 'Attendees', value: allUsers?.filter(u => u.role === 'user').length || 0, color: '#10b981' },
+    { name: 'Organisers', value: userStats?.byRole.organiser || 0, color: '#3b82f6' },
+    { name: 'Attendees', value: userStats?.byRole.user || 0, color: '#10b981' },
   ];
 
   const systemMetricsData = [
@@ -60,7 +61,7 @@ export default function AdminDashboard() {
   const stats = [
     {
       title: 'Total Platform Users',
-      value: allUsers?.length || 0,
+      value: userStats?.total || 0,
       change: '+12% this month',
       icon: Users,
       color: 'bg-blue-500',
@@ -69,14 +70,14 @@ export default function AdminDashboard() {
     {
       title: 'Pending Verifications',
       value: pendingOrganisers?.length || 0,
-      change: '3 new today',
+      change: pendingOrganisers?.length ? `${pendingOrganisers.length} pending` : 'All caught up',
       icon: Clock,
       color: 'bg-yellow-500',
       trend: 'up'
     },
     {
       title: 'Platform Events',
-      value: allEvents?.length || 0,
+      value: eventStats?.total || 0,
       change: '+8% growth',
       icon: Calendar,
       color: 'bg-green-500',
@@ -289,7 +290,7 @@ export default function AdminDashboard() {
             <div>
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Platform Event Management</h3>
               <div className="space-y-4">
-                {allEvents?.map((event) => (
+                {eventsData?.events?.map((event) => (
                   <div key={event._id} className="p-4 bg-gray-50 rounded-xl">
                     <div className="flex items-center justify-between">
                       <div>
