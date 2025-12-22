@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "cross-env EXPERIMENTAL_TURBOPACK=0 npx convex codegen && next build",
+    "build": "cross-env EXPERIMENTAL_TURBOPACK=0 next build",
     "start": "next start",
     "lint": "cross-env ESLINT_USE_FLAT_CONFIG=false eslint .",
     "convex:dev": "convex dev",
