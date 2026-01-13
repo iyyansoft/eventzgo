@@ -50,7 +50,9 @@ export async function POST(request: NextRequest) {
       customerName,
       eventName: event.title,
       eventDate: new Date(event.dateTime.start).toLocaleString(),
-      eventVenue: `${event.venue.name}, ${event.venue.address}, ${event.venue.city}`,
+      eventVenue: typeof event.venue === 'string'
+        ? event.venue
+        : `${event.venue.name}, ${event.venue.address}, ${event.venue.city}`,
       tickets: booking.tickets.map((t) => ({
         name: t.ticketTypeName,
         quantity: t.quantity,

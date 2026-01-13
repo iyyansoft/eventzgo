@@ -81,7 +81,9 @@ export default function MyBookingsPage() {
         bookingNumber: booking.bookingNumber,
         eventName: booking.event.title,
         eventDate: booking.event.dateTime.start,
-        eventVenue: `${booking.event.venue.name}, ${booking.event.venue.address.city}, ${booking.event.venue.address.state}`,
+        eventVenue: typeof booking.event.venue === 'string'
+          ? booking.event.venue
+          : `${booking.event.venue.name}, ${booking.event.venue.city}, ${booking.event.venue.state}`,
         customerName: booking.guestDetails?.name || "Guest",
         customerEmail: booking.guestDetails?.email || "N/A",
         customerPhone: booking.guestDetails?.phone || "N/A",
@@ -211,7 +213,7 @@ export default function MyBookingsPage() {
                             <div>
                               <p className="text-sm text-gray-500">Venue</p>
                               <p className="font-medium text-gray-900">
-                                {booking.event.venue.name}
+                                {typeof booking.event.venue === 'string' ? booking.event.venue : booking.event.venue.name}
                               </p>
                             </div>
                           </div>

@@ -20,10 +20,41 @@ export default function EditEventPage({ params }: { params: Promise<{ eventId: s
   const handleSubmit = async (eventData: any) => {
     setIsSubmitting(true);
     try {
+      // 1. Construct Venue Object
+      const venue = {
+        name: eventData.venue || "",
+        address: eventData.address || "",
+        city: eventData.city || "",
+        state: eventData.state || "",
+        pincode: eventData.pincode || "",
+      };
+
+      // 2. Construct DateTime Object
+      let dateTime;
+      if (eventData.startDate && eventData.startTime && eventData.endDate && eventData.endTime) {
+        // Ensure proper date objects
+        const start = new Date(`${eventData.startDate}T${eventData.startTime}`).getTime();
+        const end = new Date(`${eventData.endDate}T${eventData.endTime}`).getTime();
+        dateTime = { start, end };
+      }
+
+      // 3. Prepare Update Payload (only include defined fields)
       await updateEvent({
         eventId: resolvedParams.eventId as Id<"events">,
-        ...eventData,
+        title: eventData.title,
+        description: eventData.description,
+        category: eventData.category,
+        bannerImage: eventData.coverImage, // Map coverImage to bannerImage
+        galleryImages: eventData.galleryImages,
+        venue,
+        dateTime,
+        ticketTypes: eventData.ticketTypes,
+        customFields: eventData.customFields,
+        cancellationPolicy: eventData.cancellationPolicy,
+        // Tags are not in the form yet, so we omit or pass existing if wired
+        tags: eventData.tags
       });
+
       router.push("/management/organiser/events");
     } catch (error) {
       console.error("Error updating event:", error);

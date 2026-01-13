@@ -1,17 +1,18 @@
 import React from "react";
-import { Payout } from "@/types";
 import { formatCurrency } from "@/lib/currency-utils";
 
 interface Props {
-  payout: Payout;
+  payout: any;
 }
 
 const PayoutManagement: React.FC<Props> = ({ payout }) => {
   return (
     <div className="p-6 flex items-center justify-between">
       <div>
-        <div className="text-sm text-gray-600">Event ID: {payout.eventId as any}</div>
-        <div className="font-semibold text-gray-900">Amount: {formatCurrency(payout.amount)}</div>
+        <div className="text-sm text-gray-600">Payout ID: {payout.payoutId}</div>
+        <div className="text-sm text-gray-600">Organiser: {payout.organiserName}</div>
+        <div className="text-sm text-gray-600">Event: {payout.eventTitle}</div>
+        <div className="font-semibold text-gray-900">Amount: {formatCurrency(payout.eligibleAmount)}</div>
         <div className="text-sm text-gray-500">Status: {payout.status}</div>
       </div>
       <div>

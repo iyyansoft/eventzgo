@@ -15,16 +15,17 @@ export default function ConditionalLayout({
     // Check if current route is a management or admin route
     const isManagementRoute = pathname?.startsWith("/management");
     const isAdminRoute = pathname?.startsWith("/admin");
+    const isVerifyRoute = pathname?.startsWith("/verify");
 
     return (
         <div className="flex min-h-screen flex-col">
             {/* Only show end-user Header on non-management and non-admin pages */}
-            {!isManagementRoute && !isAdminRoute && <Header />}
+            {!isManagementRoute && !isAdminRoute && !isVerifyRoute && <Header />}
 
             <main className="flex-1">{children}</main>
 
             {/* Only show end-user Footer on non-management and non-admin pages */}
-            {!isManagementRoute && !isAdminRoute && <Footer />}
+            {!isManagementRoute && !isAdminRoute && !isVerifyRoute && <Footer />}
         </div>
     );
 }

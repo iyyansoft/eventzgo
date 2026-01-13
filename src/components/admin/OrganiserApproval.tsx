@@ -9,7 +9,7 @@ import { Id } from "@/convex/_generated/dataModel";
 import { Building2, MapPin, FileText, CreditCard, CheckCircle, XCircle } from "lucide-react";
 
 interface OrganiserApprovalProps {
-  organiser: Organiser;
+  organiser: any;
 }
 
 export default function OrganiserApproval({ organiser }: OrganiserApprovalProps) {
@@ -23,7 +23,7 @@ export default function OrganiserApproval({ organiser }: OrganiserApprovalProps)
 
   const handleApprove = async () => {
     if (!user) return;
-    
+
     setIsProcessing(true);
     try {
       await approveOrganiser({

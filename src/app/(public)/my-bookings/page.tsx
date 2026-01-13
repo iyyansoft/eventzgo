@@ -152,7 +152,9 @@ export default function MyBookingsPage() {
                             <div>
                               <p className="text-sm text-gray-500">Venue</p>
                               <p className="font-medium text-gray-900">
-                                {booking.event.venue.name}
+                                {typeof booking.event.venue === 'string'
+                                  ? booking.event.venue
+                                  : booking.event.venue.name}
                               </p>
                             </div>
                           </div>

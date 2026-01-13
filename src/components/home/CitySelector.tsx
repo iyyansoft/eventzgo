@@ -85,7 +85,7 @@ const StateSelector = () => {
     return statesConfig.map((state) => ({
       ...state,
       events: allEvents.filter(
-        (event) => event.venue.state === state.name
+        (event) => typeof event.venue === 'object' && event.venue.state === state.name
       ).length,
     }));
   }, [allEvents]);

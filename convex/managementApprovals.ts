@@ -7,10 +7,10 @@ export const getPendingApprovals = query({
         category: v.optional(v.string()), // "all", "organiser", "vendor", "speaker", "sponsor"
     },
     handler: async (ctx, args) => {
-        // Fetch pending organisers
+        // Fetch organisers with accountStatus: pending_approval (onboarding submitted)
         const organisers = await ctx.db
             .query("organisers")
-            .withIndex("by_approval_status", (q) => q.eq("approvalStatus", "pending"))
+            .filter((q) => q.eq(q.field("accountStatus"), "pending_approval"))
             .collect();
 
         // Fetch pending vendors
@@ -32,17 +32,14 @@ export const getPendingApprovals = query({
             .collect();
 
         // Get user details for each pending approval
-        const organisersWithUsers = await Promise.all(
-            organisers.map(async (org) => {
-                const user = await ctx.db.get(org.userId);
-                return {
-                    ...org,
-                    category: "organiser" as const,
-                    userName: user ? `${user.firstName} ${user.lastName}` : "Unknown",
-                    userEmail: user?.email || "Unknown",
-                };
-            })
-        );
+        const organisersWithUsers = organisers.map((org) => {
+            return {
+                ...org,
+                category: "organiser" as const,
+                userName: org.contactPerson || org.institutionName || "Unknown",
+                userEmail: org.email || "Unknown",
+            };
+        });
 
         const vendorsWithUsers = await Promise.all(
             vendors.map(async (vendor) => {
@@ -110,7 +107,7 @@ export const getApprovalStats = query({
         const [organisers, vendors, speakers, sponsors] = await Promise.all([
             ctx.db
                 .query("organisers")
-                .withIndex("by_approval_status", (q) => q.eq("approvalStatus", "pending"))
+                .filter((q) => q.eq(q.field("accountStatus"), "pending_approval"))
                 .collect(),
             ctx.db
                 .query("vendors")
@@ -145,16 +142,20 @@ export const approveOrganiser = mutation({
         const organiser = await ctx.db.get(args.organiserId);
         if (!organiser) throw new Error("Organiser not found");
 
-        // Update organiser status
+        // Update organiser status to active
         await ctx.db.patch(args.organiserId, {
+            accountStatus: "active",
             approvalStatus: "approved",
             approvedAt: Date.now(),
+            isActive: true,
         });
 
-        // Update user role to organiser
-        await ctx.db.patch(organiser.userId, {
-            role: "organiser",
-        });
+        // Update user role to organiser (only if userId exists - for Clerk users)
+        if (organiser.userId) {
+            await ctx.db.patch(organiser.userId, {
+                role: "organiser",
+            });
+        }
 
         return { success: true };
     },
@@ -287,5 +288,57 @@ export const rejectSponsor = mutation({
         });
 
         return { success: true };
+    },
+});
+
+// Soft delete organiser (marks as deleted, keeps data, blocks access)
+export const deleteOrganiser = mutation({
+    args: {
+        organiserId: v.id("organisers"),
+    },
+    handler: async (ctx, args) => {
+        // Soft delete: mark as deleted instead of removing from database
+        await ctx.db.patch(args.organiserId, {
+            isDeleted: true,
+            deletedAt: Date.now(),
+            isActive: false,
+            accountStatus: "blocked", // Block access to organiser panel
+        });
+
+        return { success: true };
+    },
+});
+
+// Get all active/approved organisers (excluding deleted)
+export const getActiveOrganisers = query({
+    handler: async (ctx) => {
+        const organisers = await ctx.db
+            .query("organisers")
+            .filter((q) =>
+                q.and(
+                    q.eq(q.field("approvalStatus"), "approved"),
+                    q.or(
+                        q.eq(q.field("isDeleted"), false),
+                        q.eq(q.field("isDeleted"), undefined)
+                    )
+                )
+            )
+            .order("desc")
+            .collect();
+
+        return organisers;
+    },
+});
+
+// Get all deleted organisers
+export const getDeletedOrganisers = query({
+    handler: async (ctx) => {
+        const organisers = await ctx.db
+            .query("organisers")
+            .filter((q) => q.eq(q.field("isDeleted"), true))
+            .order("desc")
+            .collect();
+
+        return organisers;
     },
 });

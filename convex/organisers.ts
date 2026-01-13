@@ -160,6 +160,9 @@ export const updateOrganiser = mutation({
   args: {
     organiserId: v.id("organisers"),
     institutionName: v.optional(v.string()),
+    contactPerson: v.optional(v.string()),
+    email: v.optional(v.string()),
+    phone: v.optional(v.string()),
     address: v.optional(
       v.object({
         street: v.string(),
@@ -184,8 +187,11 @@ export const updateOrganiser = mutation({
       v.object({
         gstCertificate: v.optional(v.string()),
         panCard: v.optional(v.string()),
+        panCardFront: v.optional(v.string()),
+        panCardBack: v.optional(v.string()),
         cancelledCheque: v.optional(v.string()),
         bankStatement: v.optional(v.string()),
+        bankProofType: v.optional(v.union(v.literal('cheque'), v.literal('statement'))),
       })
     ),
   },
@@ -221,7 +227,7 @@ export const approveOrganiser = mutation({
 
     // Update user role to organiser
     const organiser = await ctx.db.get(args.organiserId);
-    if (organiser) {
+    if (organiser && organiser.userId) {
       await ctx.db.patch(organiser.userId, {
         role: "organiser",
         updatedAt: now,
@@ -286,10 +292,12 @@ export const manualApproveByClerkId = mutation({
     });
 
     // Update user role
-    await ctx.db.patch(organiser.userId, {
-      role: "organiser",
-      updatedAt: now,
-    });
+    if (organiser.userId) {
+      await ctx.db.patch(organiser.userId, {
+        role: "organiser",
+        updatedAt: now,
+      });
+    }
 
     return {
       success: true,
@@ -298,5 +306,48 @@ export const manualApproveByClerkId = mutation({
       clerkId: args.clerkId,
       message: "Organiser approved in Convex. Now update Clerk metadata with: role='organiser', status='approved', onboardingCompleted=true"
     };
+  },
+});
+
+/**
+ * Submit for Admin Approval
+ */
+export const submitForApproval = mutation({
+  args: { organiserId: v.id("organisers") },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.organiserId, {
+      accountStatus: "pending_approval",
+      approvalStatus: "pending",
+      updatedAt: Date.now()
+    });
+    return args.organiserId;
+  }
+});
+
+/**
+ * Update a specific document and trigger re-verification
+ */
+export const updateDocument = mutation({
+  args: {
+    organiserId: v.id("organisers"),
+    field: v.union(v.literal("gstCertificate"), v.literal("panCardFront"), v.literal("panCardBack"), v.literal("cancelledCheque"), v.literal("bankStatement")),
+    url: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const organiser = await ctx.db.get(args.organiserId);
+    if (!organiser) throw new Error("Organiser not found");
+
+    const documents = organiser.documents || {};
+    // @ts-ignore
+    documents[args.field] = args.url;
+
+    await ctx.db.patch(args.organiserId, {
+      documents: documents,
+      approvalStatus: "pending", // Re-trigger approval
+      accountStatus: "pending_approval", // Put under review
+      updatedAt: Date.now(),
+    });
+
+    return args.organiserId;
   },
 });

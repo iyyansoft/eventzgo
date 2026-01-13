@@ -2,6 +2,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 import { ConvexClientProvider } from "@/components/shared/ConvexClientProvider";
 import { LocationProvider } from "@/contexts/LocationContext";
 import ConditionalLayout from "@/components/shared/ConditionalLayout";
+import SessionProvider from "@/components/providers/SessionProvider";
 import "./globals.css";
 import type { Metadata } from "next";
 
@@ -19,11 +20,13 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="en" suppressHydrationWarning>
         <body suppressHydrationWarning>
-          <ConvexClientProvider>
-            <LocationProvider>
-              <ConditionalLayout>{children}</ConditionalLayout>
-            </LocationProvider>
-          </ConvexClientProvider>
+          <SessionProvider>
+            <ConvexClientProvider>
+              <LocationProvider>
+                <ConditionalLayout>{children}</ConditionalLayout>
+              </LocationProvider>
+            </ConvexClientProvider>
+          </SessionProvider>
         </body>
       </html>
     </ClerkProvider>

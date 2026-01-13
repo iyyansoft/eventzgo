@@ -26,7 +26,9 @@ export default function AllEventsPage() {
   const { states, categories } = useMemo(() => {
     if (!allEvents) return { states: [], categories: [] };
 
-    const uniqueStates = [...new Set(allEvents.map((e) => e.venue.state))].sort();
+    const uniqueStates = [...new Set(allEvents
+      .filter((e) => typeof e.venue !== 'string')
+      .map((e) => (e.venue as any).state))].sort();
     const uniqueCategories = [...new Set(allEvents.map((e) => e.category))].sort();
 
     return { states: uniqueStates, categories: uniqueCategories };
@@ -45,8 +47,9 @@ export default function AllEventsPage() {
         (event) =>
           event.title.toLowerCase().includes(query) ||
           event.description.toLowerCase().includes(query) ||
-          event.venue.city.toLowerCase().includes(query) ||
-          event.venue.state.toLowerCase().includes(query) ||
+          (typeof event.venue !== 'string' && event.venue.city.toLowerCase().includes(query)) ||
+          (typeof event.venue !== 'string' && event.venue.state.toLowerCase().includes(query)) ||
+          (typeof event.venue === 'string' && event.venue.toLowerCase().includes(query)) ||
           event.category.toLowerCase().includes(query) ||
           event.tags.some((tag) => tag.toLowerCase().includes(query))
       );
@@ -54,7 +57,7 @@ export default function AllEventsPage() {
 
     // State filter
     if (selectedState !== "all") {
-      filtered = filtered.filter((e) => e.venue.state === selectedState);
+      filtered = filtered.filter((e) => typeof e.venue !== 'string' && e.venue.state === selectedState);
     }
 
     // Category filter
@@ -189,7 +192,7 @@ export default function AllEventsPage() {
               >
                 <option value="all">All States ({allEvents.length})</option>
                 {states.map((state) => {
-                  const count = allEvents.filter((e) => e.venue.state === state).length;
+                  const count = allEvents.filter((e) => typeof e.venue !== 'string' && e.venue.state === state).length;
                   return (
                     <option key={state} value={state}>
                       {state} ({count})

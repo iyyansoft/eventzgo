@@ -1,10 +1,12 @@
 // src/components/management/OrganiserSidebar.tsx
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
-import { useUser, useClerk } from '@clerk/nextjs';
+import { useSession, signOut } from 'next-auth/react';
+import { useQuery } from 'convex/react';
+import { api } from '@/convex/_generated/api';
 import {
     LayoutDashboard,
     Calendar,
@@ -15,13 +17,30 @@ import {
     HelpCircle,
     Bell,
     CreditCard,
+    Ticket,
+    QrCode,
 } from 'lucide-react';
 
 export default function OrganiserSidebar() {
     const router = useRouter();
     const pathname = usePathname();
-    const { user } = useUser();
-    const { signOut } = useClerk();
+    const { data: session } = useSession();
+    const [organiserId, setOrganiserId] = useState<string | null>(null);
+
+    useEffect(() => {
+        const stored = localStorage.getItem("organiser_session");
+        if (stored) {
+            try {
+                const sessionData = JSON.parse(stored);
+                if (sessionData && sessionData.id) setOrganiserId(sessionData.id);
+            } catch (e) { }
+        }
+    }, []);
+
+    const organiserData = useQuery(
+        api.organisers.getOrganiserById,
+        organiserId ? { organiserId: organiserId as any } : "skip"
+    );
 
     const menuItems = [
         {
@@ -49,11 +68,24 @@ export default function OrganiserSidebar() {
             label: 'Payouts',
             path: '/management/organiser/payouts',
         },
+        {
+            icon: Ticket,
+            label: 'Coupons',
+            path: '/management/organiser/coupons',
+        },
+        {
+            icon: QrCode,
+            label: 'Staff Management',
+            path: '/management/organiser/staff',
+        },
     ];
 
     const handleLogout = async () => {
-        await signOut();
-        router.push('/management');
+        // Clear local storage session
+        localStorage.removeItem("organiser_session");
+
+        // Sign out from NextAuth and redirect to sign-in
+        await signOut({ callbackUrl: '/management/sign-in' });
     };
 
     return (
@@ -63,9 +95,9 @@ export default function OrganiserSidebar() {
                 <Image
                     src="/eventzgo_logo.png"
                     alt="EventzGo"
-                    width={60}
-                    height={60}
-                    className="h-12 w-auto cursor-pointer"
+                    width={150}
+                    height={40}
+                    className="cursor-pointer"
                     onClick={() => router.push('/management/organiser/dashboard')}
                 />
             </div>
@@ -73,24 +105,14 @@ export default function OrganiserSidebar() {
             {/* User Info */}
             <div className="p-6 border-b border-gray-200">
                 <div className="flex items-center space-x-3">
-                    <div className="bg-gradient-to-r from-blue-500 to-blue-600 w-12 h-12 rounded-xl flex items-center justify-center">
-                        {user?.imageUrl ? (
-                            <Image
-                                src={user.imageUrl}
-                                alt={user.firstName || 'User'}
-                                width={48}
-                                height={48}
-                                className="w-12 h-12 rounded-xl object-cover"
-                            />
-                        ) : (
-                            <span className="text-white font-bold text-lg">
-                                {user?.firstName?.charAt(0) || 'U'}
-                            </span>
-                        )}
+                    <div className="bg-gradient-to-r from-purple-500 to-pink-600 w-12 h-12 rounded-xl flex items-center justify-center">
+                        <span className="text-white font-bold text-lg">
+                            {(organiserData?.institutionName || session?.user?.name || session?.user?.username || 'O').charAt(0).toUpperCase()}
+                        </span>
                     </div>
                     <div className="flex-1 min-w-0">
                         <h3 className="font-semibold text-gray-900 truncate">
-                            {user?.firstName} {user?.lastName}
+                            {organiserData?.institutionName || session?.user?.name || session?.user?.username || 'Organiser'}
                         </h3>
                         <p className="text-sm text-gray-500">Organiser</p>
                     </div>
@@ -102,18 +124,32 @@ export default function OrganiserSidebar() {
                 {menuItems.map((item) => {
                     const Icon = item.icon;
                     const isActive = pathname === item.path;
+                    const isDashboard = item.path === '/management/organiser/dashboard';
+
+                    // Disable all items except Dashboard if not approved
+                    const isDisabled = !isDashboard &&
+                        (organiserData?.accountStatus === 'pending_setup' ||
+                            organiserData?.accountStatus === 'pending_approval' ||
+                            organiserData?.accountStatus === 'pending_verification');
 
                     return (
                         <button
                             key={item.path}
-                            onClick={() => router.push(item.path)}
-                            className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-left transition-all duration-200 ${isActive
+                            onClick={() => !isDisabled && router.push(item.path)}
+                            disabled={isDisabled}
+                            className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-left transition-all duration-200 ${isDisabled
+                                ? 'opacity-40 cursor-not-allowed blur-[0.5px] pointer-events-none'
+                                : isActive
                                     ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg'
                                     : 'text-gray-700 hover:bg-gray-100'
                                 }`}
                         >
                             <Icon
-                                className={`w-5 h-5 ${isActive ? 'text-white' : 'text-gray-500'
+                                className={`w-5 h-5 ${isDisabled
+                                    ? 'text-gray-400'
+                                    : isActive
+                                        ? 'text-white'
+                                        : 'text-gray-500'
                                     }`}
                             />
                             <span className="font-medium">{item.label}</span>
@@ -124,37 +160,60 @@ export default function OrganiserSidebar() {
 
             {/* Bottom Actions */}
             <div className="p-4 border-t border-gray-200 space-y-2">
-                <button
-                    onClick={() => router.push('/management/organiser/notifications')}
-                    className="w-full flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-xl transition-all duration-200"
-                >
-                    <Bell className="w-5 h-5 text-gray-500" />
-                    <span className="font-medium">Notifications</span>
-                </button>
+                {/* Check if organiser is approved */}
+                {(() => {
+                    const isNotApproved = organiserData?.accountStatus === 'pending_setup' ||
+                        organiserData?.accountStatus === 'pending_approval' ||
+                        organiserData?.accountStatus === 'pending_verification';
 
-                <button
-                    onClick={() => router.push('/management/organiser/settings')}
-                    className="w-full flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-xl transition-all duration-200"
-                >
-                    <Settings className="w-5 h-5 text-gray-500" />
-                    <span className="font-medium">Settings</span>
-                </button>
+                    return (
+                        <>
+                            <button
+                                onClick={() => !isNotApproved && router.push('/management/organiser/notifications')}
+                                disabled={isNotApproved}
+                                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-200 ${isNotApproved
+                                    ? 'opacity-40 cursor-not-allowed blur-[0.5px] pointer-events-none text-gray-400'
+                                    : 'text-gray-700 hover:bg-gray-100'
+                                    }`}
+                            >
+                                <Bell className="w-5 h-5" />
+                                <span className="font-medium">Notifications</span>
+                            </button>
 
-                <button
-                    onClick={() => router.push('/management/organiser/help')}
-                    className="w-full flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-xl transition-all duration-200"
-                >
-                    <HelpCircle className="w-5 h-5 text-gray-500" />
-                    <span className="font-medium">Help & Support</span>
-                </button>
+                            <button
+                                onClick={() => !isNotApproved && router.push('/management/organiser/settings')}
+                                disabled={isNotApproved}
+                                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-200 ${isNotApproved
+                                    ? 'opacity-40 cursor-not-allowed blur-[0.5px] pointer-events-none text-gray-400'
+                                    : 'text-gray-700 hover:bg-gray-100'
+                                    }`}
+                            >
+                                <Settings className="w-5 h-5" />
+                                <span className="font-medium">Settings</span>
+                            </button>
 
-                <button
-                    onClick={handleLogout}
-                    className="w-full flex items-center space-x-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-xl transition-all duration-200"
-                >
-                    <LogOut className="w-5 h-5" />
-                    <span className="font-medium">Sign Out</span>
-                </button>
+                            <button
+                                onClick={() => !isNotApproved && router.push('/management/organiser/help')}
+                                disabled={isNotApproved}
+                                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-200 ${isNotApproved
+                                    ? 'opacity-40 cursor-not-allowed blur-[0.5px] pointer-events-none text-gray-400'
+                                    : 'text-gray-700 hover:bg-gray-100'
+                                    }`}
+                            >
+                                <HelpCircle className="w-5 h-5" />
+                                <span className="font-medium">Help & Support</span>
+                            </button>
+
+                            <button
+                                onClick={handleLogout}
+                                className="w-full flex items-center space-x-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-xl transition-all duration-200"
+                            >
+                                <LogOut className="w-5 h-5" />
+                                <span className="font-medium">Sign Out</span>
+                            </button>
+                        </>
+                    );
+                })()}
             </div>
         </div>
     );

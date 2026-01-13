@@ -198,10 +198,10 @@ export default function ConfirmationPage(props: ConfirmationPageProps) {
                   <div>
                     <p className="text-sm text-gray-500">Venue</p>
                     <p className="font-semibold text-gray-900">
-                      {event.venue.name}
+                      {typeof event.venue === 'string' ? event.venue : event.venue.name}
                     </p>
                     <p className="text-sm text-gray-600">
-                      {event.venue.address}, {event.venue.city}
+                      {typeof event.venue === 'string' ? '' : `${event.venue.address}, ${event.venue.city}`}
                     </p>
                   </div>
                 </div>

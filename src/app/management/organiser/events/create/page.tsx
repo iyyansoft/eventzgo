@@ -4,18 +4,41 @@ import { useState } from "react";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useRouter } from "next/navigation";
-import { useUser } from "@clerk/nextjs";
+import { useSession } from "next-auth/react";
 import EventForm from "@/components/organiser/EventForm";
 
 export default function CreateEventPage() {
   const router = useRouter();
-  const { user } = useUser();
+  const { data: session } = useSession();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const createEvent = useMutation(api.events.createEvent);
 
   const handleSubmit = async (eventData: any) => {
     setIsSubmitting(true);
     try {
+      // Validate dates are not in the past
+      const startDateTime = new Date(`${eventData.startDate}T${eventData.startTime}`);
+      const endDateTime = new Date(`${eventData.endDate}T${eventData.endTime}`);
+      const now = new Date();
+
+      if (startDateTime < now) {
+        alert("❌ Cannot create events in the past! Please select a future date.");
+        setIsSubmitting(false);
+        return;
+      }
+
+      if (endDateTime < now) {
+        alert("❌ End date cannot be in the past! Please select a future date.");
+        setIsSubmitting(false);
+        return;
+      }
+
+      if (endDateTime <= startDateTime) {
+        alert("❌ End date must be after start date!");
+        setIsSubmitting(false);
+        return;
+      }
+
       // Transform form data to match Convex schema
       const transformedData = {
         title: eventData.title,
@@ -25,8 +48,8 @@ export default function CreateEventPage() {
 
         // Convert dates and times to timestamps
         dateTime: {
-          start: new Date(`${eventData.startDate}T${eventData.startTime}`).getTime(),
-          end: new Date(`${eventData.endDate}T${eventData.endTime}`).getTime(),
+          start: startDateTime.getTime(),
+          end: endDateTime.getTime(),
         },
 
         // Structure venue as object

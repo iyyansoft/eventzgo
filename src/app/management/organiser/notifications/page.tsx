@@ -2,25 +2,40 @@
 
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { useAuth } from "@clerk/nextjs";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function OrganiserNotificationsPage() {
-  const { userId } = useAuth();
+  const [organiserId, setOrganiserId] = useState<string | null>(null);
   const [filter, setFilter] = useState<"all" | "unread">("all");
+
+  useEffect(() => {
+    const stored = localStorage.getItem("organiser_session");
+    if (stored) {
+      try {
+        const session = JSON.parse(stored);
+        if (session && session.id) setOrganiserId(session.id);
+      } catch (e) { }
+    }
+  }, []);
+
+  const organiser = useQuery(
+    api.organisers.getOrganiserById,
+    organiserId ? { organiserId: organiserId as any } : "skip"
+  );
+
+  const userId = organiser?.userId;
 
   const notificationsData = useQuery(
     api.notifications.getUserNotifications,
-    userId ? { userId: userId as any } : "skip"
+    userId ? { userId: userId } : "skip"
   );
 
   const unreadCount = useQuery(
     api.notifications.getUserUnreadCount,
-    userId ? { userId: userId as any } : "skip"
+    userId ? { userId: userId } : "skip"
   );
 
   const markAsRead = useMutation(api.notifications.markAsRead);
-  const markAllAsRead = useMutation(api.notifications.markAllAsRead);
   const deleteNotification = useMutation(api.notifications.deleteNotification);
 
   if (!notificationsData) {
@@ -46,8 +61,9 @@ export default function OrganiserNotificationsPage() {
   };
 
   const handleMarkAllAsRead = async () => {
-    if (userId) {
-      await markAllAsRead();
+    if (userId && notifications.length > 0) {
+      const unread = notifications.filter(n => !n.isRead);
+      await Promise.all(unread.map(n => markAsRead({ notificationId: n._id })));
     }
   };
 

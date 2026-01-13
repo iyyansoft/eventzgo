@@ -235,7 +235,7 @@ export const getPendingOrganisers = query({
 
         const organisersWithUsers = await Promise.all(
             organisers.map(async (organiser) => {
-                const user = await ctx.db.get(organiser.userId);
+                const user = organiser.userId ? await ctx.db.get(organiser.userId) : null;
                 return {
                     ...organiser,
                     user: user
@@ -264,7 +264,7 @@ export const getAllOrganisers = query({
 
         const organisersWithUsers = await Promise.all(
             organisers.map(async (organiser) => {
-                const user = await ctx.db.get(organiser.userId);
+                const user = organiser.userId ? await ctx.db.get(organiser.userId) : null;
 
                 // Count events for this organiser
                 const events = await ctx.db
@@ -404,7 +404,7 @@ export const getOrganiserProfile = query({
             return null;
         }
 
-        const user = await ctx.db.get(organiser.userId);
+        const user = organiser.userId ? await ctx.db.get(organiser.userId) : null;
 
         // Count events
         const events = await ctx.db

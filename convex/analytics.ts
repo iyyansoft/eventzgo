@@ -258,7 +258,7 @@ export const getPlatformAnalytics = query({
 
     // State breakdown
     const stateStats = events.reduce((acc, event) => {
-      const state = event.venue.state;
+      const state = typeof event.venue === 'object' ? event.venue.state : 'Unknown';
       if (!acc[state]) {
         acc[state] = {
           events: 0,
@@ -302,20 +302,11 @@ export const getPlatformAnalytics = query({
 export const getOrganiserSalesData = query({
   args: {
     period: v.string(),
-    userId: v.id("users")
+    organiserId: v.id("organisers"),
   },
   handler: async (ctx, args) => {
-    // Get user from database
-    const user = await ctx.db.get(args.userId);
-    if (!user) {
-      return [];
-    }
-
-    // Get organiser profile
-    const organiser = await ctx.db
-      .query("organisers")
-      .withIndex("by_user_id", (q) => q.eq("userId", user._id))
-      .first();
+    // Get organiser profile to ensure it exists
+    const organiser = await ctx.db.get(args.organiserId);
 
     if (!organiser) {
       // Return empty data if not an organiser

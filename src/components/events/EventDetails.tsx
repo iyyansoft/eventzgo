@@ -22,7 +22,7 @@ interface Event {
   category: string;
   tags: string[];
   bannerImage: string;
-  venue: {
+  venue: string | {
     name: string;
     address: string;
     city: string;
@@ -106,14 +106,20 @@ const EventDetails: React.FC<EventDetailsProps> = ({ event }) => {
     const gstPercentage = 18;
 
     const platformFeeAmount = (subtotal * platformFeePercentage) / 100;
-    const baseWithFee = subtotal + platformFeeAmount;
-    const gstAmount = (baseWithFee * gstPercentage) / 100;
-    const grandTotal = baseWithFee + gstAmount;
+
+    // GST Calculation (18%)
+    const ticketGst = (subtotal * gstPercentage) / 100;
+    const platformFeeGst = (platformFeeAmount * gstPercentage) / 100;
+    const totalGst = ticketGst + platformFeeGst;
+
+    const grandTotal = subtotal + ticketGst + platformFeeAmount + platformFeeGst;
 
     return {
       subtotal,
       platformFeeAmount,
-      gstAmount,
+      ticketGst,
+      platformFeeGst,
+      gstAmount: totalGst,
       grandTotal,
     };
   };
@@ -203,11 +209,10 @@ const EventDetails: React.FC<EventDetailsProps> = ({ event }) => {
             <div className="flex items-center space-x-3">
               <button
                 onClick={() => setIsLiked(!isLiked)}
-                className={`p-3 rounded-full backdrop-blur-sm transition-all ${
-                  isLiked
-                    ? "bg-red-500 text-white"
-                    : "bg-black/30 text-white hover:bg-black/50"
-                }`}
+                className={`p-3 rounded-full backdrop-blur-sm transition-all ${isLiked
+                  ? "bg-red-500 text-white"
+                  : "bg-black/30 text-white hover:bg-black/50"
+                  }`}
               >
                 <Heart className={`w-5 h-5 ${isLiked ? "fill-current" : ""}`} />
               </button>
@@ -245,7 +250,7 @@ const EventDetails: React.FC<EventDetailsProps> = ({ event }) => {
               <div className="flex items-center space-x-2">
                 <MapPin className="w-5 h-5" />
                 <span>
-                  {event.venue.city}, {event.venue.state}
+                  {typeof event.venue === 'string' ? event.venue : `${event.venue.city}, ${event.venue.state}`}
                 </span>
               </div>
             </div>
@@ -293,13 +298,17 @@ const EventDetails: React.FC<EventDetailsProps> = ({ event }) => {
                   <MapPin className="w-6 h-6 text-purple-600 mt-1" />
                   <div>
                     <p className="font-semibold text-gray-900">Venue</p>
-                    <p className="text-gray-600">{event.venue.name}</p>
-                    <p className="text-gray-600">
-                      {event.venue.address}, {event.venue.city}
-                    </p>
-                    <p className="text-gray-600">
-                      {event.venue.state} - {event.venue.pincode}
-                    </p>
+                    <p className="text-gray-600">{typeof event.venue === 'string' ? event.venue : event.venue.name}</p>
+                    {typeof event.venue !== 'string' && (
+                      <>
+                        <p className="text-gray-600">
+                          {event.venue.address}, {event.venue.city}
+                        </p>
+                        <p className="text-gray-600">
+                          {event.venue.state} - {event.venue.pincode}
+                        </p>
+                      </>
+                    )}
                   </div>
                 </div>
 
@@ -390,15 +399,21 @@ const EventDetails: React.FC<EventDetailsProps> = ({ event }) => {
                       </span>
                     </div>
                     <div className="flex justify-between">
+                      <span className="text-gray-600">Ticket GST (18%)</span>
+                      <span className="font-medium text-gray-900">
+                        ₹{pricing.ticketGst.toLocaleString("en-IN")}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
                       <span className="text-gray-600">Platform Fee (5%)</span>
                       <span className="font-medium text-gray-900">
                         ₹{pricing.platformFeeAmount.toLocaleString("en-IN")}
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">GST (18%)</span>
+                      <span className="text-gray-600">Platform GST (18%)</span>
                       <span className="font-medium text-gray-900">
-                        ₹{pricing.gstAmount.toLocaleString("en-IN")}
+                        ₹{pricing.platformFeeGst.toLocaleString("en-IN")}
                       </span>
                     </div>
                   </div>

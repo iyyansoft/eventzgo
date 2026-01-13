@@ -39,11 +39,11 @@ export default function EditEventPage() {
             endTime: endDate.toTimeString().slice(0, 5),
 
             // Venue details
-            venue: event.venue.name,
-            address: event.venue.address,
-            city: event.venue.city,
-            state: event.venue.state,
-            pincode: event.venue.pincode,
+            venue: typeof event.venue === 'string' ? event.venue : event.venue.name,
+            address: typeof event.venue === 'string' ? '' : event.venue.address,
+            city: typeof event.venue === 'string' ? '' : event.venue.city,
+            state: typeof event.venue === 'string' ? '' : event.venue.state,
+            pincode: typeof event.venue === 'string' ? '' : event.venue.pincode,
 
             // Ticket types (remove 'sold' field for editing)
             ticketTypes: event.ticketTypes.map(({ sold, ...ticket }) => ticket),

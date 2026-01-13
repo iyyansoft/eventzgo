@@ -2,26 +2,33 @@
 
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { useUser } from "@clerk/nextjs";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import BankDetailsForm from "@/components/organiser/BankDetailsForm";
 import DocumentUpload from "@/components/organiser/DocumentUpload";
 
 export default function OrganiserSettingsPage() {
-  const { user } = useUser();
+  const [userId, setUserId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const stored = localStorage.getItem("organiser_session");
+    if (stored) {
+      try {
+        const user = JSON.parse(stored);
+        if (user && user.id) setUserId(user.id);
+      } catch (e) { }
+    }
+  }, []);
+
   const [activeTab, setActiveTab] = useState<"profile" | "bank" | "documents">("profile");
-  
-  const userData = useQuery(api.users.getUserByClerkId, 
-    user?.id ? { clerkId: user.id } : "skip"
-  );
-  
-  const organiser = useQuery(api.organisers.getOrganiserByClerkId,
-    user?.id ? { clerkId: user.id } : "skip"
+
+  const organiser = useQuery(
+    api.organisers.getOrganiserById,
+    userId ? { organiserId: userId as any } : "skip"
   );
 
   const updateOrganiser = useMutation(api.organisers.updateOrganiser);
 
-  if (!userData || !organiser) {
+  if (!organiser) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
@@ -51,31 +58,28 @@ export default function OrganiserSettingsPage() {
       <div className="bg-white rounded-xl shadow-sm p-2 flex space-x-2">
         <button
           onClick={() => setActiveTab("profile")}
-          className={`flex-1 px-6 py-3 rounded-lg font-medium transition ${
-            activeTab === "profile"
-              ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white"
-              : "text-gray-600 hover:bg-gray-100"
-          }`}
+          className={`flex-1 px-6 py-3 rounded-lg font-medium transition ${activeTab === "profile"
+            ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white"
+            : "text-gray-600 hover:bg-gray-100"
+            }`}
         >
           Profile
         </button>
         <button
           onClick={() => setActiveTab("bank")}
-          className={`flex-1 px-6 py-3 rounded-lg font-medium transition ${
-            activeTab === "bank"
-              ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white"
-              : "text-gray-600 hover:bg-gray-100"
-          }`}
+          className={`flex-1 px-6 py-3 rounded-lg font-medium transition ${activeTab === "bank"
+            ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white"
+            : "text-gray-600 hover:bg-gray-100"
+            }`}
         >
           Bank Details
         </button>
         <button
           onClick={() => setActiveTab("documents")}
-          className={`flex-1 px-6 py-3 rounded-lg font-medium transition ${
-            activeTab === "documents"
-              ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white"
-              : "text-gray-600 hover:bg-gray-100"
-          }`}
+          className={`flex-1 px-6 py-3 rounded-lg font-medium transition ${activeTab === "documents"
+            ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white"
+            : "text-gray-600 hover:bg-gray-100"
+            }`}
         >
           Documents
         </button>
@@ -86,7 +90,7 @@ export default function OrganiserSettingsPage() {
         {activeTab === "profile" && (
           <div className="space-y-6">
             <h2 className="text-2xl font-bold text-gray-900 mb-6">Business Profile</h2>
-            
+
             <div className="grid md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -172,7 +176,7 @@ export default function OrganiserSettingsPage() {
         )}
 
         {activeTab === "bank" && (
-          <BankDetailsForm 
+          <BankDetailsForm
             initialData={organiser.bankDetails}
             organiserId={organiser._id}
           />

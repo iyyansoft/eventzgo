@@ -81,6 +81,16 @@ export default function CheckoutPage(props: CheckoutPageProps) {
     if (data) {
       const parsed = JSON.parse(data);
       console.log("Loaded booking data:", parsed);
+
+      // Patch for legacy data: Calculate split GST if missing
+      if (parsed.pricing && parsed.pricing.ticketGst === undefined) {
+        // Default 18% GST if not pre-calculated
+        const subtotal = parsed.pricing.subtotal || 0;
+        const platformFee = parsed.pricing.platformFeeAmount || 0;
+        parsed.pricing.ticketGst = (subtotal * 18) / 100;
+        parsed.pricing.platformFeeGst = (platformFee * 18) / 100;
+      }
+
       setBookingData(parsed);
     } else {
       console.error("No booking data found");
@@ -213,7 +223,13 @@ export default function CheckoutPage(props: CheckoutPageProps) {
       });
 
       if (!orderResponse.ok) {
-        throw new Error("Failed to create Razorpay order");
+        const errorData = await orderResponse.json().catch(() => ({ error: "Unknown error" }));
+        console.error("❌ Razorpay order creation failed:", {
+          status: orderResponse.status,
+          statusText: orderResponse.statusText,
+          error: errorData,
+        });
+        throw new Error(`Failed to create Razorpay order: ${errorData.error || errorData.message || orderResponse.statusText}`);
       }
 
       const orderData = await orderResponse.json();
@@ -329,6 +345,8 @@ export default function CheckoutPage(props: CheckoutPageProps) {
                 gst: Number(bookingData.pricing.gstAmount),
                 platformFee: Number(bookingData.pricing.platformFeeAmount),
                 total: Number(bookingData.pricing.grandTotal),
+                ticketGst: Number(bookingData.pricing.ticketGst),
+                platformFeeGst: Number(bookingData.pricing.platformFeeGst),
               },
               paymentId,
               customFieldResponses,
@@ -450,7 +468,9 @@ export default function CheckoutPage(props: CheckoutPageProps) {
                         <div className="flex items-center space-x-2">
                           <MapPin className="w-4 h-4" />
                           <span>
-                            {event.venue.name}, {event.venue.city}
+                            {typeof event.venue === 'string'
+                              ? event.venue
+                              : `${event.venue.name}, ${event.venue.city}`}
                           </span>
                         </div>
                       </div>
@@ -722,7 +742,14 @@ export default function CheckoutPage(props: CheckoutPageProps) {
                 )}
 
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Convenience Fee</span>
+                  <span className="text-gray-600">Ticket GST (18%)</span>
+                  <span className="font-medium text-gray-900">
+                    ₹{bookingData.pricing.ticketGst.toLocaleString("en-IN")}
+                  </span>
+                </div>
+
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Platform Fee</span>
                   <span className="font-medium text-gray-900">
                     ₹
                     {bookingData.pricing.platformFeeAmount.toLocaleString(
@@ -732,9 +759,9 @@ export default function CheckoutPage(props: CheckoutPageProps) {
                 </div>
 
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">GST (18%)</span>
+                  <span className="text-gray-600">Platform GST (18%)</span>
                   <span className="font-medium text-gray-900">
-                    ₹{bookingData.pricing.gstAmount.toLocaleString("en-IN")}
+                    ₹{bookingData.pricing.platformFeeGst.toLocaleString("en-IN")}
                   </span>
                 </div>
               </div>

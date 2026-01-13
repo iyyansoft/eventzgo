@@ -19,6 +19,7 @@ import {
   Mail,
   Phone,
   Hash,
+  Shield,
 } from "lucide-react";
 
 interface EventFormProps {
@@ -63,6 +64,12 @@ interface EventFormData {
   coverImage: string;
   galleryImages: string[];
   customFields: CustomField[];
+  cancellationPolicy: {
+    isCancellable: boolean;
+    refundPercentage: number;
+    deadlineHoursBeforeStart: number;
+    description: string;
+  };
 }
 
 const EventForm: React.FC<EventFormProps> = ({
@@ -72,36 +79,62 @@ const EventForm: React.FC<EventFormProps> = ({
   isEditing,
 }) => {
   const [currentStep, setCurrentStep] = useState(1);
-  const [formData, setFormData] = useState<EventFormData>({
-    // Basic Info
-    title: initialData?.title || "",
-    description: initialData?.description || "",
-    category: initialData?.category || "",
+  const [formData, setFormData] = useState<EventFormData>(() => {
+    const d = initialData || {};
+    const venueObj = typeof d.venue === 'object' ? d.venue : null;
+    const venueName = typeof d.venue === 'string' ? d.venue : venueObj?.name || "";
 
-    // Date & Time
-    startDate: initialData?.startDate || "",
-    endDate: initialData?.endDate || "",
-    startTime: initialData?.startTime || "",
-    endTime: initialData?.endTime || "",
+    const formatDate = (ts?: number) => {
+      if (!ts) return "";
+      const date = new Date(ts);
+      return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    };
 
-    // Location
-    venue: initialData?.venue || "",
-    address: initialData?.address || "",
-    city: initialData?.city || "",
-    state: initialData?.state || "",
-    pincode: initialData?.pincode || "",
+    const formatTime = (ts?: number) => {
+      if (!ts) return "";
+      const date = new Date(ts);
+      return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+    };
 
-    // Tickets
-    ticketTypes: initialData?.ticketTypes || [
-      { name: "General Admission", price: 0, quantity: 100, description: "" }
-    ],
+    return {
+      // Basic Info
+      title: d.title || "",
+      description: d.description || "",
+      category: d.category || "",
 
-    // Media
-    coverImage: initialData?.coverImage || "",
-    galleryImages: initialData?.galleryImages || [],
+      // Date & Time
+      startDate: formatDate(d.dateTime?.start) || d.startDate || "",
+      endDate: formatDate(d.dateTime?.end) || d.endDate || "",
+      startTime: formatTime(d.dateTime?.start) || d.startTime || "",
+      endTime: formatTime(d.dateTime?.end) || d.endTime || "",
 
-    // Custom Registration Form
-    customFields: initialData?.customFields || [],
+      // Location
+      venue: venueName,
+      address: venueObj?.address || d.address || "",
+      city: venueObj?.city || d.city || "",
+      state: venueObj?.state || d.state || "",
+      pincode: venueObj?.pincode || d.pincode || "",
+
+      // Tickets
+      ticketTypes: d.ticketTypes || [
+        { name: "General Admission", price: 0, quantity: 100, description: "" }
+      ],
+
+      // Media
+      coverImage: d.bannerImage || d.coverImage || "",
+      galleryImages: d.galleryImages || [],
+
+      // Custom Registration Form
+      customFields: d.customFields || [],
+
+      // Policies
+      cancellationPolicy: d.cancellationPolicy || {
+        isCancellable: false,
+        refundPercentage: 0,
+        deadlineHoursBeforeStart: 24,
+        description: ""
+      },
+    };
   });
 
   const [customFields, setCustomFields] = useState<CustomField[]>(
@@ -230,7 +263,8 @@ const EventForm: React.FC<EventFormProps> = ({
     { number: 2, title: "Date & Location", icon: MapPin },
     { number: 3, title: "Tickets", icon: IndianRupee },
     { number: 4, title: "Media", icon: ImageIcon },
-    { number: 5, title: "Registration Form", icon: List },
+    { number: 5, title: "Registration", icon: List },
+    { number: 6, title: "Policies", icon: Shield },
   ];
 
   return (
@@ -773,6 +807,99 @@ const EventForm: React.FC<EventFormProps> = ({
               </p>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Step 6: Policies */}
+      {currentStep === 6 && (
+        <div className="space-y-6">
+          <h2 className="text-2xl font-bold text-gray-900">Cancellation & Refund Policy</h2>
+
+          <div className="bg-white border border-gray-200 rounded-lg p-6">
+            <div className="flex items-center gap-3 mb-6">
+              <input
+                type="checkbox"
+                id="isCancellable"
+                checked={formData.cancellationPolicy.isCancellable}
+                onChange={(e) => setFormData({
+                  ...formData,
+                  cancellationPolicy: { ...formData.cancellationPolicy, isCancellable: e.target.checked }
+                })}
+                className="w-5 h-5 text-purple-600 border-gray-300 rounded focus:ring-purple-600"
+              />
+              <label htmlFor="isCancellable" className="text-lg font-medium text-gray-900 cursor-pointer">
+                Allow Ticket Cancellation
+              </label>
+            </div>
+
+            {formData.cancellationPolicy.isCancellable && (
+              <div className="space-y-6 pl-8 border-l-2 border-gray-100 ml-2 animate-in fade-in slide-in-from-top-2 duration-200">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Refund Percentage (%)
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        value={formData.cancellationPolicy.refundPercentage}
+                        onChange={(e) => setFormData({
+                          ...formData,
+                          cancellationPolicy: { ...formData.cancellationPolicy, refundPercentage: Number(e.target.value) }
+                        })}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent"
+                      />
+                      <span className="absolute right-4 top-3 text-gray-500">%</span>
+                    </div>
+                    <p className="mt-1 text-xs text-gray-500">
+                      Amount refunded to the user (excluding platform fees).
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Cancellation Deadline (Hours)
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={formData.cancellationPolicy.deadlineHoursBeforeStart}
+                      onChange={(e) => setFormData({
+                        ...formData,
+                        cancellationPolicy: { ...formData.cancellationPolicy, deadlineHoursBeforeStart: Number(e.target.value) }
+                      })}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent"
+                    />
+                    <p className="mt-1 text-xs text-gray-500">
+                      Hours before the event start time after which cancellation is not allowed.
+                    </p>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Policy Description
+                  </label>
+                  <textarea
+                    rows={4}
+                    value={formData.cancellationPolicy.description || ""}
+                    onChange={(e) => setFormData({
+                      ...formData,
+                      cancellationPolicy: { ...formData.cancellationPolicy, description: e.target.value }
+                    })}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent"
+                    placeholder="e.g. Full refund if cancelled 48 hours before the event. No refund after that."
+                  />
+                </div>
+              </div>
+            )}
+
+            {!formData.cancellationPolicy.isCancellable && (
+              <p className="text-gray-500 text-sm mt-2 ml-8">Ticketing will be strictly non-refundable.</p>
+            )}
+          </div>
         </div>
       )}
 

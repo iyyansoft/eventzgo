@@ -295,7 +295,7 @@ export default function AdminDashboard() {
                     <div className="flex items-center justify-between">
                       <div>
                         <h4 className="font-semibold text-gray-900">{event.title}</h4>
-                        <p className="text-gray-600 text-sm">{event.venue.city}</p>
+                        <p className="text-gray-600 text-sm">{typeof event.venue === 'string' ? event.venue : event.venue.city}</p>
                       </div>
                       <span className={`px-3 py-1 rounded-full text-xs font-medium ${(event as any).approvalStatus === 'approved' ? 'bg-green-100 text-green-800' :
                         (event as any).approvalStatus === 'pending' ? 'bg-yellow-100 text-yellow-800' :

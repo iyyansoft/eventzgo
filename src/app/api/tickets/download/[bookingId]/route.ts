@@ -13,6 +13,7 @@ export async function GET(
     const bookingId = resolvedParams.bookingId as Id<"bookings">;
 
     // Fetch booking from Convex
+    // @ts-ignore
     const booking = await fetchQuery(api.bookings.getBookingById, {
       bookingId,
     });
@@ -25,6 +26,7 @@ export async function GET(
     }
 
     // Fetch event details
+    // @ts-ignore
     const event = await fetchQuery(api.events.getEventById, {
       eventId: booking.eventId,
     });
@@ -46,7 +48,9 @@ export async function GET(
       bookingNumber: booking.bookingNumber,
       eventName: event.title,
       eventDate: event.dateTime.start,
-      eventVenue: `${event.venue.name}, ${event.venue.address}, ${event.venue.city}`,
+      eventVenue: typeof event.venue === 'string'
+        ? event.venue
+        : `${event.venue.name}, ${event.venue.address}, ${event.venue.city}`,
       customerName,
       customerEmail,
       customerPhone,

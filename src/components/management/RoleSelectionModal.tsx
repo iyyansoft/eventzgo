@@ -1,3 +1,5 @@
+"use client";
+
 import React from 'react';
 import { X, Building, Briefcase, Mic, DollarSign, ArrowRight } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -55,7 +57,14 @@ const RoleSelectionModal: React.FC<RoleSelectionModalProps> = ({
     ];
 
     const handleSignUp = (roleId: 'organizer' | 'vendor' | 'speaker' | 'sponsor') => {
-        onRoleSelected(roleId);
+        const roleMap = {
+            organizer: "organiser",
+            vendor: "vendor",
+            speaker: "speaker",
+            sponsor: "sponsor",
+        };
+        const schemaRole = roleMap[roleId];
+        router.push(`/management/sign-up?role=${schemaRole}`);
         onClose();
     };
 

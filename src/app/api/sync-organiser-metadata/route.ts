@@ -18,6 +18,7 @@ export async function POST(req: Request) {
         }
 
         // Get organiser status from Convex
+        // @ts-ignore
         const organiserStatus = await convex.query(api.management.getOrganiserStatus, {
             clerkId
         });

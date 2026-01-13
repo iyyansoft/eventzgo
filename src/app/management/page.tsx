@@ -1,10 +1,10 @@
-// src/app/management/page.tsx - YOUR UI with Clerk integration
+// src/app/management/page.tsx - Management landing with NextAuth
 "use client";
 
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useUser } from "@clerk/nextjs";
+import { useSession } from "next-auth/react";
 import {
     ChevronLeft,
     ChevronRight,
@@ -24,29 +24,26 @@ import ManagementFooter from "@/components/management/ManagementFooter";
 
 export default function ManagementLanding() {
     const router = useRouter();
-    const { user, isLoaded } = useUser();
+    const { data: session, status } = useSession();
     const [currentSlide, setCurrentSlide] = useState(0);
 
     // Redirect authenticated users to their dashboard
     useEffect(() => {
-        if (isLoaded && user) {
-            const role = user.publicMetadata?.role as string;
+        if (status === "authenticated" && session?.user) {
+            const role = session.user.role;
             if (role === "admin") {
                 router.push("/admin/dashboard");
             } else if (role === "organiser") {
-                const onboardingCompleted = user.publicMetadata?.onboardingCompleted;
-                const status = user.publicMetadata?.status;
+                const accountStatus = session.user.accountStatus;
 
-                if (!onboardingCompleted) {
-                    router.push("/management/onboarding");
-                } else if (status === "pending") {
+                if (accountStatus === "pending_approval") {
                     router.push("/management/pending-approval");
-                } else if (status === "approved") {
+                } else if (accountStatus === "active" || accountStatus === "approved") {
                     router.push("/management/organiser/dashboard");
                 }
             }
         }
-    }, [isLoaded, user, router]);
+    }, [status, session, router]);
 
     const featuredManagementItems = [
         {
@@ -144,7 +141,7 @@ export default function ManagementLanding() {
 
     const handleGetStarted = () => {
         // If not authenticated, scroll to features
-        if (!user) {
+        if (!session) {
             const featuresSection = document.querySelector("#features-section");
             if (featuresSection) {
                 featuresSection.scrollIntoView({ behavior: "smooth" });

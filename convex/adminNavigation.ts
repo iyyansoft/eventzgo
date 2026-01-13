@@ -161,3 +161,30 @@ export const addNotificationsItem = mutation({
         return { success: true, message: "Notifications item added successfully" };
     },
 });
+
+// Mutation to add Organisers navigation item
+export const addOrganisersItem = mutation({
+    args: {},
+    handler: async (ctx) => {
+        // Check if it already exists
+        const existing = await ctx.db
+            .query("adminNavigation")
+            .filter((q) => q.eq(q.field("path"), "/admin/organisers"))
+            .first();
+
+        if (existing) {
+            return { success: false, message: "Organisers item already exists" };
+        }
+
+        await ctx.db.insert("adminNavigation", {
+            label: "Organisers",
+            path: "/admin/organisers",
+            icon: "Building2",
+            order: 2.6, // Between Management Approval and Notifications
+            category: "main",
+            isActive: true,
+        });
+
+        return { success: true, message: "Organisers item added successfully" };
+    },
+});

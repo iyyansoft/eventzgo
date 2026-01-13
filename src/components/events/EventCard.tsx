@@ -11,7 +11,7 @@ interface Event {
   title: string;
   category: string;
   bannerImage: string;
-  venue: {
+  venue: string | {
     name: string;
     city: string;
     state: string;
@@ -89,9 +89,16 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
 
+        {/* Completed Badge */}
+        {Date.now() > event.dateTime.end && (
+          <div className="absolute top-3 left-3 bg-gray-900/90 text-white text-xs font-semibold px-3 py-1 rounded-full z-10">
+            Completed
+          </div>
+        )}
+
         {/* Featured Badge */}
         {event.isFeatured && (
-          <div className="absolute top-3 left-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs font-semibold px-3 py-1 rounded-full">
+          <div className={`absolute left-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs font-semibold px-3 py-1 rounded-full ${Date.now() > event.dateTime.end ? 'top-10' : 'top-3'}`}>
             Featured
           </div>
         )}
@@ -127,7 +134,7 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
           <div className="flex items-center space-x-2 text-gray-600">
             <MapPin className="w-4 h-4" />
             <span className="text-sm">
-              {event.venue.name}, {event.venue.city}
+              {typeof event.venue === 'string' ? event.venue : `${event.venue.name}, ${event.venue.city}`}
             </span>
           </div>
         </div>
@@ -141,10 +148,14 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
           </div>
 
           <button
-            onClick={handleBookNow}
-            className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-2 rounded-lg font-semibold hover:from-purple-700 hover:to-pink-700 transform hover:scale-105 transition-all duration-200"
+            onClick={Date.now() > event.dateTime.end ? undefined : handleBookNow}
+            disabled={Date.now() > event.dateTime.end}
+            className={`px-6 py-2 rounded-lg font-semibold transition-all duration-200 ${Date.now() > event.dateTime.end
+              ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+              : "bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 transform hover:scale-105"
+              }`}
           >
-            Book Now
+            {Date.now() > event.dateTime.end ? "Event Ended" : "Book Now"}
           </button>
         </div>
       </div>

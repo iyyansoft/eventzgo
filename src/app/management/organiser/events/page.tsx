@@ -2,14 +2,34 @@
 
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import EventsTable from "@/components/organiser/EventsTable";
 import { useRouter } from "next/navigation";
 
 export default function OrganiserEventsPage() {
   const router = useRouter();
   const [filter, setFilter] = useState<"all" | "active" | "draft" | "past">("all");
-  const allEvents = useQuery(api.events.getOrganiserEvents, { limit: 100 });
+  const [userId, setUserId] = useState<string | null>(null);
+
+  // Retrieve userId from local session
+  useEffect(() => {
+    const stored = localStorage.getItem("organiser_session");
+    if (stored) {
+      try {
+        const user = JSON.parse(stored);
+        if (user && user.id) {
+          setUserId(user.id);
+        }
+      } catch (e) {
+        // ignore
+      }
+    }
+  }, []);
+
+  const allEvents = useQuery(
+    api.events.getOrganiserEvents,
+    userId ? { organiserId: userId as any, limit: 100 } : "skip"
+  );
 
   if (!allEvents) {
     return (
@@ -53,41 +73,37 @@ export default function OrganiserEventsPage() {
         <div className="flex items-center space-x-4">
           <button
             onClick={() => setFilter("all")}
-            className={`px-4 py-2 rounded-lg font-medium transition ${
-              filter === "all"
-                ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white"
-                : "text-gray-600 hover:bg-gray-100"
-            }`}
+            className={`px-4 py-2 rounded-lg font-medium transition ${filter === "all"
+              ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white"
+              : "text-gray-600 hover:bg-gray-100"
+              }`}
           >
             All Events
           </button>
           <button
             onClick={() => setFilter("active")}
-            className={`px-4 py-2 rounded-lg font-medium transition ${
-              filter === "active"
-                ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white"
-                : "text-gray-600 hover:bg-gray-100"
-            }`}
+            className={`px-4 py-2 rounded-lg font-medium transition ${filter === "active"
+              ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white"
+              : "text-gray-600 hover:bg-gray-100"
+              }`}
           >
             Active
           </button>
           <button
             onClick={() => setFilter("draft")}
-            className={`px-4 py-2 rounded-lg font-medium transition ${
-              filter === "draft"
-                ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white"
-                : "text-gray-600 hover:bg-gray-100"
-            }`}
+            className={`px-4 py-2 rounded-lg font-medium transition ${filter === "draft"
+              ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white"
+              : "text-gray-600 hover:bg-gray-100"
+              }`}
           >
             Draft
           </button>
           <button
             onClick={() => setFilter("past")}
-            className={`px-4 py-2 rounded-lg font-medium transition ${
-              filter === "past"
-                ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white"
-                : "text-gray-600 hover:bg-gray-100"
-            }`}
+            className={`px-4 py-2 rounded-lg font-medium transition ${filter === "past"
+              ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white"
+              : "text-gray-600 hover:bg-gray-100"
+              }`}
           >
             Past
           </button>
@@ -128,7 +144,7 @@ export default function OrganiserEventsPage() {
 
           return <EventsTable events={events} />;
         })()}
-        
+
       </div>
     </div>
   );

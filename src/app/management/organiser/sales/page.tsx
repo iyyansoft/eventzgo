@@ -2,18 +2,29 @@
 
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { useState } from "react";
-import { useUser } from "@clerk/nextjs";
+import { useState, useEffect } from "react";
 import StatsCard from "@/components/management/StatsCard";
 import SalesChart from "@/components/organiser/SalesChart";
 import { formatCurrencyCompact } from "@/lib/currency-utils";
 
 export default function OrganiserSalesPage() {
-  const { user } = useUser();
+  const [userId, setUserId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const stored = localStorage.getItem("organiser_session");
+    if (stored) {
+      try {
+        const user = JSON.parse(stored);
+        if (user && user.id) setUserId(user.id);
+      } catch (e) { }
+    }
+  }, []);
+
   const [period, setPeriod] = useState<"7days" | "30days" | "90days" | "1year">("30days");
+
   const salesData = useQuery(
     api.analytics.getOrganiserSalesData,
-    user ? { userId: user.id as any, period } : "skip"
+    userId ? { organiserId: userId as any, period } : "skip"
   );
   const stats = useQuery(api.organisers.getOrganiserStats);
 
@@ -55,11 +66,10 @@ export default function OrganiserSalesPage() {
             <button
               key={option.value}
               onClick={() => setPeriod(option.value as any)}
-              className={`px-4 py-2 rounded-lg font-medium transition ${
-                period === option.value
-                  ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white"
-                  : "text-gray-600 hover:bg-gray-100"
-              }`}
+              className={`px-4 py-2 rounded-lg font-medium transition ${period === option.value
+                ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white"
+                : "text-gray-600 hover:bg-gray-100"
+                }`}
             >
               {option.label}
             </button>

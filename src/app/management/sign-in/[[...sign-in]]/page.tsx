@@ -1,154 +1,114 @@
-// src/app/management/sign-in/[[...sign-in]]/page.tsx - Matching sign-up design
 "use client";
 
-import { SignIn } from '@clerk/nextjs';
-import { useOrganiserSync } from '@/hooks/useOrganiserSync';
-import { useUser } from '@clerk/nextjs';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import Image from 'next/image';
-import { AlertCircle, ArrowLeft } from 'lucide-react';
-import { useQuery } from 'convex/react';
-import { api } from '@/convex/_generated/api';
+import { useState } from "react";
+import { useAction } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
+import Link from "next/link";
+import {
+    ArrowLeft,
+    Eye,
+    EyeOff,
+    Loader2,
+    Shield,
+    AlertTriangle,
+    Mail,
+    Lock,
+    User,
+    Sparkles,
+    CheckCircle
+} from "lucide-react";
 
-export default function ManagementSignInPage() {
-    const { user, isLoaded } = useUser();
+export default function OrganiserAuthPage() {
     const router = useRouter();
-    const searchParams = useSearchParams();
-    const [showError, setShowError] = useState(false);
+    const signInAction = useAction(api.auth.authActions.signInAction);
 
-    // Get role from URL
-    const role = searchParams.get("role") || "";
+    // Sign In State
+    const [signInData, setSignInData] = useState({
+        username: "",
+        password: "",
+    });
+    const [showPassword, setShowPassword] = useState(false);
+    const [error, setError] = useState("");
+    const [loading, setLoading] = useState(false);
 
-    // Check if organiser exists in Convex database
-    const organiserData = useQuery(
-        api.organisers.getOrganiserByClerkId,
-        user?.id ? { clerkId: user.id } : "skip"
-    );
+    const handleSignIn = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setError("");
+        setLoading(true);
 
-    // This hook will automatically sync existing organisers
-    useOrganiserSync();
-
-    useEffect(() => {
-        if (isLoaded && user) {
-            const clerkRole = user.publicMetadata?.role as string;
-            const clerkStatus = user.publicMetadata?.status as string;
-
-            console.log('Sign-in check:', {
-                clerkRole,
-                clerkStatus,
-                organiserData,
-                userId: user.id
+        try {
+            console.log("Initiating sign in...");
+            const result = await signInAction({
+                username: signInData.username,
+                password: signInData.password,
+                ipAddress: "client-direct",
+                userAgent: navigator.userAgent
             });
+            console.log("Sign in result:", result);
 
-            // Check if user is an end user (not a management role)
-            if (clerkRole === 'user' || clerkRole === 'attendee' || !clerkRole) {
-                console.log('End user detected, showing error');
-                setShowError(true);
-                setTimeout(() => {
-                    router.push('/management');
-                }, 3000);
+            if (result.success) {
+                const user = {
+                    id: result.userId,
+                    username: result.username,
+                    companyName: result.companyName,
+                    email: result.email,
+                    role: result.role,
+                    accountStatus: result.accountStatus,
+                    sessionToken: result.sessionToken,
+                };
+
+                // Store session
+                try {
+                    localStorage.setItem("organiser_session", JSON.stringify(user));
+                    console.log("Session stored locally");
+                } catch (e) {
+                    console.error("Storage error:", e);
+                }
+
+                // Redirect using window.location for robustness
+                console.log("Redirecting to dashboard...");
+                window.location.href = "/management/organiser/dashboard";
+                return;
+            } else {
+                setError(result.message || "Login failed - Invalid credentials");
+                setLoading(false);
+            }
+        } catch (err: any) {
+            console.error("Sign-in error:", err);
+            console.log("Error message:", err.message);
+            console.log("Error organiserId:", err.organiserId);
+            console.log("Error email:", err.email);
+
+            // Check if error is about email verification
+            if (err.message?.includes("verify your email")) {
+                console.log("Email verification error detected, redirecting...");
+
+                // Use username as email fallback (they might have entered email as username)
+                const email = signInData.username;
+
+                // Redirect to email-not-verified page
+                router.push(`/management/email-not-verified?email=${encodeURIComponent(email)}`);
                 return;
             }
 
-            // For organisers, check Convex database
-            if (clerkRole === 'organiser' && organiserData !== undefined) {
-                console.log('Organiser check:', { organiserData });
-
-                if (organiserData === null) {
-                    console.log('Organiser not in database, redirecting to onboarding');
-                    router.push('/management/onboarding');
-                } else {
-                    // Check approval status from Convex
-                    const approvalStatus = organiserData.approvalStatus;
-                    console.log('Approval status:', approvalStatus);
-
-                    if (approvalStatus === 'approved') {
-                        console.log('Approved! Redirecting to dashboard');
-                        router.push('/management/organiser/dashboard');
-                    } else if (approvalStatus === 'pending') {
-                        console.log('Pending approval');
-                        router.push('/management/pending-approval');
-                    } else if (approvalStatus === 'rejected') {
-                        console.log('Rejected');
-                        router.push('/management/pending-approval');
-                    }
-                }
-            }
-
-            // For admins
-            if (clerkRole === 'admin') {
-                console.log('Admin detected, redirecting to admin dashboard');
-                router.push('/admin/dashboard');
-            }
+            setError(err.message || "Failed to sign in");
+            setLoading(false);
         }
-    }, [isLoaded, user, organiserData, router]);
-
-    // Show loading state while checking user status
-    if (isLoaded && user) {
-        const clerkRole = user.publicMetadata?.role as string;
-
-        // If user is an organiser, wait for Convex data to load
-        if (clerkRole === 'organiser' && organiserData === undefined) {
-            return (
-                <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50 flex flex-col items-center justify-center p-4">
-                    <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl p-8">
-                        <div className="text-center">
-                            <div className="w-20 h-20 bg-purple-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
-                            </div>
-                            <h1 className="text-2xl font-bold text-gray-900 mb-3">
-                                Verifying Your Account
-                            </h1>
-                            <p className="text-gray-600">
-                                Please wait while we check your organiser status...
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            );
-        }
-    }
-
-    // Show error message if end user tries to sign in
-    if (showError) {
-        return (
-            <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50 flex flex-col items-center justify-center p-4">
-                <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl border-2 border-red-100 p-8">
-                    <div className="text-center">
-                        <div className="w-20 h-20 bg-red-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                            <AlertCircle className="w-12 h-12 text-red-600" />
-                        </div>
-                        <h1 className="text-2xl font-bold text-gray-900 mb-3">
-                            No Management Profile Found
-                        </h1>
-                        <p className="text-gray-600 mb-6">
-                            You don't have a management profile. Please create one to access the management portal.
-                        </p>
-                        <div className="space-y-3">
-                            <button
-                                onClick={() => router.push('/management')}
-                                className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-purple-700 hover:to-pink-700 transition-all duration-200"
-                            >
-                                Create Management Profile
-                            </button>
-                            <button
-                                onClick={() => router.push('/')}
-                                className="w-full bg-gray-100 text-gray-700 px-6 py-3 rounded-xl font-semibold hover:bg-gray-200 transition-all duration-200"
-                            >
-                                Go to Main Site
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        );
-    }
+    };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50 flex flex-col">
-            {/* Header - Matching sign-up */}
-            <div className="w-full bg-white/80 backdrop-blur-md border-b border-gray-200 py-4 px-6">
+        <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-pink-900 flex flex-col relative overflow-hidden">
+            {/* Animated Background Elements */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                <div className="absolute top-20 left-10 w-72 h-72 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
+                <div className="absolute top-40 right-10 w-72 h-72 bg-pink-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
+                <div className="absolute -bottom-8 left-1/2 w-72 h-72 bg-purple-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
+            </div>
+
+            {/* Header */}
+            <div className="relative z-10 w-full bg-white/10 backdrop-blur-md border-b border-white/20 py-4 px-6">
                 <div className="max-w-7xl mx-auto flex items-center justify-between">
                     <div className="flex items-center space-x-3">
                         <Image
@@ -156,18 +116,14 @@ export default function ManagementSignInPage() {
                             alt="EventzGo"
                             width={192}
                             height={40}
-                            className="h-10 w-auto"
+                            className="h-10 w-auto brightness-0 invert"
                             priority
                         />
-                        <div>
-                            <h1 className="text-xl font-bold text-gray-900">EventzGo</h1>
-                            <p className="text-xs text-gray-600">Management Portal</p>
-                        </div>
                     </div>
 
                     <button
                         onClick={() => router.push("/management")}
-                        className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors duration-200"
+                        className="flex items-center space-x-2 text-white/80 hover:text-white transition-colors duration-200"
                     >
                         <ArrowLeft className="w-4 h-4" />
                         <span className="text-sm font-medium">Back to Home</span>
@@ -175,101 +131,211 @@ export default function ManagementSignInPage() {
                 </div>
             </div>
 
-            {/* Sign-in Content */}
-            <div className="flex-1 flex items-center justify-center p-4">
-                <div className="w-full max-w-md">
-                    {/* Role Badge - Matching sign-up */}
-                    <div className="text-center mb-6">
-                        <div className="inline-flex items-center space-x-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-full shadow-lg">
-                            <span className="text-2xl">
-                                {!role ? "👤" :
-                                    role === "organiser" || role === "organizer" ? "🏢" :
-                                        role === "vendor" ? "🛠️" :
-                                            role === "speaker" ? "🎤" :
-                                                role === "sponsor" ? "💰" : "👤"}
-                            </span>
-                            <div className="text-left">
-                                <p className="text-xs font-medium opacity-90">
-                                    {!role ? "Management Portal" : "Signing in as"}
-                                </p>
-                                <p className="text-sm font-bold">
-                                    {!role ? "Sign In" : role.charAt(0).toUpperCase() + role.slice(1)}
-                                </p>
+            {/* Main Content */}
+            <div className="relative z-10 flex-1 flex items-center justify-center p-4 py-12">
+                <div className="w-full max-w-6xl grid md:grid-cols-2 gap-8 items-center">
+
+                    {/* Left Side - Branding */}
+                    <div className="hidden md:block text-white space-y-8">
+                        <div className="space-y-4">
+                            <div className="inline-flex items-center space-x-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20">
+                                <Sparkles className="w-4 h-4 text-yellow-300" />
+                                <span className="text-sm font-semibold">Enterprise-Grade Security</span>
+                            </div>
+
+                            <h1 className="text-5xl font-bold leading-tight">
+                                Manage Your Events
+                                <br />
+                                <span className="bg-gradient-to-r from-yellow-300 to-pink-300 bg-clip-text text-transparent">
+                                    Like a Pro
+                                </span>
+                            </h1>
+
+                            <p className="text-xl text-white/80">
+                                Join thousands of event organisers who trust EventzGo for their event management needs.
+                            </p>
+                        </div>
+
+                        <div className="space-y-4">
+                            <div className="flex items-start space-x-3">
+                                <div className="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center flex-shrink-0">
+                                    <CheckCircle className="w-5 h-5 text-green-300" />
+                                </div>
+                                <div>
+                                    <h3 className="font-semibold text-lg">Secure & Compliant</h3>
+                                    <p className="text-white/70 text-sm">Bank-grade encryption with complete audit trails</p>
+                                </div>
+                            </div>
+                            <div className="flex items-start space-x-3">
+                                <div className="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center flex-shrink-0">
+                                    <Shield className="w-5 h-5 text-blue-300" />
+                                </div>
+                                <div>
+                                    <h3 className="font-semibold text-lg">Rate Limiting Protection</h3>
+                                    <p className="text-white/70 text-sm">Advanced security against brute force attacks</p>
+                                </div>
+                            </div>
+                            <div className="flex items-start space-x-3">
+                                <div className="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center flex-shrink-0">
+                                    <Sparkles className="w-5 h-5 text-purple-300" />
+                                </div>
+                                <div>
+                                    <h3 className="font-semibold text-lg">Real-time Analytics</h3>
+                                    <p className="text-white/70 text-sm">Track bookings, revenue, and attendees in real-time</p>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    {/* Clerk Sign In Component */}
-                    <SignIn
-                        appearance={{
-                            elements: {
-                                rootBox: "w-full",
-                                card: "shadow-2xl border-0 rounded-2xl",
-                                headerTitle: "hidden",
-                                headerSubtitle: "hidden",
-                                socialButtonsBlockButton:
-                                    "bg-white border-2 border-gray-200 hover:border-purple-500 hover:bg-purple-50 transition-all duration-200",
-                                formButtonPrimary:
-                                    "bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold py-3 transition-all duration-200 hover:shadow-lg",
-                                footerActionLink:
-                                    "text-purple-600 hover:text-purple-700 font-semibold",
-                                formFieldInput:
-                                    "border-2 border-gray-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 rounded-lg transition-all duration-200",
-                                formFieldLabel: "text-gray-700 font-medium",
-                                dividerLine: "bg-gray-200",
-                                dividerText: "text-gray-500",
-                            }
-                        }}
-                        signUpUrl="/management/sign-up"
-                    />
+                    {/* Right Side - Sign In Logic Only */}
+                    <div className="w-full">
+                        <div className="bg-white rounded-3xl shadow-2xl overflow-hidden p-8">
+                            <div className="space-y-6">
+                                <div className="text-center">
+                                    <div className="inline-flex items-center space-x-2 bg-green-50 border border-green-200 text-green-700 px-4 py-2 rounded-full mb-4">
+                                        <Shield className="w-4 h-4" />
+                                        <span className="text-xs font-semibold">Secured with NextAuth</span>
+                                    </div>
+                                    <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                                        Welcome Back
+                                    </h2>
+                                    <p className="text-gray-600">
+                                        Sign in to access your organiser dashboard
+                                    </p>
+                                </div>
 
-                    {/* Help Text */}
-                    <div className="mt-6 text-center">
-                        <p className="text-sm text-gray-600">
-                            Don't have an account?{' '}
-                            <button
-                                onClick={() => router.push('/management')}
-                                className="text-purple-600 hover:text-purple-700 font-semibold"
-                            >
-                                Register now
-                            </button>
-                        </p>
-                    </div>
+                                <form onSubmit={handleSignIn} className="space-y-5">
+                                    {/* Username */}
+                                    <div>
+                                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                            Username
+                                        </label>
+                                        <div className="relative">
+                                            <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                                            <input
+                                                type="text"
+                                                value={signInData.username}
+                                                onChange={(e) => setSignInData({ ...signInData, username: e.target.value })}
+                                                className="w-full pl-11 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:ring-4 focus:ring-purple-100 transition-all"
+                                                placeholder="Enter your username"
+                                                required
+                                                disabled={loading}
+                                            />
+                                        </div>
+                                    </div>
 
-                    {/* Info Box */}
-                    <div className="mt-6 bg-blue-50 border border-blue-200 rounded-xl p-4">
-                        <h4 className="font-semibold text-blue-900 mb-2 text-sm">
-                            Management Portal Access
-                        </h4>
-                        <ul className="space-y-1 text-xs text-blue-800">
-                            <li>✓ Access your organiser dashboard</li>
-                            <li>✓ Manage events and bookings</li>
-                            <li>✓ Track revenue and analytics</li>
-                            <li>✓ Handle customer inquiries</li>
-                        </ul>
+                                    {/* Password */}
+                                    <div>
+                                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                            Password
+                                        </label>
+                                        <div className="relative">
+                                            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                                            <input
+                                                type={showPassword ? "text" : "password"}
+                                                value={signInData.password}
+                                                onChange={(e) => setSignInData({ ...signInData, password: e.target.value })}
+                                                className="w-full pl-11 pr-12 py-3 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:ring-4 focus:ring-purple-100 transition-all"
+                                                placeholder="Enter your password"
+                                                required
+                                                disabled={loading}
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowPassword(!showPassword)}
+                                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                                            >
+                                                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {/* Forgot Password Link */}
+                                    <div className="flex justify-end">
+                                        <Link
+                                            href="/management/forgot-password"
+                                            className="text-sm font-medium text-purple-600 hover:text-purple-500 hover:underline"
+                                        >
+                                            Forgot password?
+                                        </Link>
+                                    </div>
+
+                                    {/* Error Message */}
+                                    {error && (
+                                        <div className="bg-red-50 border-2 border-red-200 rounded-xl p-4">
+                                            <div className="flex items-start space-x-3">
+                                                <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                                                <div className="flex-1">
+                                                    <p className="text-sm font-semibold text-red-800 mb-1">
+                                                        {error.includes("Too many") ? "Account Temporarily Locked" : "Sign In Failed"}
+                                                    </p>
+                                                    <p className="text-sm text-red-700">{error}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Submit Button */}
+                                    <button
+                                        type="submit"
+                                        disabled={loading}
+                                        className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold py-3.5 px-6 rounded-xl hover:shadow-xl transform hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center space-x-2"
+                                    >
+                                        {loading ? (
+                                            <>
+                                                <Loader2 className="w-5 h-5 animate-spin" />
+                                                <span>Signing in...</span>
+                                            </>
+                                        ) : (
+                                            <span>Sign In</span>
+                                        )}
+                                    </button>
+
+                                    {/* Sign Up Link */}
+                                    <div className="mt-6 text-center pt-4 border-t border-gray-100">
+                                        <p className="text-sm text-gray-600">
+                                            Don't have an account?{' '}
+                                            <Link
+                                                href="/management/sign-up?role=organiser"
+                                                className="inline-block font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-80 transition-opacity"
+                                            >
+                                                Sign Up
+                                            </Link>
+                                        </p>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+
+                        {/* Security Badge */}
+                        <div className="mt-6 text-center">
+                            <div className="inline-flex items-center space-x-2 text-white/80 text-sm">
+                                <Shield className="w-4 h-4" />
+                                <span>Protected by enterprise-grade security • Rate limiting active • Audit logging enabled</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            {/* Footer - Matching sign-up */}
-            <div className="w-full bg-gray-900 text-white py-6 px-6">
-                <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between">
-                    <p className="text-sm text-gray-400 mb-2 sm:mb-0">
-                        © 2024 EventzGo Management. All rights reserved.
-                    </p>
-                    <div className="flex items-center space-x-4 text-sm text-gray-400">
-                        <button className="hover:text-white transition-colors duration-200">
-                            Privacy
-                        </button>
-                        <button className="hover:text-white transition-colors duration-200">
-                            Terms
-                        </button>
-                        <button className="hover:text-white transition-colors duration-200">
-                            Help
-                        </button>
+            {/* Footer */}
+            <div className="relative z-10 w-full bg-white/10 backdrop-blur-md border-t border-white/20 py-4 px-6">
+                <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between text-white/60 text-sm">
+                    <p>© 2024 EventzGo. All rights reserved.</p>
+                    <div className="flex items-center space-x-4 mt-2 sm:mt-0">
+                        <button className="hover:text-white transition-colors">Privacy</button>
+                        <button className="hover:text-white transition-colors">Terms</button>
+                        <button className="hover:text-white transition-colors">Help</button>
                     </div>
                 </div>
             </div>
+            <style jsx>{`
+            /* Animations (Same as before) */
+            @keyframes blob { 0% { transform: translate(0px, 0px) scale(1); } 33% { transform: translate(30px, -50px) scale(1.1); } 66% { transform: translate(-20px, 20px) scale(0.9); } 100% { transform: translate(0px, 0px) scale(1); } }
+            .animate-blob { animation: blob 7s infinite; }
+            .animation-delay-2000 { animation-delay: 2s; }
+            .animation-delay-4000 { animation-delay: 4s; }
+            `}</style>
         </div>
     );
 }

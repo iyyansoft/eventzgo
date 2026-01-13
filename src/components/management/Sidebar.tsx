@@ -4,7 +4,8 @@ import React from "react";
 import Image from "next/image";
 import { APP_CONFIG } from "@/constants/config";
 import { useRouter, usePathname } from "next/navigation";
-import { useUser } from "@clerk/nextjs";
+import { useUser, useClerk } from "@clerk/nextjs";
+import { signOut as nextAuthSignOut } from "next-auth/react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import {
@@ -36,8 +37,29 @@ const Sidebar = () => {
     isSignedIn && user ? { clerkId: user.id } : "skip"
   );
 
-  const handleLogout = () => {
-    router.push("/");
+  const organiserData = useQuery(
+    api.organisers.getOrganiserByUserId,
+    userData && userData.role === "organiser" ? { userId: userData._id } : "skip"
+  );
+
+  const { signOut } = useClerk();
+
+  const handleLogout = async () => {
+    try {
+      // Clear all sessions
+      localStorage.removeItem("organiser_session");
+
+      // Attempt NextAuth signout (silently)
+      await nextAuthSignOut({ redirect: false });
+
+      // Clerk signout (handles redirect)
+      await signOut({ redirectUrl: "/management/sign-in" });
+
+      router.push("/management/sign-in");
+    } catch (error) {
+      console.error("Logout error:", error);
+      router.push("/management/sign-in");
+    }
   };
 
   const getRoleIcon = (role: string) => {
@@ -80,6 +102,7 @@ const Sidebar = () => {
         { icon: Calendar, label: "My Events", path: "/management/events" },
         { icon: Users, label: "Connections", path: "/management/connections" },
         { icon: Target, label: "Find Partners", path: "/management/partners" },
+        { icon: Building, label: "Onboarding Info", path: "/management/organiser/onboarding" },
       ],
     };
 
@@ -130,7 +153,9 @@ const Sidebar = () => {
           </div>
           <div className="flex-1 min-w-0">
             <h3 className="font-semibold text-gray-900 truncate">
-              {userData.firstName} {userData.lastName}
+              {userData.role === "organiser" && organiserData?.institutionName
+                ? organiserData.institutionName
+                : `${userData.firstName} ${userData.lastName}`}
             </h3>
             <p className="text-sm text-gray-500 capitalize">{userData.role}</p>
           </div>
@@ -148,8 +173,8 @@ const Sidebar = () => {
               key={item.path}
               onClick={() => router.push(item.path)}
               className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-left transition-all duration-200 ${isActive
-                  ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg"
-                  : "text-gray-700 hover:bg-gray-100"
+                ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg"
+                : "text-gray-700 hover:bg-gray-100"
                 }`}
             >
               <Icon

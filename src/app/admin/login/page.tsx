@@ -1,221 +1,157 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import Image from 'next/image';
-import { Shield, Lock, Key } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useState } from "react";
+import Image from "next/image";
+import { Shield, Lock, Mail, ArrowRight, Loader2, AlertCircle, Eye, EyeOff } from "lucide-react";
+import { useAction } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { useAdminAuth } from "@/components/admin/AdminAuthProvider";
 
-export default function AdminSignInPage() {
-    const router = useRouter();
-    const [step, setStep] = useState<'credentials' | 'authCode'>('credentials');
-    const [username, setUsername] = useState('');
-    const [password, setPassword] = useState('');
-    const [authCode, setAuthCode] = useState('');
-    const [error, setError] = useState('');
-    const [loading, setLoading] = useState(false);
+export default function AdminLoginPage() {
+    const [identifier, setIdentifier] = useState("");
+    const [password, setPassword] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
 
-    const handleCredentialsSubmit = async (e: React.FormEvent) => {
+    const signIn = useAction(api.auth.authActions.signInAction);
+    const { login } = useAdminAuth();
+
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        setError('');
-        setLoading(true);
+        setIsLoading(true);
+        setError("");
 
         try {
-            const response = await fetch('/api/admin/verify-credentials', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password }),
+            // Direct Client-Side Login (Bypassing Server Fetch issues)
+            const result = await signIn({
+                username: identifier,
+                password: password,
             });
 
-            const data = await response.json();
+            // result contains sessionToken, role, etc.
+            if (result && result.sessionToken) {
+                // Enforce Admin Role
+                if (result.role !== "admin") {
+                    setError("Access denied. Admin privileges required.");
+                    setIsLoading(false);
+                    return;
+                }
 
-            if (response.ok) {
-                setStep('authCode');
+                // Login successful
+                login(result.sessionToken, result);
             } else {
-                setError(data.error || 'Invalid credentials');
+                throw new Error("Invalid response from server");
             }
-        } catch (err) {
-            setError('An error occurred. Please try again.');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleAuthCodeSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setError('');
-        setLoading(true);
-
-        try {
-            const response = await fetch('/api/admin/verify-auth-code', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, authCode }),
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                // Redirect to admin dashboard
-                router.push('/admin/dashboard');
+        } catch (err: any) {
+            console.error("Login failed:", err);
+            // Handle specific Convex errors
+            if (err.message && (err.message.includes("Invalid credentials") || err.message.includes("Invalid username"))) {
+                setError("Invalid credentials. Please try again.");
             } else {
-                setError(data.error || 'Invalid authentication code');
+                setError(err.message || "An unexpected error occurred. Please try again.");
             }
-        } catch (err) {
-            setError('An error occurred. Please try again.');
-        } finally {
-            setLoading(false);
+            setIsLoading(false);
         }
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center p-4">
-            <div className="w-full max-w-md">
-                {/* Logo and Header */}
-                <div className="text-center mb-8">
-                    <div className="flex items-center justify-center mb-6">
-                        <div className="bg-red-600 p-4 rounded-2xl shadow-2xl">
-                            <Shield className="w-12 h-12 text-white" />
+        <div className="min-h-screen bg-black flex items-center justify-center p-4 relative overflow-hidden">
+            {/* Background Effects */}
+            <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0">
+                <div className="absolute -top-32 -left-32 w-96 h-96 bg-purple-500/20 rounded-full blur-[128px]" />
+                <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-blue-500/20 rounded-full blur-[128px]" />
+            </div>
+
+            <div className="w-full max-w-md relative z-10">
+                <div className="bg-zinc-900/50 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl">
+                    <div className="text-center mb-8">
+                        <div className="mx-auto bg-gradient-to-tr from-white/10 to-transparent w-20 h-20 rounded-2xl flex items-center justify-center mb-6 border border-white/5 shadow-lg relative group">
+                            <div className="absolute inset-0 bg-white/5 rounded-2xl blur opacity-0 group-hover:opacity-100 transition duration-500"></div>
+                            <Shield className="w-10 h-10 text-white relative z-10" />
+                            <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-zinc-900 animate-pulse"></div>
                         </div>
+                        <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white via-white/80 to-white/50 mb-2">
+                            Admin Sign In
+                        </h1>
+                        <p className="text-zinc-400 text-sm">
+                            Enter your credentials to access the dashboard
+                        </p>
                     </div>
-                    <Image
-                        src="/eventzgo_logo.png"
-                        alt="EventzGo Logo"
-                        width={200}
-                        height={60}
-                        className="mx-auto mb-4"
-                        priority
-                    />
-                    <h1 className="text-3xl font-bold text-white mb-2">Admin Portal</h1>
-                    <p className="text-gray-400">Secure access for platform administrators</p>
-                </div>
 
-                {/* Sign In Form */}
-                <div className="bg-white rounded-2xl shadow-2xl p-8">
-                    {step === 'credentials' ? (
-                        <form onSubmit={handleCredentialsSubmit} className="space-y-6">
-                            <div>
-                                <div className="flex items-center space-x-2 mb-6">
-                                    <Lock className="w-5 h-5 text-red-600" />
-                                    <h2 className="text-xl font-semibold text-gray-900">Sign In</h2>
-                                </div>
-                            </div>
+                    {error && (
+                        <div className="mb-6 bg-red-500/10 border border-red-500/20 rounded-xl p-4 flex items-center gap-3 animate-in slide-in-from-top-2">
+                            <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
+                            <p className="text-red-400 text-sm">{error}</p>
+                        </div>
+                    )}
 
-                            {error && (
-                                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-                                    {error}
-                                </div>
-                            )}
-
-                            <div>
-                                <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
-                                    Username
-                                </label>
+                    <form onSubmit={handleSubmit} className="space-y-5">
+                        <div className="space-y-1.5">
+                            <label className="text-xs font-medium text-zinc-500 ml-1 uppercase tracking-wider">
+                                Username / Email
+                            </label>
+                            <div className="relative group">
+                                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500 group-focus-within:text-white transition-colors" />
                                 <input
                                     type="text"
-                                    id="username"
-                                    value={username}
-                                    onChange={(e) => setUsername(e.target.value)}
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition-all"
-                                    placeholder="Enter admin username"
+                                    value={identifier}
+                                    onChange={(e) => setIdentifier(e.target.value)}
+                                    className="w-full bg-black/50 border border-white/10 rounded-xl px-12 py-3.5 text-white placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-white/20 transition-all hover:bg-black/70"
+                                    placeholder="admin@eventzgo.com"
                                     required
-                                    autoComplete="username"
                                 />
                             </div>
+                        </div>
 
-                            <div>
-                                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-                                    Password
-                                </label>
+                        <div className="space-y-1.5">
+                            <label className="text-xs font-medium text-zinc-500 ml-1 uppercase tracking-wider">
+                                Password
+                            </label>
+                            <div className="relative group">
+                                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500 group-focus-within:text-white transition-colors" />
                                 <input
-                                    type="password"
-                                    id="password"
+                                    type={showPassword ? "text" : "password"}
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition-all"
-                                    placeholder="Enter password"
+                                    className="w-full bg-black/50 border border-white/10 rounded-xl px-12 py-3.5 text-white placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-white/20 transition-all hover:bg-black/70 pr-12"
+                                    placeholder="••••••••••••"
                                     required
-                                    autoComplete="current-password"
                                 />
-                            </div>
-
-                            <button
-                                type="submit"
-                                disabled={loading}
-                                className="w-full bg-gradient-to-r from-red-600 to-pink-600 text-white py-3 rounded-lg font-semibold hover:from-red-700 hover:to-pink-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                {loading ? 'Verifying...' : 'Continue'}
-                            </button>
-                        </form>
-                    ) : (
-                        <form onSubmit={handleAuthCodeSubmit} className="space-y-6">
-                            <div>
-                                <div className="flex items-center space-x-2 mb-6">
-                                    <Key className="w-5 h-5 text-red-600" />
-                                    <h2 className="text-xl font-semibold text-gray-900">Authentication Code</h2>
-                                </div>
-                                <p className="text-sm text-gray-600 mb-4">
-                                    Enter the 6-digit authentication code to complete sign-in.
-                                </p>
-                            </div>
-
-                            {error && (
-                                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-                                    {error}
-                                </div>
-                            )}
-
-                            <div>
-                                <label htmlFor="authCode" className="block text-sm font-medium text-gray-700 mb-2">
-                                    Authentication Code
-                                </label>
-                                <input
-                                    type="text"
-                                    id="authCode"
-                                    value={authCode}
-                                    onChange={(e) => setAuthCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition-all text-center text-2xl tracking-widest font-mono"
-                                    placeholder="000000"
-                                    required
-                                    maxLength={6}
-                                    autoComplete="one-time-code"
-                                />
-                            </div>
-
-                            <div className="flex space-x-3">
                                 <button
                                     type="button"
-                                    onClick={() => {
-                                        setStep('credentials');
-                                        setAuthCode('');
-                                        setError('');
-                                    }}
-                                    className="flex-1 bg-gray-200 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-300 transition-all duration-200"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white transition-colors"
                                 >
-                                    Back
-                                </button>
-                                <button
-                                    type="submit"
-                                    disabled={loading || authCode.length !== 6}
-                                    className="flex-1 bg-gradient-to-r from-red-600 to-pink-600 text-white py-3 rounded-lg font-semibold hover:from-red-700 hover:to-pink-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                    {loading ? 'Verifying...' : 'Sign In'}
+                                    {showPassword ? (
+                                        <EyeOff className="w-5 h-5" />
+                                    ) : (
+                                        <Eye className="w-5 h-5" />
+                                    )}
                                 </button>
                             </div>
-                        </form>
-                    )}
-                </div>
+                        </div>
 
-                {/* Security Notice */}
-                <div className="mt-6 text-center">
-                    <p className="text-gray-400 text-sm">
-                        🔒 This is a secure admin area. All actions are logged and monitored.
-                    </p>
-                </div>
+                        <button
+                            type="submit"
+                            disabled={isLoading}
+                            className="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium py-3.5 rounded-xl transition-all flex items-center justify-center gap-2 group shadow-lg shadow-blue-500/20 disabled:opacity-50 disabled:cursor-not-allowed mt-2"
+                        >
+                            {isLoading ? (
+                                <Loader2 className="w-5 h-5 animate-spin" />
+                            ) : (
+                                <>
+                                    Sign In
+                                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                                </>
+                            )}
+                        </button>
+                    </form>
 
-                {/* Footer */}
-                <div className="mt-8 text-center text-gray-500 text-xs">
-                    <p>EventzGo Admin Portal v1.0</p>
-                    <p className="mt-1">© 2024 EventzGo. All rights reserved.</p>
+                    <div className="mt-8 flex items-center justify-between text-xs text-zinc-600 px-2">
+                        <span>Protected by EventzGo Secure</span>
+                        <span>v2.4.0 (Admin Build)</span>
+                    </div>
                 </div>
             </div>
         </div>

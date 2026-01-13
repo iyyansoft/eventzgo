@@ -30,6 +30,8 @@ export const createBooking = mutation({
       gst: v.number(),
       platformFee: v.number(),
       total: v.number(),
+      ticketGst: v.optional(v.number()),
+      platformFeeGst: v.optional(v.number()),
     }),
     paymentId: v.id("payments"),
     qrCode: v.optional(v.string()),
@@ -284,12 +286,66 @@ export const cancelBooking = mutation({
       throw new Error("Booking not found");
     }
 
-    await ctx.db.patch(args.bookingId, {
-      status: "cancelled",
-      updatedAt: Date.now(),
-    });
+    if (booking.status === "cancelled" || booking.status === "refunded") {
+      throw new Error("Booking is already cancelled");
+    }
 
     const event = await ctx.db.get(booking.eventId);
+    if (!event) {
+      throw new Error("Event not found");
+    }
+
+    const now = Date.now();
+
+    // Policy Checks
+    if (event.cancellationPolicy) {
+      if (!event.cancellationPolicy.isCancellable) {
+        throw new Error("This event does not allow cancellations.");
+      }
+
+      const deadlineMs = event.cancellationPolicy.deadlineHoursBeforeStart * 60 * 60 * 1000;
+      const deadlineTimestamp = event.dateTime.start - deadlineMs;
+
+      if (now > deadlineTimestamp) {
+        throw new Error(`Cancellation deadline passed. Must cancel ${event.cancellationPolicy.deadlineHoursBeforeStart} hours before event.`);
+      }
+    } else {
+      // Default policy if none defined? Or allow freely? Or strictly disallow?
+      // User requirement implies Organiser defines it. If undefined, maybe assume Non-Cancellable or Strict?
+      // Let's assume Free Cancellation if not defined? No, safer to assume Non-Cancellable to protect revenue.
+      // But for backward compatibility with existing events, maybe allow?
+      // I'll assume: If policy is missing, it is NOT cancellable via this self-serve flow.
+      throw new Error("No cancellation policy defined for this event. Please contact support.");
+    }
+
+    // Calculate Refund
+    let refundAmount = 0;
+    if (event.cancellationPolicy.refundPercentage > 0) {
+      refundAmount = (booking.totalAmount * event.cancellationPolicy.refundPercentage) / 100;
+    }
+
+    // Update Booking Status
+    await ctx.db.patch(args.bookingId, {
+      status: "cancelled", // Or "refund_pending"? Keeping "cancelled" as per schema enum.
+      updatedAt: now,
+    });
+
+    // Create Refund Record if amount > 0
+    if (refundAmount > 0) {
+      await ctx.db.insert("refunds", {
+        bookingId: booking._id,
+        paymentId: booking.paymentId,
+        userId: booking.userId,
+        amount: refundAmount,
+        reason: "User requested cancellation",
+        status: "approved", // Auto-approved by policy
+        approvedAt: now, // approvedBy is optional
+        createdAt: now,
+        updatedAt: now,
+      });
+    }
+
+    // Restore Inventory (Vacate Tickets)
     if (event) {
       const updatedTicketTypes = event.ticketTypes.map((ticketType) => {
         const cancelledTicket = booking.tickets.find(
@@ -309,7 +365,7 @@ export const cancelBooking = mutation({
       await ctx.db.patch(booking.eventId, {
         ticketTypes: updatedTicketTypes,
         soldTickets: Math.max(0, event.soldTickets - totalCancelled),
-        updatedAt: Date.now(),
+        updatedAt: now,
       });
     }
 
@@ -403,73 +459,72 @@ export const getPendingBookings = query({
  * Get all bookings for the authenticated organiser
  */
 export const getOrganiserBookings = query({
-  handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
+  args: {
+    organiserId: v.optional(v.id("organisers"))
+  },
+  handler: async (ctx, args) => {
+    let organiserId = args.organiserId;
 
-    // For now, if not authenticated, try to find the first organiser as fallback (development mode only)
-    if (!identity) {
-      // return []; // Uncomment to enforce auth
+    if (!organiserId) {
+      const identity = await ctx.auth.getUserIdentity();
+      if (identity) {
+        const user = await ctx.db
+          .query("users")
+          .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
+          .first();
 
-      // Fallback for demo: Get first organiser
-      const organiser = await ctx.db.query("organisers").first();
-      if (!organiser) return [];
+        if (user) {
+          const organiser = await ctx.db
+            .query("organisers")
+            .withIndex("by_user_id", (q) => q.eq("userId", user._id))
+            .first();
 
-      const events = await ctx.db
-        .query("events")
-        .withIndex("by_organiser_id", (q) => q.eq("organiserId", organiser._id))
-        .collect();
-
-      const eventIds = events.map(e => e._id);
-
-      const allBookings = await ctx.db.query("bookings").collect();
-
-      const organiserBookings = allBookings
-        .filter(b => eventIds.includes(b.eventId))
-        .map(b => {
-          const event = events.find(e => e._id === b.eventId);
-          return {
-            ...b,
-            eventName: event?.title || "Unknown Event",
-            eventDate: event?.dateTime.start || 0,
-          };
-        });
-
-      return organiserBookings.sort((a, b) => b.createdAt - a.createdAt);
+          if (organiser) {
+            organiserId = organiser._id;
+          }
+        }
+      }
     }
 
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
+    if (!organiserId) {
+      return [];
+    }
 
-    if (!user) return [];
-
-    const organiser = await ctx.db
-      .query("organisers")
-      .withIndex("by_user_id", (q) => q.eq("userId", user._id))
-      .first();
-
-    if (!organiser) return [];
-
+    // Get all events for this organiser
     const events = await ctx.db
       .query("events")
-      .withIndex("by_organiser_id", (q) => q.eq("organiserId", organiser._id))
+      .withIndex("by_organiser_id", (q) => q.eq("organiserId", organiserId!))
       .collect();
+
+    if (events.length === 0) {
+      return [];
+    }
 
     const eventIds = events.map(e => e._id);
 
-    const allBookings = await ctx.db.query("bookings").collect();
+    // Get bookings for these events
+    // Ideally we would do this more efficiently but for now filtering all bookings is okay-ish for MVP
+    // Better: use an index on bookings by eventId? (We have one!)
+    // But we have multiple events. Convex doesn't support "in" array queries easily without Promise.all loop.
 
-    const organiserBookings = allBookings
-      .filter(b => eventIds.includes(b.eventId))
-      .map(b => {
-        const event = events.find(e => e._id === b.eventId);
-        return {
-          ...b,
-          eventName: event?.title || "Unknown Event",
-          eventDate: event?.dateTime.start || 0,
-        };
-      });
+    // Using Promise.all is better than scanning table
+    const bookingsPromises = eventIds.map(eventId =>
+      ctx.db.query("bookings")
+        .withIndex("by_event_id", (q) => q.eq("eventId", eventId))
+        .collect()
+    );
+
+    const bookingsArrays = await Promise.all(bookingsPromises);
+    const allBookings = bookingsArrays.flat();
+
+    const organiserBookings = allBookings.map(b => {
+      const event = events.find(e => e._id === b.eventId);
+      return {
+        ...b,
+        eventName: event?.title || "Unknown Event",
+        eventDate: event?.dateTime.start || 0,
+      };
+    });
 
     return organiserBookings.sort((a, b) => b.createdAt - a.createdAt);
   },

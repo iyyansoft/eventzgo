@@ -12,7 +12,7 @@ import { formatCurrency } from "@/lib/currency-utils";
 import { format } from "date-fns";
 
 interface EventApprovalProps {
-  event: Event;
+  event: any;
 }
 
 export default function EventApproval({ event }: EventApprovalProps) {
@@ -26,7 +26,7 @@ export default function EventApproval({ event }: EventApprovalProps) {
 
   const handleApprove = async () => {
     if (!user) return;
-    
+
     setIsProcessing(true);
     try {
       await approveEvent({
@@ -104,9 +104,9 @@ export default function EventApproval({ event }: EventApprovalProps) {
                 <MapPin className="w-5 h-5 text-purple-600 mt-0.5" />
                 <div>
                   <p className="text-sm text-gray-600">Venue</p>
-                  <p className="font-semibold text-gray-900">{event.venue.name}</p>
+                  <p className="font-semibold text-gray-900">{typeof event.venue === 'string' ? event.venue : event.venue.name}</p>
                   <p className="text-sm text-gray-600">
-                    {event.venue.city}, {event.venue.state}
+                    {typeof event.venue === 'string' ? '' : `${event.venue.city}, ${event.venue.state}`}
                   </p>
                 </div>
               </div>
@@ -117,7 +117,7 @@ export default function EventApproval({ event }: EventApprovalProps) {
                   <p className="text-sm text-gray-600">Category</p>
                   <p className="font-semibold text-gray-900 capitalize">{event.category}</p>
                   <div className="flex flex-wrap gap-1 mt-1">
-                    {event.tags.map((tag, index) => (
+                    {event.tags.map((tag: string, index: number) => (
                       <span key={index} className="px-2 py-0.5 bg-purple-100 text-purple-700 text-xs rounded-full">
                         {tag}
                       </span>
@@ -144,7 +144,7 @@ export default function EventApproval({ event }: EventApprovalProps) {
             <div>
               <h4 className="font-semibold text-gray-900 mb-3">Ticket Types</h4>
               <div className="grid gap-2">
-                {event.ticketTypes.map((ticket) => (
+                {event.ticketTypes.map((ticket: any) => (
                   <div key={ticket.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                     <div>
                       <p className="font-medium text-gray-900">{ticket.name}</p>

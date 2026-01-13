@@ -10,7 +10,7 @@ interface Event {
 	description: string;
 	category: string;
 	bannerImage: string;
-	venue: {
+	venue: string | {
 		name: string;
 		city: string;
 		state: string;
@@ -121,7 +121,7 @@ const EventsTable: React.FC<EventsTableProps> = ({ events = [] }) => {
 								<div className="flex items-center gap-2 text-sm text-gray-700">
 									<MapPin className="w-4 h-4 text-gray-400" />
 									<span>
-										{event.venue.city}, {event.venue.state}
+										{typeof event.venue === 'string' ? event.venue : `${event.venue.city}, ${event.venue.state}`}
 									</span>
 								</div>
 							</td>
@@ -141,14 +141,31 @@ const EventsTable: React.FC<EventsTableProps> = ({ events = [] }) => {
 							</td>
 
 							{/* Status */}
+							{/* Status */}
 							<td className="px-6 py-4">
-								<span
-									className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(
-										event.status
-									)}`}
-								>
-									{event.status.charAt(0).toUpperCase() + event.status.slice(1)}
-								</span>
+								{(() => {
+									const isCompleted = event.dateTime.end < Date.now();
+									const displayStatus =
+										event.status === "cancelled" ? "Cancelled" :
+											event.status === "rejected" ? "Rejected" :
+												event.status === "draft" ? "Draft" :
+													isCompleted ? "Completed" :
+														event.status.charAt(0).toUpperCase() + event.status.slice(1);
+
+									let colorClass = "bg-gray-100 text-gray-800";
+									if (displayStatus === "Published" || displayStatus === "Approved") colorClass = "bg-green-100 text-green-800";
+									else if (displayStatus === "Pending") colorClass = "bg-yellow-100 text-yellow-800";
+									else if (displayStatus === "Rejected" || displayStatus === "Cancelled") colorClass = "bg-red-100 text-red-800";
+									else if (displayStatus === "Completed") colorClass = "bg-blue-50 text-blue-600 border border-blue-100";
+
+									return (
+										<span
+											className={`px-3 py-1 rounded-full text-xs font-medium ${colorClass}`}
+										>
+											{displayStatus}
+										</span>
+									);
+								})()}
 							</td>
 
 							{/* Actions */}

@@ -11,6 +11,7 @@ export const createEvent = mutation({
     category: v.string(),
     tags: v.array(v.string()),
     bannerImage: v.string(),
+    galleryImages: v.optional(v.array(v.string())),
     venue: v.object({
       name: v.string(),
       address: v.string(),
@@ -49,6 +50,12 @@ export const createEvent = mutation({
       )
     ),
     customFields: v.optional(v.array(v.any())), // Add custom fields support
+    cancellationPolicy: v.optional(v.object({
+      isCancellable: v.boolean(),
+      refundPercentage: v.number(),
+      deadlineHoursBeforeStart: v.number(),
+      description: v.optional(v.string()),
+    })),
   },
   handler: async (ctx, args) => {
     // TEMPORARY: Get organiser ID (bypassing auth for now)
@@ -114,6 +121,7 @@ export const createEvent = mutation({
       category: args.category,
       tags: args.tags,
       bannerImage: args.bannerImage,
+      galleryImages: args.galleryImages,
       venue: args.venue,
       dateTime: args.dateTime,
       ticketTypes: args.ticketTypes,
@@ -131,6 +139,7 @@ export const createEvent = mutation({
       createdAt: now,
       updatedAt: now,
       ...(args.customFields && { customFields: args.customFields }), // Add custom fields if provided
+      ...(args.cancellationPolicy && { cancellationPolicy: args.cancellationPolicy }),
     });
 
     return eventId;
@@ -192,11 +201,11 @@ export const getAllEvents = query({
     }
 
     if (args.state) {
-      events = events.filter((e) => e.venue.state === args.state);
+      events = events.filter((e) => typeof e.venue === 'object' && e.venue.state === args.state);
     }
 
     if (args.city) {
-      events = events.filter((e) => e.venue.city === args.city);
+      events = events.filter((e) => typeof e.venue === 'object' && e.venue.city === args.city);
     }
 
     if (args.status) {
@@ -235,8 +244,10 @@ export const searchEvents = query({
         event.description.toLowerCase().includes(searchLower) ||
         event.category.toLowerCase().includes(searchLower) ||
         event.tags.some((tag) => tag.toLowerCase().includes(searchLower)) ||
-        event.venue.city.toLowerCase().includes(searchLower) ||
-        event.venue.state.toLowerCase().includes(searchLower)
+        (typeof event.venue === 'object' && (
+          event.venue.city.toLowerCase().includes(searchLower) ||
+          event.venue.state.toLowerCase().includes(searchLower)
+        ))
     );
   },
 });
@@ -252,6 +263,14 @@ export const updateEvent = mutation({
     category: v.optional(v.string()),
     tags: v.optional(v.array(v.string())),
     bannerImage: v.optional(v.string()),
+    galleryImages: v.optional(v.array(v.string())),
+    customFields: v.optional(v.array(v.any())),
+    cancellationPolicy: v.optional(v.object({
+      isCancellable: v.boolean(),
+      refundPercentage: v.number(),
+      deadlineHoursBeforeStart: v.number(),
+      description: v.optional(v.string()),
+    })),
     venue: v.optional(
       v.object({
         name: v.string(),
@@ -517,51 +536,15 @@ export const getEventsByCity = query({
  * Get events for current organiser (for dashboard)
  */
 export const getOrganiserEvents = query({
-  args: { limit: v.optional(v.number()) },
+  args: {
+    organiserId: v.id("organisers"),
+    limit: v.optional(v.number())
+  },
   handler: async (ctx, args) => {
-    // TEMPORARY: Get organiser ID (bypassing auth for now)
-    let organiserId;
-
-    try {
-      // Try to get authenticated user
-      const identity = await ctx.auth.getUserIdentity();
-
-      if (identity) {
-        // Get user from database
-        const user = await ctx.db
-          .query("users")
-          .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-          .first();
-
-        if (user) {
-          // Get organiser profile
-          const organiser = await ctx.db
-            .query("organisers")
-            .withIndex("by_user_id", (q) => q.eq("userId", user._id))
-            .first();
-
-          if (organiser) {
-            organiserId = organiser._id;
-          }
-        }
-      }
-    } catch (error) {
-      console.log("Auth not available in getOrganiserEvents");
-    }
-
-    // If no authenticated organiser, use the first organiser
-    if (!organiserId) {
-      const firstOrganiser = await ctx.db.query("organisers").first();
-      if (!firstOrganiser) {
-        return [];
-      }
-      organiserId = firstOrganiser._id;
-    }
-
     // Get events for this organiser
     const events = await ctx.db
       .query("events")
-      .withIndex("by_organiser_id", (q) => q.eq("organiserId", organiserId))
+      .withIndex("by_organiser_id", (q) => q.eq("organiserId", args.organiserId))
       .order("desc")
       .collect();
 
@@ -570,5 +553,52 @@ export const getOrganiserEvents = query({
     }
 
     return events;
+  },
+});
+
+/**
+ * Get all events grouped by organiser (for admin panel)
+ */
+export const getAllEventsGroupedByOrganiser = query({
+  handler: async (ctx) => {
+    // Get all events
+    const events = await ctx.db.query("events").collect();
+
+    // Get all organisers
+    const organisers = await ctx.db.query("organisers").collect();
+
+    // Group events by organiser
+    const groupedEvents = organisers.map(organiser => {
+      const organiserEvents = events.filter(event =>
+        event.organiserId === organiser._id
+      );
+
+      // Calculate total revenue for this organiser
+      const totalRevenue = organiserEvents.reduce((sum, event) => {
+        // Revenue = soldTickets * pricing.totalPrice
+        const eventRevenue = event.soldTickets * (event.pricing?.totalPrice || 0);
+        return sum + eventRevenue;
+      }, 0);
+
+      return {
+        organiser: {
+          _id: organiser._id,
+          institutionName: organiser.institutionName,
+          email: organiser.email,
+          contactPerson: organiser.contactPerson,
+        },
+        events: organiserEvents.map(event => ({
+          ...event,
+          revenue: event.soldTickets * (event.pricing?.totalPrice || 0),
+        })),
+        totalEvents: organiserEvents.length,
+        activeEvents: organiserEvents.filter(e => e.status === 'published').length,
+        completedEvents: organiserEvents.filter(e => e.status === 'pending').length, // Using pending as completed for now
+        draftEvents: organiserEvents.filter(e => e.status === 'draft').length,
+        totalRevenue: totalRevenue,
+      };
+    }).filter(group => group.totalEvents > 0); // Only show organisers with events
+
+    return groupedEvents;
   },
 });

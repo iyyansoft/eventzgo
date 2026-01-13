@@ -1,7 +1,8 @@
 // convex/http.ts - NEW FILE for Clerk webhook
 import { httpRouter } from "convex/server";
 import { httpAction } from "./_generated/server";
-import { internal } from "./_generated/api";
+import { anyApi } from "convex/server";
+const internalAny = anyApi;
 import { Webhook } from "svix";
 
 const http = httpRouter();
@@ -47,7 +48,7 @@ http.route({
 
     // Handle user.created event
     if (eventType === "user.created") {
-      await ctx.runMutation(internal.users.createUser, {
+      await ctx.runMutation(internalAny.users.createUser, {
         clerkId: id,
         email: email_addresses[0]?.email_address || "",
         firstName: first_name || undefined,
@@ -61,7 +62,7 @@ http.route({
 
     // Handle user.updated event
     if (eventType === "user.updated") {
-      await ctx.runMutation(internal.users.updateUser, {
+      await ctx.runMutation(internalAny.users.updateUser, {
         clerkId: id,
         email: email_addresses[0]?.email_address || "",
         firstName: first_name || undefined,

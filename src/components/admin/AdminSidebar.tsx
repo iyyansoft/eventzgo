@@ -4,6 +4,7 @@ import React from "react";
 import Image from "next/image";
 import { useRouter, usePathname } from "next/navigation";
 import { useQuery } from "convex/react";
+import { useAdminAuth } from "@/components/admin/AdminAuthProvider";
 import { api } from "@/convex/_generated/api";
 import {
     LayoutDashboard,
@@ -19,7 +20,10 @@ import {
     HelpCircle,
     FileText,
     Lock,
+    Building2,
+    Trash2,
     LucideIcon,
+    Receipt,
 } from "lucide-react";
 
 // Icon mapping from string to lucide-react component
@@ -32,22 +36,31 @@ const iconMap: Record<string, LucideIcon> = {
     Database,
     FileText,
     Bell,
+    Building2,
+    Trash2,
     Settings,
     HelpCircle,
     Shield,
     Lock,
+    Receipt,
 };
 
 const AdminSidebar = () => {
     const router = useRouter();
     const pathname = usePathname();
+    const { logout, sessionToken } = useAdminAuth();
 
     // Fetch navigation items from Convex
+    // Assuming getNavigationItems is public or adapted
     const navigationItems = useQuery(api.adminNavigation.getNavigationItems);
 
+    // Pass sessionToken to getDashboardStats
+    const stats = useQuery(api.adminOrganisers.getDashboardStats,
+        sessionToken ? { sessionToken } : "skip"
+    );
+
     const handleLogout = async () => {
-        await fetch('/api/admin/logout', { method: 'POST' });
-        router.push("/admin/login");
+        logout();
     };
 
     // Fallback menu items if Convex query fails or is loading
@@ -62,6 +75,24 @@ const AdminSidebar = () => {
             icon: "Users",
             label: "User Management",
             path: "/admin/users",
+            category: "main" as const,
+        },
+        {
+            icon: "Building2",
+            label: "Organisers",
+            path: "/admin/organisers",
+            category: "main" as const,
+        },
+        {
+            icon: "Receipt",
+            label: "Payouts",
+            path: "/admin/payouts",
+            category: "main" as const,
+        },
+        {
+            icon: "Trash2",
+            label: "Deleted Organisers",
+            path: "/admin/deleted-organisers",
             category: "main" as const,
         },
         {
@@ -95,6 +126,12 @@ const AdminSidebar = () => {
             category: "main" as const,
         },
         {
+            icon: "HelpCircle",
+            label: "Support Desk",
+            path: "/admin/support",
+            category: "main" as const,
+        },
+        {
             icon: "Bell",
             label: "Notifications",
             path: "/admin/notifications",
@@ -110,9 +147,10 @@ const AdminSidebar = () => {
         category: "main" | "bottom";
     };
 
-    // Use Convex data if available, otherwise use fallback
-    const menuItems: NavigationItem[] = navigationItems?.filter((item: NavigationItem) => item.category === "main") || fallbackMenuItems;
-    const bottomItems: NavigationItem[] = navigationItems?.filter((item: NavigationItem) => item.category === "bottom") || [];
+    // Use Convex data if available and not empty, otherwise use fallback
+    const hasNavigationItems = navigationItems && navigationItems.length > 0;
+    const menuItems: NavigationItem[] = hasNavigationItems ? navigationItems.filter((item: NavigationItem) => item.category === "main") : fallbackMenuItems;
+    const bottomItems: NavigationItem[] = hasNavigationItems ? navigationItems.filter((item: NavigationItem) => item.category === "bottom") : [];
 
     return (
         <div className="w-64 bg-white border-r border-gray-200 h-screen flex flex-col">
@@ -160,7 +198,23 @@ const AdminSidebar = () => {
                                 className={`w-5 h-5 ${isActive ? "text-white" : "text-gray-500"
                                     }`}
                             />
-                            <span className="font-medium">{item.label}</span>
+                            <span className="font-medium flex-1">{item.label}</span>
+
+                            {item.label === "Organisers" && stats?.pendingOrganisersCount ? (
+                                stats.pendingOrganisersCount > 0 && (
+                                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${isActive ? 'bg-white text-red-600' : 'bg-red-500 text-white'}`}>
+                                        {stats.pendingOrganisersCount}
+                                    </span>
+                                )
+                            ) : null}
+
+                            {item.label === "Payouts" && stats?.pendingPayoutsCount ? (
+                                stats.pendingPayoutsCount > 0 && (
+                                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${isActive ? 'bg-white text-red-600' : 'bg-red-500 text-white'}`}>
+                                        {stats.pendingPayoutsCount}
+                                    </span>
+                                )
+                            ) : null}
                         </button>
                     );
                 })}

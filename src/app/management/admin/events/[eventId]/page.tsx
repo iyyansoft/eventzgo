@@ -55,7 +55,7 @@ export default function EventDetailsPage({ params }: { params: Promise<{ eventId
             <span className="font-semibold">Category:</span> {event.category}
           </div>
           <div>
-            <span className="font-semibold">Venue:</span> {event.venue.name}
+            <span className="font-semibold">Venue:</span> {typeof event.venue === 'string' ? event.venue : event.venue.name}
           </div>
         </div>
       </div>
