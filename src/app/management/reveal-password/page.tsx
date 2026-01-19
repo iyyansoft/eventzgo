@@ -1,11 +1,11 @@
 "use client";
 
 import { useSearchParams, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import Image from "next/image";
-import { Copy, Check, Eye, EyeOff } from "lucide-react";
+import { Copy, Check, Eye, EyeOff, Loader2 } from "lucide-react";
 
-export default function RevealPasswordPage() {
+function RevealPasswordContent() {
     const searchParams = useSearchParams();
     const router = useRouter();
     const password = searchParams.get("token");
@@ -157,5 +157,17 @@ export default function RevealPasswordPage() {
                 </div>
             </div>
         </div>
+    );
+}
+
+export default function RevealPasswordPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center">
+                <Loader2 className="w-10 h-10 text-purple-600 animate-spin" />
+            </div>
+        }>
+            <RevealPasswordContent />
+        </Suspense>
     );
 }

@@ -1,9 +1,7 @@
 // src/app/management/onboarding/page.tsx - ENHANCED VERSION
 'use client';
 
-import { useEffect } from 'react';
-
-import React, { useState } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
@@ -24,7 +22,7 @@ interface GSTData {
     verified: boolean;
 }
 
-export default function OnboardingPage() {
+function OnboardingContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const role = searchParams.get('role') || 'organiser';
@@ -1122,5 +1120,17 @@ export default function OnboardingPage() {
                 </div>
             </div>
         </div>
+    );
+}
+
+export default function OnboardingPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center">
+                <Loader2 className="w-10 h-10 text-purple-600 animate-spin" />
+            </div>
+        }>
+            <OnboardingContent />
+        </Suspense>
     );
 }

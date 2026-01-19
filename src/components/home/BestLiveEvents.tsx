@@ -110,7 +110,7 @@ export default function BestLiveEvents() {
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                                         </svg>
                                         <span className="line-clamp-1">
-                                            {typeof event.venue === 'string' ? event.venue : `${event.venue.name}, ${event.venue.city}`}
+                                            {typeof event.venue === 'string' ? event.venue : (event.venue ? `${event.venue.name}, ${event.venue.city}` : 'Venue TBA')}
                                         </span>
                                     </div>
 

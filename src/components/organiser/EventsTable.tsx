@@ -121,7 +121,7 @@ const EventsTable: React.FC<EventsTableProps> = ({ events = [] }) => {
 								<div className="flex items-center gap-2 text-sm text-gray-700">
 									<MapPin className="w-4 h-4 text-gray-400" />
 									<span>
-										{typeof event.venue === 'string' ? event.venue : `${event.venue.city}, ${event.venue.state}`}
+										{typeof event.venue === 'string' ? event.venue : (event.venue ? `${event.venue.city}, ${event.venue.state}` : 'Venue TBA')}
 									</span>
 								</div>
 							</td>

@@ -18,7 +18,7 @@ export default function LocationBasedEvents() {
     // Filter events by selected state
     const locationEvents = useMemo(() => {
         if (!state || !allEvents) return [];
-        return allEvents.filter((event) => event.venue.state === state).slice(0, 4);
+        return allEvents.filter((event) => event.venue && typeof event.venue !== 'string' && event.venue.state === state).slice(0, 4);
     }, [state, allEvents]);
 
     const formatDate = (timestamp: number) => {
@@ -117,7 +117,11 @@ export default function LocationBasedEvents() {
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                                     </svg>
-                                    <span className="line-clamp-1">{event.venue.name}, {event.venue.city}</span>
+                                    <span className="line-clamp-1">
+                                        {typeof event.venue === 'string'
+                                            ? event.venue
+                                            : (event.venue ? `${event.venue.name}, ${event.venue.city}` : 'Venue TBA')}
+                                    </span>
                                 </div>
 
                                 <div className="flex items-center justify-between pt-3 border-t border-gray-100">

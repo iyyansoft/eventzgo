@@ -87,7 +87,7 @@ const StateSelector = () => {
     return statesConfig.map((state) => ({
       ...state,
       events: allEvents.filter(
-        (event) => event.venue.state === state.name
+        (event) => event.venue && typeof event.venue !== 'string' && event.venue.state === state.name
       ).length,
     }));
   }, [allEvents]);
@@ -122,7 +122,7 @@ const StateSelector = () => {
         </div>
       </div>
     );
-    
+
     if (showSelector) {
       return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
@@ -158,56 +158,56 @@ const StateSelector = () => {
       {showSelector && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="w-full h-screen max-w-4xl max-h-screen flex flex-col bg-white rounded-3xl">
-          <div className="p-6 border-b border-gray-200 flex items-center justify-between">
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900">Select Your Location</h2>
-              <p className="text-gray-600 mt-1">Choose a city to discover events near you</p>
+            <div className="p-6 border-b border-gray-200 flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">Select Your Location</h2>
+                <p className="text-gray-600 mt-1">Choose a city to discover events near you</p>
+              </div>
+              <button
+                onClick={closeSelector}
+                className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+              >
+                <X className="w-6 h-6 text-gray-600" />
+              </button>
             </div>
-            <button
-              onClick={closeSelector}
-              className="p-2 rounded-full hover:bg-gray-100 transition-colors"
-            >
-              <X className="w-6 h-6 text-gray-600" />
-            </button>
-          </div>
-          <div className="flex-1 overflow-y-auto p-8">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {states.map((state) => (
-                <div
-                  key={state.name}
-                  className="group cursor-pointer transform hover:scale-105 transition-all duration-300"
-                  onClick={() => handleStateClick(state)}
-                >
-                  <div className="relative h-48 rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-shadow duration-300">
-                    <Image
-                      src={state.image}
-                      alt={state.name}
-                      width={320}
-                      height={256}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                    />
+            <div className="flex-1 overflow-y-auto p-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {states.map((state) => (
+                  <div
+                    key={state.name}
+                    className="group cursor-pointer transform hover:scale-105 transition-all duration-300"
+                    onClick={() => handleStateClick(state)}
+                  >
+                    <div className="relative h-48 rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-shadow duration-300">
+                      <Image
+                        src={state.image}
+                        alt={state.name}
+                        width={320}
+                        height={256}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                      />
 
-                    <div
-                      className={`absolute inset-0 bg-gradient-to-t ${state.gradient} opacity-70 group-hover:opacity-80 transition-opacity duration-300`}
-                    ></div>
+                      <div
+                        className={`absolute inset-0 bg-gradient-to-t ${state.gradient} opacity-70 group-hover:opacity-80 transition-opacity duration-300`}
+                      ></div>
 
-                    <div className="absolute inset-0 flex flex-col justify-between p-4 text-white">
-                      <div className="bg-white/20 backdrop-blur-sm rounded-full p-2 w-fit">
-                        <MapPin className="w-5 h-5" />
-                      </div>
+                      <div className="absolute inset-0 flex flex-col justify-between p-4 text-white">
+                        <div className="bg-white/20 backdrop-blur-sm rounded-full p-2 w-fit">
+                          <MapPin className="w-5 h-5" />
+                        </div>
 
-                      <div>
-                        <h3 className="text-xl font-bold mb-1">{state.name}</h3>
-                        <p className="text-white/90 text-sm mb-2">{state.city}</p>
-                        <p className="text-white/70 text-xs">{state.events} Events</p>
+                        <div>
+                          <h3 className="text-xl font-bold mb-1">{state.name}</h3>
+                          <p className="text-white/90 text-sm mb-2">{state.city}</p>
+                          <p className="text-white/70 text-xs">{state.events} Events</p>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
-        </div>
         </div>
       )}
 

@@ -92,7 +92,7 @@ export default function HorizontalEventSlider({
         >
           {events.map((event) => {
             const minPrice = Math.min(...event.ticketTypes.map((t) => t.price));
-            
+
             return (
               <div
                 key={event._id}
@@ -135,7 +135,7 @@ export default function HorizontalEventSlider({
 
                       <div className="flex items-center space-x-2 text-gray-600">
                         <MapPin className="w-4 h-4" />
-                        <span className="text-sm">{event.venue.name}, {event.venue.city}</span>
+                        <span className="text-sm">{typeof event.venue === 'string' ? event.venue : (event.venue ? `${event.venue.name}, ${event.venue.city}` : 'Venue TBA')}</span>
                       </div>
                     </div>
 

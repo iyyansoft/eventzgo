@@ -5,8 +5,8 @@ import { useRouter } from 'next/navigation';
 import { useUser } from "@clerk/nextjs";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { 
-  Calendar, Plus, Users, TrendingUp, Clock, MapPin, 
+import {
+  Calendar, Plus, Users, TrendingUp, Clock, MapPin,
   Eye, Edit, Trash2, CheckCircle
 } from 'lucide-react';
 import Breadcrumbs from './Breadcrumbs';
@@ -25,7 +25,12 @@ export default function OrganizerDashboard() {
     isSignedIn && user ? { clerkId: user.id } : "skip"
   );
 
-  const myEvents = useQuery(api.events.getOrganiserEvents, {});
+  const organiserData = useQuery(
+    api.organisers.getOrganiserByClerkId,
+    isSignedIn && user ? { clerkId: user.id } : "skip"
+  );
+
+  const myEvents = useQuery(api.events.getOrganiserEvents, organiserData ? { organiserId: organiserData._id } : "skip");
 
   const eventPerformanceData = [
     { month: 'Jan', events: 5, attendees: 1200, revenue: 450000 },
@@ -98,13 +103,13 @@ export default function OrganizerDashboard() {
   return (
     <div className="space-y-6">
       <Breadcrumbs />
-      
+
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Event Organizer Hub</h1>
           <p className="text-gray-600 mt-1">Create amazing events and build powerful partnerships</p>
         </div>
-        <button 
+        <button
           onClick={handleCreateEvent}
           className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-200 flex items-center space-x-2"
         >
@@ -136,20 +141,20 @@ export default function OrganizerDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Event Performance Trends</h3>
-          <LineChart 
-            data={eventPerformanceData} 
-            dataKey="attendees" 
-            xAxisKey="month" 
+          <LineChart
+            data={eventPerformanceData}
+            dataKey="attendees"
+            xAxisKey="month"
             color="#3b82f6"
             height={250}
           />
         </div>
-        
+
         <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Event Category Distribution</h3>
-          <PieChart 
-            data={eventCategoryData} 
-            dataKey="value" 
+          <PieChart
+            data={eventCategoryData}
+            dataKey="value"
             nameKey="name"
             height={250}
           />
@@ -158,10 +163,10 @@ export default function OrganizerDashboard() {
 
       <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Revenue Growth</h3>
-        <BarChart 
-          data={eventPerformanceData} 
-          dataKey="revenue" 
-          xAxisKey="month" 
+        <BarChart
+          data={eventPerformanceData}
+          dataKey="revenue"
+          xAxisKey="month"
           color="#10b981"
           height={250}
         />
@@ -178,11 +183,10 @@ export default function OrganizerDashboard() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${
-                  activeTab === tab.id
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
-                }`}
+                className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${activeTab === tab.id
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+                  }`}
               >
                 {tab.label}
               </button>
@@ -197,12 +201,10 @@ export default function OrganizerDashboard() {
                 const Icon = activity.icon;
                 return (
                   <div key={activity.id} className="flex items-center space-x-4 p-4 bg-gray-50 rounded-xl">
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                      activity.type === 'success' ? 'bg-green-100' : 'bg-blue-100'
-                    }`}>
-                      <Icon className={`w-5 h-5 ${
-                        activity.type === 'success' ? 'text-green-600' : 'text-blue-600'
-                      }`} />
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${activity.type === 'success' ? 'bg-green-100' : 'bg-blue-100'
+                      }`}>
+                      <Icon className={`w-5 h-5 ${activity.type === 'success' ? 'text-green-600' : 'text-blue-600'
+                        }`} />
                     </div>
                     <div className="flex-1">
                       <p className="text-gray-900 font-medium">{activity.message}</p>
@@ -218,7 +220,7 @@ export default function OrganizerDashboard() {
             <div>
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-lg font-semibold text-gray-900">My Event Portfolio</h3>
-                <button 
+                <button
                   onClick={handleCreateEvent}
                   className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors duration-200 flex items-center space-x-2"
                 >
@@ -239,15 +241,14 @@ export default function OrganizerDashboard() {
                           </div>
                           <div className="flex items-center space-x-2">
                             <MapPin className="w-4 h-4" />
-                            <span>{event.venue.name}, {event.venue.city}</span>
+                            <span>{typeof event.venue === 'string' ? event.venue : (event.venue ? `${event.venue.name}, ${event.venue.city}` : 'Venue TBA')}</span>
                           </div>
                         </div>
                       </div>
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                        (event as any).approvalStatus === 'approved' ? 'bg-green-100 text-green-800' :
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${(event as any).approvalStatus === 'approved' ? 'bg-green-100 text-green-800' :
                         (event as any).approvalStatus === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                        'bg-gray-100 text-gray-800'
-                      }`}>
+                          'bg-gray-100 text-gray-800'
+                        }`}>
                         {(event as any).approvalStatus}
                       </span>
                     </div>
@@ -257,13 +258,13 @@ export default function OrganizerDashboard() {
                         <span className="font-medium">{event.soldTickets}</span> / {event.totalCapacity} sold
                       </div>
                       <div className="flex space-x-2">
-                        <button 
+                        <button
                           onClick={() => router.push(`/events/${event._id}`)}
                           className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-200"
                         >
                           <Eye className="w-4 h-4" />
                         </button>
-                        <button 
+                        <button
                           onClick={() => router.push(`/management/events/${event._id}/edit`)}
                           className="p-2 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors duration-200"
                         >

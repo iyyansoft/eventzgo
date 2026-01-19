@@ -250,7 +250,7 @@ const EventDetails: React.FC<EventDetailsProps> = ({ event }) => {
               <div className="flex items-center space-x-2">
                 <MapPin className="w-5 h-5" />
                 <span>
-                  {typeof event.venue === 'string' ? event.venue : `${event.venue.city}, ${event.venue.state}`}
+                  {typeof event.venue === 'string' ? event.venue : (event.venue ? `${event.venue.city}, ${event.venue.state}` : 'Venue TBA')}
                 </span>
               </div>
             </div>
@@ -298,8 +298,8 @@ const EventDetails: React.FC<EventDetailsProps> = ({ event }) => {
                   <MapPin className="w-6 h-6 text-purple-600 mt-1" />
                   <div>
                     <p className="font-semibold text-gray-900">Venue</p>
-                    <p className="text-gray-600">{typeof event.venue === 'string' ? event.venue : event.venue.name}</p>
-                    {typeof event.venue !== 'string' && (
+                    <p className="text-gray-600">{typeof event.venue === 'string' ? event.venue : (event.venue ? event.venue.name : 'Venue TBA')}</p>
+                    {event.venue && typeof event.venue !== 'string' && (
                       <>
                         <p className="text-gray-600">
                           {event.venue.address}, {event.venue.city}

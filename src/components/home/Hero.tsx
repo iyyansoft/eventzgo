@@ -295,7 +295,7 @@ const Hero = () => {
                           </div>
                           <div className="flex items-center space-x-1">
                             <MapPin className="w-3 h-3" />
-                            <span>{event.venue.city}</span>
+                            <span>{event.venue ? (typeof event.venue === 'string' ? event.venue : event.venue.city) : 'Venue TBA'}</span>
                           </div>
                         </div>
                       </div>
@@ -342,9 +342,8 @@ const Hero = () => {
               <button
                 key={index}
                 onClick={() => setCurrentSlide(index)}
-                className={`w-2 sm:w-3 h-2 sm:h-3 rounded-full transition-all duration-200 ${
-                  index === currentSlide ? "bg-white" : "bg-white/40"
-                }`}
+                className={`w-2 sm:w-3 h-2 sm:h-3 rounded-full transition-all duration-200 ${index === currentSlide ? "bg-white" : "bg-white/40"
+                  }`}
               />
             ))}
           </div>

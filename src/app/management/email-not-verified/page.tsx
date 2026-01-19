@@ -1,13 +1,13 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useMutation, useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { Mail, AlertCircle, Loader2, CheckCircle, Clock } from 'lucide-react';
 import { Id } from '@/convex/_generated/dataModel';
 
-export default function EmailNotVerifiedPage() {
+function EmailNotVerifiedContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const email = searchParams.get('email');
@@ -172,5 +172,17 @@ export default function EmailNotVerifiedPage() {
                 </p>
             </div>
         </div>
+    );
+}
+
+export default function EmailNotVerifiedPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center">
+                <Loader2 className="w-10 h-10 text-orange-600 animate-spin" />
+            </div>
+        }>
+            <EmailNotVerifiedContent />
+        </Suspense>
     );
 }

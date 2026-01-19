@@ -116,11 +116,11 @@ export const authOptions: NextAuthOptions = {
             // Initial sign in
             if (user) {
                 token.userId = user.id;
-                token.username = user.username;
-                token.role = user.role;
-                token.accountStatus = user.accountStatus;
-                token.requirePasswordChange = user.requirePasswordChange;
-                token.sessionToken = user.sessionToken;
+                token.username = user.username || "";
+                token.role = user.role || "";
+                token.accountStatus = user.accountStatus || "";
+                token.requirePasswordChange = user.requirePasswordChange || false;
+                token.sessionToken = user.sessionToken || "";
             }
 
             return token;

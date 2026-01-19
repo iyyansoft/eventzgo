@@ -2,10 +2,24 @@ import Razorpay from "razorpay";
 import crypto from "crypto";
 
 // Server-side Razorpay instance
-export const razorpayInstance = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID!,
-  key_secret: process.env.RAZORPAY_KEY_SECRET!,
-});
+let razorpayInstance: Razorpay | undefined;
+
+const getRazorpayInstance = () => {
+  if (!razorpayInstance) {
+    if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
+      console.warn("Razorpay keys are missing");
+      // Don't throw here to allow other functions to work if they don't need instance
+    }
+
+    razorpayInstance = new Razorpay({
+      key_id: process.env.RAZORPAY_KEY_ID || "dummy_key",
+      key_secret: process.env.RAZORPAY_KEY_SECRET || "dummy_secret",
+    });
+  }
+  return razorpayInstance!;
+};
+
+export { getRazorpayInstance };
 
 /**
  * Create Razorpay order
@@ -17,13 +31,13 @@ export async function createRazorpayOrder(
   notes?: Record<string, string>
 ) {
   try {
-    const order = await razorpayInstance.orders.create({
+    const order = await getRazorpayInstance().orders.create({
       amount: Math.round(amount * 100), // Convert to paise
       currency,
       receipt,
       notes,
     });
-    
+
     return order;
   } catch (error) {
     console.error("Razorpay order creation failed:", error);
@@ -45,7 +59,7 @@ export function verifyRazorpaySignature(
       .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET!)
       .update(text)
       .digest("hex");
-    
+
     return generated_signature === signature;
   } catch (error) {
     console.error("Signature verification failed:", error);
@@ -65,7 +79,7 @@ export function verifyWebhookSignature(
       .createHmac("sha256", process.env.RAZORPAY_WEBHOOK_SECRET!)
       .update(body)
       .digest("hex");
-    
+
     return expectedSignature === signature;
   } catch (error) {
     console.error("Webhook signature verification failed:", error);
@@ -78,7 +92,7 @@ export function verifyWebhookSignature(
  */
 export async function fetchPayment(paymentId: string) {
   try {
-    const payment = await razorpayInstance.payments.fetch(paymentId);
+    const payment = await getRazorpayInstance().payments.fetch(paymentId);
     return payment;
   } catch (error) {
     console.error("Failed to fetch payment:", error);
@@ -95,11 +109,11 @@ export async function createRefund(
   notes?: Record<string, string>
 ) {
   try {
-    const refund = await razorpayInstance.payments.refund(paymentId, {
+    const refund = await getRazorpayInstance().payments.refund(paymentId, {
       amount: amount ? Math.round(amount * 100) : undefined,
       notes,
     });
-    
+
     return refund;
   } catch (error) {
     console.error("Refund creation failed:", error);
@@ -112,7 +126,7 @@ export async function createRefund(
  */
 export async function fetchRefund(refundId: string) {
   try {
-    const refund = await razorpayInstance.refunds.fetch(refundId);
+    const refund = await getRazorpayInstance().refunds.fetch(refundId);
     return refund;
   } catch (error) {
     console.error("Failed to fetch refund:", error);
@@ -130,7 +144,7 @@ export function loadRazorpayScript(): Promise<boolean> {
       resolve(true);
       return;
     }
-    
+
     const script = document.createElement("script");
     script.src = "https://checkout.razorpay.com/v1/checkout.js";
     script.onload = () => resolve(true);
@@ -169,11 +183,11 @@ export interface RazorpayOptions {
 
 export async function openRazorpayCheckout(options: RazorpayOptions) {
   const loaded = await loadRazorpayScript();
-  
+
   if (!loaded) {
     throw new Error("Failed to load Razorpay SDK");
   }
-  
+
   const razorpay = new (window as any).Razorpay(options);
   razorpay.open();
 }
