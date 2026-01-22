@@ -229,7 +229,7 @@ const OrganizerDashboard = () => {
                     <div>
                         <h1 className="text-3xl font-bold text-gray-900">Event Organizer Hub</h1>
                         <p className="text-gray-600 mt-1">
-                            Welcome back, {organiserData?.institutionName || session.user?.companyName || 'Organiser'}! ðŸ‘‹
+                            Welcome back, {organiserData?.institutionName || session.user?.companyName || 'Organiser'}! 👋‘‹
                         </p>
                     </div>
                     <button

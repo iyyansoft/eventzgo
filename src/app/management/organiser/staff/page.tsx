@@ -611,7 +611,7 @@ function PasswordDisplay({ password }: { password?: string }) {
     return (
         <div className="flex items-center gap-2">
             <code className="px-2 py-1 bg-gray-100 rounded text-sm w-[100px] block truncate font-mono text-purple-600">
-                {show ? password : 'â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢'}
+                {show ? password : '••••••••'}
             </code>
             <button
                 onClick={() => setShow(!show)}

@@ -2,8 +2,10 @@
 
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import { Id } from "@/convex/_generated/dataModel";
 import { TrendingUp, Users, DollarSign, Calendar, ArrowUp, ArrowDown, Ticket, Eye } from "lucide-react";
 import { useMemo, useState, useEffect } from "react";
+import { RUPEE_SYMBOL } from "@/lib/currency";
 
 // Disable static generation for this page
 export const dynamic = 'force-dynamic';
@@ -21,13 +23,15 @@ export default function OrganiserAnalyticsPage() {
         }
     }, []);
 
+    // @ts-ignore
     const events = useQuery(
         api.events.getOrganiserEvents,
-        userId ? { organiserId: userId as any } : "skip"
+        userId ? { organiserId: userId } : "skip"
     );
+    // @ts-ignore
     const bookings = useQuery(
         api.bookings.getOrganiserBookings,
-        userId ? { organiserId: userId as any } : "skip"
+        userId ? { organiserId: userId } : "skip"
     );
 
     const analytics = useMemo(() => {
@@ -90,7 +94,7 @@ export default function OrganiserAnalyticsPage() {
     const stats = [
         {
             label: "Total Revenue",
-            value: `â‚¹${analytics.totalRevenue.toLocaleString()}`,
+            value: `${RUPEE_SYMBOL}${analytics.totalRevenue.toLocaleString()}`,
             subtext: `${analytics.confirmedBookings} confirmed bookings`,
             icon: DollarSign,
             color: "green",
@@ -191,7 +195,7 @@ export default function OrganiserAnalyticsPage() {
                         <h3 className="font-semibold text-gray-900">Avg. Revenue per Event</h3>
                     </div>
                     <p className="text-2xl font-bold text-gray-900">
-                        â‚¹{events.length > 0 ? Math.round(analytics.totalRevenue / events.length).toLocaleString() : 0}
+                        {RUPEE_SYMBOL}{events.length > 0 ? Math.round(analytics.totalRevenue / events.length).toLocaleString() : 0}
                     </p>
                     <p className="text-sm text-gray-600 mt-1">
                         Based on {events.length} events
@@ -229,13 +233,13 @@ export default function OrganiserAnalyticsPage() {
                                                 {event.title}
                                             </h4>
                                             <p className="text-sm text-gray-600">
-                                                {event.bookings} bookings â€¢ {event.soldTickets}/{event.capacity} tickets
+                                                {event.bookings} bookings • {event.soldTickets}/{event.capacity} tickets
                                             </p>
                                         </div>
                                     </div>
                                     <div className="text-right">
                                         <p className="font-semibold text-gray-900">
-                                            â‚¹{event.revenue.toLocaleString()}
+                                            {RUPEE_SYMBOL}{event.revenue.toLocaleString()}
                                         </p>
                                         <p className="text-sm text-purple-600">
                                             {event.occupancy.toFixed(1)}% filled

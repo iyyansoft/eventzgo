@@ -3,8 +3,9 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { Calendar, Users, Clock, CheckCircle, XCircle, AlertCircle, Ticket, Download, ChevronDown, ChevronUp, FileSpreadsheet, Filter } from "lucide-react";
+import { Calendar, Users, Clock, CheckCircle, XCircle, AlertCircle, Ticket, Download, ChevronDown, ChevronUp, FileSpreadsheet, Filter, User } from "lucide-react";
 import * as XLSX from 'xlsx';
+import { RUPEE_SYMBOL } from "@/lib/currency";
 
 // Disable static generation for this page
 export const dynamic = 'force-dynamic';
@@ -123,7 +124,7 @@ export default function OrganiserBookingsPage() {
                 'Email': booking.guestDetails?.email || '',
                 'Phone': booking.guestDetails?.phone || '',
                 'Tickets': booking.tickets.map((t: any) => `${t.quantity}x ${t.ticketTypeName}`).join(', '),
-                'Total Amount': `â‚¹${booking.totalAmount}`,
+                'Total Amount': `${RUPEE_SYMBOL}${booking.totalAmount}`,
                 'Status': booking.status,
                 'Booking Date': new Date(booking._creationTime).toLocaleString(),
             };
@@ -215,7 +216,7 @@ export default function OrganiserBookingsPage() {
                                     {event.name}
                                 </div>
                                 <div className="text-xs text-gray-500 mt-1">
-                                    {new Date(event.date).toLocaleDateString()} â€¢ {eventBookings.length} bookings
+                                    {new Date(event.date).toLocaleDateString()} • {eventBookings.length} bookings
                                 </div>
                                 <button
                                     onClick={(e) => {
@@ -311,20 +312,18 @@ export default function OrganiserBookingsPage() {
                                             className="hover:bg-gray-50 transition-colors"
                                         >
                                             <td className="px-6 py-4">
-                                                {booking.customFieldResponses && booking.customFieldResponses.length > 0 && (
-                                                    <button
-                                                        onClick={() => setExpandedBooking(
-                                                            expandedBooking === booking._id ? null : booking._id
-                                                        )}
-                                                        className="text-purple-600 hover:text-purple-800 transition-colors"
-                                                    >
-                                                        {expandedBooking === booking._id ? (
-                                                            <ChevronUp className="w-5 h-5" />
-                                                        ) : (
-                                                            <ChevronDown className="w-5 h-5" />
-                                                        )}
-                                                    </button>
-                                                )}
+                                                <button
+                                                    onClick={() => setExpandedBooking(
+                                                        expandedBooking === booking._id ? null : booking._id
+                                                    )}
+                                                    className="text-purple-600 hover:text-purple-800 transition-colors"
+                                                >
+                                                    {expandedBooking === booking._id ? (
+                                                        <ChevronUp className="w-5 h-5" />
+                                                    ) : (
+                                                        <ChevronDown className="w-5 h-5" />
+                                                    )}
+                                                </button>
                                             </td>
                                             <td className="px-6 py-4">
                                                 <span className="font-mono text-sm text-gray-600">
@@ -362,7 +361,7 @@ export default function OrganiserBookingsPage() {
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4 text-sm font-semibold text-gray-900">
-                                                â‚¹{booking.totalAmount.toLocaleString()}
+                                                {RUPEE_SYMBOL}{booking.totalAmount.toLocaleString()}
                                             </td>
                                             <td className="px-6 py-4">
                                                 <span
@@ -381,25 +380,188 @@ export default function OrganiserBookingsPage() {
                                                 </div>
                                             </td>
                                         </tr>
-                                        {expandedBooking === booking._id && booking.customFieldResponses && (
-                                            <tr className="bg-purple-50">
-                                                <td colSpan={8} className="px-6 py-4">
-                                                    <div className="space-y-3">
-                                                        <h4 className="font-semibold text-purple-900 flex items-center gap-2">
-                                                            <AlertCircle className="w-4 h-4" />
-                                                            Custom Field Responses
-                                                        </h4>
-                                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                                            {booking.customFieldResponses.map((field: any, idx: number) => (
-                                                                <div key={idx} className="bg-white rounded-lg p-4 border border-purple-200">
-                                                                    <div className="text-xs font-medium text-purple-600 uppercase mb-1">
-                                                                        {field.label}
-                                                                    </div>
-                                                                    <div className="text-sm text-gray-900 font-medium">
-                                                                        {field.value}
+                                        {expandedBooking === booking._id && (
+                                            <tr className="bg-gradient-to-r from-purple-50 to-pink-50">
+                                                <td colSpan={8} className="px-6 py-6">
+                                                    <div className="space-y-6">
+                                                        {/* Complete Booking Details Header */}
+                                                        <div className="flex items-center justify-between border-b border-purple-200 pb-4">
+                                                            <h4 className="text-lg font-bold text-purple-900 flex items-center gap-2">
+                                                                <Ticket className="w-5 h-5" />
+                                                                Complete Booking Details
+                                                            </h4>
+                                                            <span className="text-xs text-gray-500">
+                                                                ID: {booking._id}
+                                                            </span>
+                                                        </div>
+
+                                                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                                            {/* Left Column */}
+                                                            <div className="space-y-4">
+                                                                {/* Ticket Details */}
+                                                                <div className="bg-white rounded-xl p-4 border border-purple-200 shadow-sm">
+                                                                    <h5 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                                                                        <Ticket className="w-4 h-4 text-purple-600" />
+                                                                        Ticket Information
+                                                                    </h5>
+                                                                    <div className="space-y-2">
+                                                                        {booking.tickets.map((ticket: any, idx: number) => (
+                                                                            <div key={idx} className="flex justify-between text-sm p-2 bg-gray-50 rounded">
+                                                                                <span className="text-gray-700">{ticket.ticketTypeName}</span>
+                                                                                <div className="text-right">
+                                                                                    <div className="font-medium text-gray-900">
+                                                                                        {ticket.quantity} × {RUPEE_SYMBOL}{ticket.price.toLocaleString()}
+                                                                                    </div>
+                                                                                    <div className="text-xs text-gray-500">
+                                                                                        = {RUPEE_SYMBOL}{(ticket.quantity * ticket.price).toLocaleString()}
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        ))}
                                                                     </div>
                                                                 </div>
-                                                            ))}
+
+                                                                {/* Pricing Breakdown */}
+                                                                <div className="bg-white rounded-xl p-4 border border-purple-200 shadow-sm">
+                                                                    <h5 className="font-semibold text-gray-900 mb-3">Price Breakdown</h5>
+                                                                    <div className="space-y-2 text-sm">
+                                                                        <div className="flex justify-between">
+                                                                            <span className="text-gray-600">Subtotal</span>
+                                                                            <span className="font-medium">{RUPEE_SYMBOL}{booking.pricing.subtotal.toLocaleString()}</span>
+                                                                        </div>
+                                                                        {booking.discountAmount && (
+                                                                            <div className="flex justify-between text-green-600">
+                                                                                <span>Discount Applied</span>
+                                                                                <span className="font-medium">-{RUPEE_SYMBOL}{booking.discountAmount.toLocaleString()}</span>
+                                                                            </div>
+                                                                        )}
+                                                                        <div className="flex justify-between">
+                                                                            <span className="text-gray-600">GST ({booking.pricing.ticketGst ? '18%' : '0%'})</span>
+                                                                            <span className="font-medium">{RUPEE_SYMBOL}{booking.pricing.gst.toLocaleString()}</span>
+                                                                        </div>
+                                                                        <div className="flex justify-between">
+                                                                            <span className="text-gray-600">Platform Fee</span>
+                                                                            <span className="font-medium">{RUPEE_SYMBOL}{booking.pricing.platformFee.toLocaleString()}</span>
+                                                                        </div>
+                                                                        <div className="flex justify-between pt-2 border-t border-gray-200">
+                                                                            <span className="font-semibold text-gray-900">Total Amount</span>
+                                                                            <span className="font-bold text-lg text-purple-600">
+                                                                                {RUPEE_SYMBOL}{booking.pricing.total.toLocaleString()}
+                                                                            </span>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+
+                                                                {/* QR Code & PDF */}
+                                                                {booking.qrCode && (
+                                                                    <div className="bg-white rounded-xl p-4 border border-purple-200 shadow-sm">
+                                                                        <h5 className="font-semibold text-gray-900 mb-3">Ticket Access</h5>
+                                                                        <div className="flex items-center gap-4">
+                                                                            <div className="flex-1">
+                                                                                <p className="text-sm text-gray-600 mb-2">QR Code Available</p>
+                                                                                <p className="text-xs text-gray-500">Used: {booking.isUsed ? 'Yes' : 'No'}</p>
+                                                                                {booking.usedAt && (
+                                                                                    <p className="text-xs text-gray-500">
+                                                                                        Used on: {new Date(booking.usedAt).toLocaleString()}
+                                                                                    </p>
+                                                                                )}
+                                                                            </div>
+                                                                            {booking.pdfUrl && (
+                                                                                <a
+                                                                                    href={booking.pdfUrl}
+                                                                                    target="_blank"
+                                                                                    rel="noopener noreferrer"
+                                                                                    className="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm hover:bg-purple-700 transition-colors"
+                                                                                >
+                                                                                    View PDF
+                                                                                </a>
+                                                                            )}
+                                                                        </div>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+
+                                                            {/* Right Column */}
+                                                            <div className="space-y-4">
+                                                                {/* Customer Details */}
+                                                                <div className="bg-white rounded-xl p-4 border border-purple-200 shadow-sm">
+                                                                    <h5 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                                                                        <User className="w-4 h-4 text-purple-600" />
+                                                                        Customer Details
+                                                                    </h5>
+                                                                    <div className="space-y-2 text-sm">
+                                                                        <div>
+                                                                            <span className="text-gray-600">Name:</span>
+                                                                            <p className="font-medium text-gray-900">{booking.guestDetails?.name || 'N/A'}</p>
+                                                                        </div>
+                                                                        <div>
+                                                                            <span className="text-gray-600">Email:</span>
+                                                                            <p className="font-medium text-gray-900">{booking.guestDetails?.email || 'N/A'}</p>
+                                                                        </div>
+                                                                        <div>
+                                                                            <span className="text-gray-600">Phone:</span>
+                                                                            <p className="font-medium text-gray-900">{booking.guestDetails?.phone || 'N/A'}</p>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+
+                                                                {/* Custom Field Responses */}
+                                                                {booking.customFieldResponses && booking.customFieldResponses.length > 0 && (
+                                                                    <div className="bg-white rounded-xl p-4 border border-purple-200 shadow-sm">
+                                                                        <h5 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                                                                            <AlertCircle className="w-4 h-4 text-purple-600" />
+                                                                            Custom Information
+                                                                        </h5>
+                                                                        <div className="space-y-2">
+                                                                            {booking.customFieldResponses.map((field: any, idx: number) => (
+                                                                                <div key={idx} className="p-2 bg-gray-50 rounded">
+                                                                                    <div className="text-xs font-medium text-purple-600 uppercase">
+                                                                                        {field.label}
+                                                                                    </div>
+                                                                                    <div className="text-sm text-gray-900 font-medium mt-1">
+                                                                                        {field.value}
+                                                                                    </div>
+                                                                                </div>
+                                                                            ))}
+                                                                        </div>
+                                                                    </div>
+                                                                )}
+
+                                                                {/* Booking Metadata */}
+                                                                <div className="bg-white rounded-xl p-4 border border-purple-200 shadow-sm">
+                                                                    <h5 className="font-semibold text-gray-900 mb-3">Booking Information</h5>
+                                                                    <div className="space-y-2 text-sm">
+                                                                        <div className="flex justify-between">
+                                                                            <span className="text-gray-600">Booking Number:</span>
+                                                                            <span className="font-mono font-medium text-gray-900">#{booking.bookingNumber}</span>
+                                                                        </div>
+                                                                        <div className="flex justify-between">
+                                                                            <span className="text-gray-600">Status:</span>
+                                                                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(booking.status)}`}>
+                                                                                {booking.status.toUpperCase()}
+                                                                            </span>
+                                                                        </div>
+                                                                        <div className="flex justify-between">
+                                                                            <span className="text-gray-600">Booked On:</span>
+                                                                            <span className="font-medium text-gray-900">
+                                                                                {new Date(booking._creationTime).toLocaleString()}
+                                                                            </span>
+                                                                        </div>
+                                                                        <div className="flex justify-between">
+                                                                            <span className="text-gray-600">Last Updated:</span>
+                                                                            <span className="font-medium text-gray-900">
+                                                                                {new Date(booking.updatedAt || booking._creationTime).toLocaleString()}
+                                                                            </span>
+                                                                        </div>
+                                                                        {booking.couponId && (
+                                                                            <div className="flex justify-between text-green-600">
+                                                                                <span>Coupon Used:</span>
+                                                                                <span className="font-medium">Yes</span>
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </td>

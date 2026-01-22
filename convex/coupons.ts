@@ -1,503 +1,352 @@
-// convex/coupons.ts
-// Coupon Management System - Discount codes and promotions
-
+// convex/coupons.ts - Coupon Management Functions
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
 
 /**
- * Generate random coupon code
- */
-function generateCouponCode(prefix?: string): string {
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-    let code = prefix ? prefix.toUpperCase() : '';
-
-    for (let i = 0; i < 6; i++) {
-        code += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-
-    return code;
-}
-
-/**
- * Create a new coupon
+ * Create a new coupon code
+ * Only for active events
  */
 export const createCoupon = mutation({
-    args: {
-        organiserId: v.id("organisers"),
-        eventId: v.optional(v.id("events")),
-        code: v.optional(v.string()), // If not provided, auto-generate
-        name: v.string(),
-        description: v.string(),
-        discountType: v.union(
-            v.literal("percentage"),
-            v.literal("fixed"),
-            v.literal("bogo")
-        ),
-        discountValue: v.number(),
-        maxDiscount: v.optional(v.number()),
-        validFrom: v.number(),
-        validUntil: v.number(),
-        maxUses: v.optional(v.number()),
-        maxUsesPerUser: v.optional(v.number()),
-        minPurchaseAmount: v.optional(v.number()),
-        applicableTicketTypes: v.optional(v.array(v.string())),
-        firstTimeUserOnly: v.boolean(),
-    },
-    handler: async (ctx, args) => {
-        console.log("🎟️ Creating coupon...");
+  args: {
+    code: v.string(),
+    name: v.string(),
+    description: v.string(),
+    organiserId: v.id("organisers"),
+    eventId: v.optional(v.id("events")),
+    discountType: v.union(v.literal("percentage"), v.literal("fixed"), v.literal("bogo")),
+    discountValue: v.number(),
+    maxDiscount: v.optional(v.number()),
+    validFrom: v.number(),
+    validUntil: v.number(),
+    maxUses: v.optional(v.number()),
+    maxUsesPerUser: v.optional(v.number()),
+    minPurchaseAmount: v.optional(v.number()),
+    applicableTicketTypes: v.optional(v.array(v.string())),
+    firstTimeUserOnly: v.boolean(),
+  },
+  handler: async (ctx, args) => {
+    // If eventId provided, verify event is active and belongs to organiser
+    if (args.eventId) {
+      const event = await ctx.db.get(args.eventId);
+      if (!event) {
+        throw new Error("Event not found");
+      }
+      if (event.organiserId !== args.organiserId) {
+        throw new Error("Event does not belong to this organiser");
+      }
+      if (event.status !== "published") {
+        throw new Error("Coupons can only be created for active/published events");
+      }
+    }
 
-        // Verify organiser exists
-        const organiser = await ctx.db.get(args.organiserId);
-        if (!organiser) {
-            throw new Error("Organiser not found");
-        }
+    // Check if coupon code already exists for this organiser
+    const existing = await ctx.db
+      .query("coupons")
+      .withIndex("by_code", (q) => q.eq("code", args.code.toUpperCase()))
+      .filter((q) => q.eq(q.field("organiserId"), args.organiserId))
+      .first();
 
-        // If eventId provided, verify it belongs to organiser
-        if (args.eventId) {
-            const event = await ctx.db.get(args.eventId);
-            if (!event || event.organiserId !== args.organiserId) {
-                throw new Error("Event not found or doesn't belong to this organiser");
-            }
-        }
+    if (existing) {
+      throw new Error("Coupon code already exists");
+    }
 
-        // Generate or validate code
-        let code = args.code?.toUpperCase() || generateCouponCode();
+    // Create coupon
+    const couponId = await ctx.db.insert("coupons", {
+      code: args.code.toUpperCase(),
+      name: args.name,
+      description: args.description,
+      organiserId: args.organiserId,
+      eventId: args.eventId,
+      discountType: args.discountType,
+      discountValue: args.discountValue,
+      maxDiscount: args.maxDiscount,
+      validFrom: args.validFrom,
+      validUntil: args.validUntil,
+      maxUses: args.maxUses,
+      maxUsesPerUser: args.maxUsesPerUser,
+      currentUses: 0,
+      minPurchaseAmount: args.minPurchaseAmount,
+      applicableTicketTypes: args.applicableTicketTypes,
+      firstTimeUserOnly: args.firstTimeUserOnly,
+      isActive: true,
+      createdAt: Date.now(),
+      createdBy: args.organiserId,
+      updatedAt: Date.now(),
+    });
 
-        // Check if code already exists
-        const existingCoupon = await ctx.db
-            .query("coupons")
-            .withIndex("by_code", (q) => q.eq("code", code))
-            .first();
-
-        if (existingCoupon) {
-            // If user provided code, throw error
-            if (args.code) {
-                throw new Error("Coupon code already exists. Please choose a different code.");
-            }
-            // If auto-generated, try again
-            code = generateCouponCode();
-        }
-
-        // Validate dates
-        if (args.validFrom >= args.validUntil) {
-            throw new Error("Valid from date must be before valid until date");
-        }
-
-        // Validate discount value
-        if (args.discountType === "percentage" && (args.discountValue <= 0 || args.discountValue > 100)) {
-            throw new Error("Percentage discount must be between 1 and 100");
-        }
-
-        if (args.discountType === "fixed" && args.discountValue <= 0) {
-            throw new Error("Fixed discount must be greater than 0");
-        }
-
-        // Create coupon
-        const couponId = await ctx.db.insert("coupons", {
-            code,
-            name: args.name,
-            description: args.description,
-            organiserId: args.organiserId,
-            eventId: args.eventId,
-            discountType: args.discountType,
-            discountValue: args.discountValue,
-            maxDiscount: args.maxDiscount,
-            validFrom: args.validFrom,
-            validUntil: args.validUntil,
-            maxUses: args.maxUses,
-            maxUsesPerUser: args.maxUsesPerUser,
-            currentUses: 0,
-            minPurchaseAmount: args.minPurchaseAmount,
-            applicableTicketTypes: args.applicableTicketTypes,
-            firstTimeUserOnly: args.firstTimeUserOnly,
-            isActive: true,
-            createdAt: Date.now(),
-            createdBy: args.organiserId,
-            updatedAt: Date.now(),
-        });
-
-        console.log("✅ Coupon created:", code);
-
-        return {
-            success: true,
-            couponId,
-            code,
-            message: `Coupon ${code} created successfully!`,
-        };
-    },
-});
-
-/**
- * Validate and apply coupon
- */
-export const validateCoupon = query({
-    args: {
-        code: v.string(),
-        eventId: v.id("events"),
-        userId: v.optional(v.id("users")),
-        bookingAmount: v.number(),
-        ticketTypes: v.array(v.string()),
-    },
-    handler: async (ctx, args) => {
-        console.log("🔍 Validating coupon:", args.code);
-
-        // Find coupon by code
-        const coupon = await ctx.db
-            .query("coupons")
-            .withIndex("by_code", (q) => q.eq("code", args.code.toUpperCase()))
-            .first();
-
-        if (!coupon) {
-            return {
-                valid: false,
-                reason: "Coupon code not found",
-            };
-        }
-
-        // Check if active
-        if (!coupon.isActive) {
-            return {
-                valid: false,
-                reason: "This coupon is no longer active",
-            };
-        }
-
-        // Check event applicability
-        if (coupon.eventId && coupon.eventId !== args.eventId) {
-            const event = await ctx.db.get(coupon.eventId);
-            return {
-                valid: false,
-                reason: `This coupon is only valid for "${event?.title}"`,
-            };
-        }
-
-        // Check validity period
-        const now = Date.now();
-        if (now < coupon.validFrom) {
-            const startDate = new Date(coupon.validFrom).toLocaleDateString();
-            return {
-                valid: false,
-                reason: `This coupon is valid from ${startDate}`,
-            };
-        }
-
-        if (now > coupon.validUntil) {
-            return {
-                valid: false,
-                reason: "This coupon has expired",
-            };
-        }
-
-        // Check total usage limit
-        if (coupon.maxUses && coupon.currentUses >= coupon.maxUses) {
-            return {
-                valid: false,
-                reason: "This coupon has reached its usage limit",
-            };
-        }
-
-        // Check per-user usage limit
-        if (args.userId && coupon.maxUsesPerUser) {
-            const userUsages = await ctx.db
-                .query("couponUsages")
-                .withIndex("by_coupon_id", (q) => q.eq("couponId", coupon._id))
-                .filter((q) => q.eq(q.field("userId"), args.userId))
-                .collect();
-
-            if (userUsages.length >= coupon.maxUsesPerUser) {
-                return {
-                    valid: false,
-                    reason: `You have already used this coupon ${coupon.maxUsesPerUser} time(s)`,
-                };
-            }
-        }
-
-        // Check minimum purchase amount
-        if (coupon.minPurchaseAmount && args.bookingAmount < coupon.minPurchaseAmount) {
-            return {
-                valid: false,
-                reason: `Minimum purchase amount is ₹${coupon.minPurchaseAmount}`,
-            };
-        }
-
-        // Check ticket type applicability
-        if (coupon.applicableTicketTypes && coupon.applicableTicketTypes.length > 0) {
-            const hasApplicableTicket = args.ticketTypes.some(tt =>
-                coupon.applicableTicketTypes?.includes(tt)
-            );
-
-            if (!hasApplicableTicket) {
-                return {
-                    valid: false,
-                    reason: "This coupon is not applicable to your selected tickets",
-                };
-            }
-        }
-
-        // Check first-time user restriction
-        if (coupon.firstTimeUserOnly && args.userId) {
-            const previousBookings = await ctx.db
-                .query("bookings")
-                .withIndex("by_user_id", (q) => q.eq("userId", args.userId))
-                .filter((q) => q.eq(q.field("status"), "confirmed"))
-                .collect();
-
-            if (previousBookings.length > 0) {
-                return {
-                    valid: false,
-                    reason: "This coupon is only for first-time users",
-                };
-            }
-        }
-
-        // Calculate discount
-        let discountAmount = 0;
-
-        switch (coupon.discountType) {
-            case "percentage":
-                discountAmount = (args.bookingAmount * coupon.discountValue) / 100;
-                if (coupon.maxDiscount && discountAmount > coupon.maxDiscount) {
-                    discountAmount = coupon.maxDiscount;
-                }
-                break;
-
-            case "fixed":
-                discountAmount = coupon.discountValue;
-                if (discountAmount > args.bookingAmount) {
-                    discountAmount = args.bookingAmount; // Can't discount more than total
-                }
-                break;
-
-            case "bogo":
-                // Buy One Get One - 50% off total
-                discountAmount = args.bookingAmount * 0.5;
-                break;
-        }
-
-        console.log("✅ Coupon valid! Discount:", discountAmount);
-
-        return {
-            valid: true,
-            coupon: {
-                code: coupon.code,
-                name: coupon.name,
-                description: coupon.description,
-                discountType: coupon.discountType,
-                discountValue: coupon.discountValue,
-            },
-            discountAmount: Math.round(discountAmount),
-            finalAmount: Math.round(args.bookingAmount - discountAmount),
-        };
-    },
-});
-
-/**
- * Apply coupon to booking (record usage)
- */
-export const applyCoupon = mutation({
-    args: {
-        couponCode: v.string(),
-        bookingId: v.id("bookings"),
-        userId: v.optional(v.id("users")),
-        eventId: v.id("events"),
-        originalAmount: v.number(),
-        discountApplied: v.number(),
-    },
-    handler: async (ctx, args) => {
-        // Find coupon
-        const coupon = await ctx.db
-            .query("coupons")
-            .withIndex("by_code", (q) => q.eq("code", args.couponCode.toUpperCase()))
-            .first();
-
-        if (!coupon) {
-            throw new Error("Coupon not found");
-        }
-
-        // Record usage
-        await ctx.db.insert("couponUsages", {
-            couponId: coupon._id,
-            bookingId: args.bookingId,
-            userId: args.userId,
-            eventId: args.eventId,
-            couponCode: coupon.code,
-            originalAmount: args.originalAmount,
-            discountApplied: args.discountApplied,
-            finalAmount: args.originalAmount - args.discountApplied,
-            usedAt: Date.now(),
-        });
-
-        // Increment usage count
-        await ctx.db.patch(coupon._id, {
-            currentUses: coupon.currentUses + 1,
-        });
-
-        return {
-            success: true,
-            message: "Coupon applied successfully",
-        };
-    },
+    return couponId;
+  },
 });
 
 /**
  * Get all coupons for an organiser
  */
 export const getCoupons = query({
-    args: {
-        organiserId: v.id("organisers"),
-        eventId: v.optional(v.id("events")),
-        includeInactive: v.optional(v.boolean()),
-    },
-    handler: async (ctx, args) => {
-        let coupons;
+  args: {
+    organiserId: v.id("organisers"),
+    eventId: v.optional(v.id("events")),
+  },
+  handler: async (ctx, args) => {
+    let coupons;
 
-        if (args.eventId) {
-            // Get coupons for specific event + global coupons
-            coupons = await ctx.db
-                .query("coupons")
-                .withIndex("by_organiser_id", (q) => q.eq("organiserId", args.organiserId))
-                .filter((q) =>
-                    q.or(
-                        q.eq(q.field("eventId"), args.eventId),
-                        q.eq(q.field("eventId"), undefined)
-                    )
-                )
-                .collect();
-        } else {
-            // Get all coupons for organiser
-            coupons = await ctx.db
-                .query("coupons")
-                .withIndex("by_organiser_id", (q) => q.eq("organiserId", args.organiserId))
-                .collect();
+    if (args.eventId) {
+      // Get coupons for specific event
+      coupons = await ctx.db
+        .query("coupons")
+        .withIndex("by_organiser_id", (q) => q.eq("organiserId", args.organiserId))
+        .filter((q) =>
+          q.or(
+            q.eq(q.field("eventId"), args.eventId),
+            q.eq(q.field("eventId"), undefined)
+          )
+        )
+        .collect();
+    } else {
+      // Get all coupons for organiser
+      coupons = await ctx.db
+        .query("coupons")
+        .withIndex("by_organiser_id", (q) => q.eq("organiserId", args.organiserId))
+        .collect();
+    }
+
+    // Enrich with event details
+    const enrichedCoupons = await Promise.all(
+      coupons.map(async (coupon) => {
+        let eventName = "All Events";
+        if (coupon.eventId) {
+          const event = await ctx.db.get(coupon.eventId);
+          eventName = event?.title || "Unknown Event";
         }
 
-        // Filter inactive if needed
-        if (!args.includeInactive) {
-            coupons = coupons.filter(c => c.isActive);
+        // Calculate status
+        const now = Date.now();
+        let status: "active" | "expired" | "exhausted" | "scheduled" = "active";
+        
+        if (now < coupon.validFrom) {
+          status = "scheduled";
+        } else if (now > coupon.validUntil) {
+          status = "expired";
+        } else if (coupon.maxUses && coupon.currentUses >= coupon.maxUses) {
+          status = "exhausted";
+        } else if (!coupon.isActive) {
+          status = "expired";
         }
 
-        // Enrich with usage statistics
-        const enrichedCoupons = await Promise.all(
-            coupons.map(async (coupon) => {
-                const usages = await ctx.db
-                    .query("couponUsages")
-                    .withIndex("by_coupon_id", (q) => q.eq("couponId", coupon._id))
-                    .collect();
+        return {
+          ...coupon,
+          eventName,
+          status,
+          usagePercentage: coupon.maxUses 
+            ? Math.round((coupon.currentUses / coupon.maxUses) * 100)
+            : 0,
+        };
+      })
+    );
 
-                const totalDiscount = usages.reduce((sum, u) => sum + u.discountApplied, 0);
-                const totalRevenue = usages.reduce((sum, u) => sum + u.finalAmount, 0);
+    return enrichedCoupons;
+  },
+});
 
-                // Get event name if applicable
-                let eventName;
-                if (coupon.eventId) {
-                    const event = await ctx.db.get(coupon.eventId);
-                    eventName = event?.title;
-                }
+/**
+ * Validate coupon code
+ */
+export const validateCoupon = query({
+  args: {
+    code: v.string(),
+    eventId: v.id("events"),
+    userId: v.optional(v.id("users")),
+    cartAmount: v.number(),
+  },
+  handler: async (ctx, args) => {
+    // Find coupon
+    const coupon = await ctx.db
+      .query("coupons")
+      .withIndex("by_code", (q) => q.eq("code", args.code.toUpperCase()))
+      .first();
 
-                return {
-                    ...coupon,
-                    eventName,
-                    stats: {
-                        totalUsages: usages.length,
-                        totalDiscount,
-                        totalRevenue,
-                        remainingUses: coupon.maxUses ? coupon.maxUses - coupon.currentUses : null,
-                    },
-                };
-            })
-        );
+    if (!coupon) {
+      return { valid: false, error: "Invalid coupon code" };
+    }
 
-        return enrichedCoupons;
-    },
+    // Check if active
+    if (!coupon.isActive) {
+      return { valid: false, error: "This coupon is no longer active" };
+    }
+
+    // Check event applicability
+    if (coupon.eventId && coupon.eventId !== args.eventId) {
+      return { valid: false, error: "This coupon is not valid for this event" };
+    }
+
+    // Check date validity
+    const now = Date.now();
+    if (now < coupon.validFrom) {
+      return { valid: false, error: "This coupon is not yet valid" };
+    }
+    if (now > coupon.validUntil) {
+      return { valid: false, error: "This coupon has expired" };
+    }
+
+    // Check usage limit
+    if (coupon.maxUses && coupon.currentUses >= coupon.maxUses) {
+      return { valid: false, error: "This coupon has reached its usage limit" };
+    }
+
+    // Check per-user limit
+    if (args.userId && coupon.maxUsesPerUser) {
+      const userBookings = await ctx.db
+        .query("bookings")
+        .withIndex("by_user_id", (q) => q.eq("userId", args.userId))
+        .filter((q) => q.eq(q.field("couponId"), coupon._id))
+        .collect();
+
+      if (userBookings.length >= coupon.maxUsesPerUser) {
+        return { 
+          valid: false, 
+          error: `You have already used this coupon ${coupon.maxUsesPerUser} time(s)` 
+        };
+      }
+    }
+
+    // Check minimum purchase amount
+    if (coupon.minPurchaseAmount && args.cartAmount < coupon.minPurchaseAmount) {
+      return { 
+        valid: false, 
+        error: `Minimum purchase amount of ₹${coupon.minPurchaseAmount} required` 
+      };
+    }
+
+    // Calculate discount
+    let discountAmount = 0;
+    if (coupon.discountType === "percentage") {
+      discountAmount = (args.cartAmount * coupon.discountValue) / 100;
+      if (coupon.maxDiscount && discountAmount > coupon.maxDiscount) {
+        discountAmount = coupon.maxDiscount;
+      }
+    } else if (coupon.discountType === "fixed") {
+      discountAmount = coupon.discountValue;
+    }
+
+    return {
+      valid: true,
+      coupon: {
+        _id: coupon._id,
+        code: coupon.code,
+        name: coupon.name,
+        discountType: coupon.discountType,
+        discountValue: coupon.discountValue,
+      },
+      discountAmount: Math.min(discountAmount, args.cartAmount),
+    };
+  },
+});
+
+/**
+ * Apply coupon to booking (increment usage)
+ */
+export const applyCoupon = mutation({
+  args: {
+    couponId: v.id("coupons"),
+  },
+  handler: async (ctx, args) => {
+    const coupon = await ctx.db.get(args.couponId);
+    if (!coupon) {
+      throw new Error("Coupon not found");
+    }
+
+    // Increment usage count
+    await ctx.db.patch(args.couponId, {
+      currentUses: coupon.currentUses + 1,
+      updatedAt: Date.now(),
+    });
+
+    return { success: true };
+  },
+});
+
+/**
+ * Get coupon statistics
+ */
+export const getCouponStats = query({
+  args: {
+    organiserId: v.id("organisers"),
+  },
+  handler: async (ctx, args) => {
+    const coupons = await ctx.db
+      .query("coupons")
+      .withIndex("by_organiser_id", (q) => q.eq("organiserId", args.organiserId))
+      .collect();
+
+    const now = Date.now();
+    const activeCoupons = coupons.filter(
+      (c) => c.isActive && c.validFrom <= now && c.validUntil >= now
+    );
+
+    // Calculate total discount given
+    const bookings = await ctx.db.query("bookings").collect();
+    const couponBookings = bookings.filter((b) => 
+      b.couponId && coupons.some((c) => c._id === b.couponId)
+    );
+
+    const totalDiscount = couponBookings.reduce(
+      (sum, b) => sum + (b.discountAmount || 0),
+      0
+    );
+
+    const totalRevenue = couponBookings.reduce(
+      (sum, b) => sum + b.totalAmount,
+      0
+    );
+
+    return {
+      totalCoupons: coupons.length,
+      activeCoupons: activeCoupons.length,
+      totalDiscount,
+      totalRevenue,
+      totalUses: coupons.reduce((sum, c) => sum + c.currentUses, 0),
+    };
+  },
 });
 
 /**
  * Update coupon
  */
 export const updateCoupon = mutation({
-    args: {
-        couponId: v.id("coupons"),
-        updates: v.object({
-            name: v.optional(v.string()),
-            description: v.optional(v.string()),
-            validUntil: v.optional(v.number()),
-            maxUses: v.optional(v.number()),
-            isActive: v.optional(v.boolean()),
-        }),
-    },
-    handler: async (ctx, args) => {
-        const coupon = await ctx.db.get(args.couponId);
-        if (!coupon) {
-            throw new Error("Coupon not found");
-        }
+  args: {
+    couponId: v.id("coupons"),
+    name: v.optional(v.string()),
+    description: v.optional(v.string()),
+    validUntil: v.optional(v.number()),
+    maxUses: v.optional(v.number()),
+    maxUsesPerUser: v.optional(v.number()),
+    isActive: v.optional(v.boolean()),
+  },
+  handler: async (ctx, args) => {
+    const { couponId, ...updates } = args;
 
-        await ctx.db.patch(args.couponId, {
-            ...args.updates,
-            updatedAt: Date.now(),
-        });
+    await ctx.db.patch(couponId, {
+      ...updates,
+      updatedAt: Date.now(),
+    });
 
-        return {
-            success: true,
-            message: "Coupon updated successfully",
-        };
-    },
+    return { success: true };
+  },
 });
 
 /**
- * Deactivate coupon
+ * Delete coupon (soft delete by deactivating)
  */
-export const deactivateCoupon = mutation({
-    args: {
-        couponId: v.id("coupons"),
-    },
-    handler: async (ctx, args) => {
-        await ctx.db.patch(args.couponId, {
-            isActive: false,
-            updatedAt: Date.now(),
-        });
+export const deleteCoupon = mutation({
+  args: {
+    couponId: v.id("coupons"),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.couponId, {
+      isActive: false,
+      updatedAt: Date.now(),
+    });
 
-        return {
-            success: true,
-            message: "Coupon deactivated",
-        };
-    },
-});
-
-/**
- * Get coupon usage details
- */
-export const getCouponUsages = query({
-    args: {
-        couponId: v.id("coupons"),
-    },
-    handler: async (ctx, args) => {
-        const usages = await ctx.db
-            .query("couponUsages")
-            .withIndex("by_coupon_id", (q) => q.eq("couponId", args.couponId))
-            .collect();
-
-        // Enrich with user and booking details
-        const enrichedUsages = await Promise.all(
-            usages.map(async (usage) => {
-                const booking = await ctx.db.get(usage.bookingId);
-
-                let userName = "Guest";
-                if (usage.userId) {
-                    const user = await ctx.db.get(usage.userId);
-                    userName = `${user?.firstName || ''} ${user?.lastName || ''}`.trim();
-                } else if (booking?.guestDetails) {
-                    userName = booking.guestDetails.name;
-                }
-
-                return {
-                    ...usage,
-                    userName,
-                    bookingNumber: booking?.bookingNumber,
-                };
-            })
-        );
-
-        return enrichedUsages;
-    },
+    return { success: true };
+  },
 });

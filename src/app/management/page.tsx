@@ -65,7 +65,7 @@ export default function ManagementLanding() {
             description:
                 "Complete event orchestration with AI-powered insights and automation",
             gradient: "from-blue-600 via-purple-600 to-indigo-700",
-            icon: "ðŸŽ¯",
+            icon: "🎯",
         },
         {
             id: 2,
@@ -83,7 +83,7 @@ export default function ManagementLanding() {
             description:
                 "Smart vendor matching with automated booking and payment systems",
             gradient: "from-green-500 via-emerald-600 to-teal-700",
-            icon: "ðŸª",
+            icon: "🏪",
         },
         {
             id: 3,
@@ -101,7 +101,7 @@ export default function ManagementLanding() {
             description:
                 "Elite speaker network with AI-powered topic matching and audience analytics",
             gradient: "from-purple-600 via-pink-600 to-rose-700",
-            icon: "ðŸŽ¤",
+            icon: "🎤",
         },
         {
             id: 4,
@@ -119,7 +119,7 @@ export default function ManagementLanding() {
             description:
                 "Advanced sponsorship platform with real-time ROI tracking and brand analytics",
             gradient: "from-yellow-500 via-orange-600 to-red-700",
-            icon: "ðŸ’Ž",
+            icon: "💎",
         },
     ];
 
