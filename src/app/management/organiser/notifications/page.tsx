@@ -1,8 +1,11 @@
-"use client";
+﻿"use client";
 
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useState, useEffect } from "react";
+
+// Disable static generation for this page
+export const dynamic = 'force-dynamic';
 
 export default function OrganiserNotificationsPage() {
   const [organiserId, setOrganiserId] = useState<string | null>(null);

@@ -16,10 +16,15 @@ import {
     X,
     Send,
     ArrowLeft,
+    Clock,
+    User,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Id } from '@/convex/_generated/dataModel';
 import { useRouter } from 'next/navigation';
+
+// Disable static generation for this page
+export const dynamic = 'force-dynamic';
 
 export default function NotificationsPage() {
     const router = useRouter();
@@ -65,11 +70,15 @@ export default function NotificationsPage() {
         }
     };
 
-    const handleReply = async () => {
-        if (!selectedNotification || !replyMessage.trim()) {
-            alert('Please enter a message');
-            return;
+    const handleNotificationClick = async (notification: any) => {
+        setSelectedNotification(notification);
+        if (!notification.isRead) {
+            await handleMarkAsRead(notification._id);
         }
+    };
+
+    const handleSendReply = async () => {
+        if (!selectedNotification || !replyMessage.trim()) return;
 
         try {
             await replyToNotification({
@@ -78,22 +87,14 @@ export default function NotificationsPage() {
             });
             setReplyMessage('');
             setShowReplyModal(false);
-            alert('Reply sent successfully!');
         } catch (error) {
-            alert('Failed to send reply');
-        }
-    };
-
-    const handleNotificationClick = async (notification: any) => {
-        setSelectedNotification(notification);
-        if (!notification.isRead) {
-            await handleMarkAsRead(notification._id);
+            console.error('Failed to send reply:', error);
         }
     };
 
     // Filter notifications
     const filteredNotifications = notificationsData?.notifications.filter((notification: any) => {
-        // Filter by read status
+        // Filter by status
         if (filterStatus === 'read' && !notification.isRead) return false;
         if (filterStatus === 'unread' && notification.isRead) return false;
 
@@ -112,14 +113,16 @@ export default function NotificationsPage() {
 
     if (!isSignedIn) {
         return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-                <div className="bg-white rounded-2xl shadow-lg p-8 max-w-md w-full text-center">
-                    <Bell className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+            <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 flex items-center justify-center p-4">
+                <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center">
+                    <div className="w-20 h-20 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <Bell className="w-10 h-10 text-purple-600" />
+                    </div>
                     <h2 className="text-2xl font-bold text-gray-900 mb-2">Sign In Required</h2>
                     <p className="text-gray-600 mb-6">Please sign in to view your notifications</p>
                     <button
                         onClick={() => router.push('/')}
-                        className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition-colors"
+                        className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all shadow-lg hover:shadow-xl"
                     >
                         Go to Home
                     </button>
@@ -129,135 +132,156 @@ export default function NotificationsPage() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 pt-20 pb-12">
-            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50 pt-20 pb-12">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 {/* Header */}
                 <div className="mb-8">
                     <button
                         onClick={() => router.back()}
-                        className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 mb-4 transition-colors"
+                        className="flex items-center space-x-2 text-gray-600 hover:text-purple-600 mb-6 transition-colors group"
                     >
-                        <ArrowLeft className="w-5 h-5" />
-                        <span>Back</span>
+                        <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+                        <span className="font-medium">Back</span>
                     </button>
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                         <div>
-                            <h1 className="text-3xl font-bold text-gray-900">Notifications</h1>
+                            <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                                Notifications
+                            </h1>
                             <p className="text-gray-600 mt-2">
                                 {unreadCount !== undefined && unreadCount > 0
                                     ? `You have ${unreadCount} unread notification${unreadCount > 1 ? 's' : ''}`
-                                    : 'All caught up!'}
+                                    : 'You\'re all caught up!'}
                             </p>
                         </div>
                         {unreadCount !== undefined && unreadCount > 0 && (
                             <button
                                 onClick={handleMarkAllAsRead}
-                                className="flex items-center space-x-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                                className="flex items-center space-x-2 px-4 py-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors shadow-sm"
                             >
-                                <CheckCheck className="w-4 h-4" />
-                                <span>Mark All Read</span>
+                                <CheckCheck className="w-4 h-4 text-purple-600" />
+                                <span className="text-sm font-medium text-gray-700">Mark all as read</span>
                             </button>
                         )}
                     </div>
                 </div>
 
-                {/* Filters */}
+                {/* Filters and Search */}
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6">
-                    <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+                    <div className="flex flex-col sm:flex-row gap-4">
+                        {/* Search */}
+                        <div className="flex-1 relative">
+                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                            <input
+                                type="text"
+                                placeholder="Search notifications..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                            />
+                        </div>
+
+                        {/* Filter */}
                         <div className="flex items-center space-x-2">
                             <Filter className="w-5 h-5 text-gray-400" />
                             <select
                                 value={filterStatus}
                                 onChange={(e) => setFilterStatus(e.target.value)}
-                                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                className="px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                             >
-                                <option value="all">All Notifications</option>
+                                <option value="all">All</option>
                                 <option value="unread">Unread</option>
                                 <option value="read">Read</option>
                             </select>
                         </div>
-                        <div className="flex items-center space-x-2 flex-1 md:max-w-md">
-                            <Search className="w-5 h-5 text-gray-400" />
-                            <input
-                                type="text"
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                placeholder="Search notifications..."
-                                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                            />
-                        </div>
                     </div>
                 </div>
 
-                {/* Notifications List */}
+                {/* Notifications Grid */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    {/* Notification List */}
+                    {/* Notifications List */}
                     <div className="lg:col-span-2">
                         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                             {!notificationsData ? (
                                 <div className="p-12 text-center">
-                                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
-                                    <p className="text-gray-500 mt-4">Loading notifications...</p>
+                                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+                                    <p className="text-gray-500">Loading notifications...</p>
                                 </div>
                             ) : filteredNotifications?.length === 0 ? (
                                 <div className="p-12 text-center">
-                                    <Bell className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                                        No Notifications
-                                    </h3>
-                                    <p className="text-gray-600">
+                                    <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                        <Bell className="w-10 h-10 text-gray-400" />
+                                    </div>
+                                    <p className="text-gray-600 font-medium">
                                         {searchTerm || filterStatus !== 'all'
                                             ? 'No notifications match your filters'
                                             : "You don't have any notifications yet"}
                                     </p>
                                 </div>
                             ) : (
-                                <div className="divide-y divide-gray-200">
+                                <div className="divide-y divide-gray-100">
                                     {filteredNotifications?.map((notification: any) => (
                                         <div
                                             key={notification._id}
                                             onClick={() => handleNotificationClick(notification)}
-                                            className={`p-6 hover:bg-gray-50 transition-colors cursor-pointer ${!notification.isRead ? 'bg-blue-50' : ''
-                                                } ${selectedNotification?._id === notification._id
-                                                    ? 'border-l-4 border-purple-600'
+                                            className={`p-6 hover:bg-gradient-to-r hover:from-purple-50 hover:to-pink-50 transition-all cursor-pointer ${
+                                                !notification.isRead ? 'bg-blue-50/50' : ''
+                                            } ${
+                                                selectedNotification?._id === notification._id
+                                                    ? 'border-l-4 border-purple-600 bg-purple-50/30'
                                                     : ''
-                                                }`}
+                                            }`}
                                         >
                                             <div className="flex items-start justify-between">
                                                 <div className="flex-1">
-                                                    <div className="flex items-center space-x-3 mb-2">
-                                                        {!notification.isRead ? (
-                                                            <Mail className="w-5 h-5 text-blue-600" />
-                                                        ) : (
-                                                            <MailOpen className="w-5 h-5 text-gray-400" />
-                                                        )}
-                                                        <h3 className="font-semibold text-gray-900">
-                                                            {notification.subject}
-                                                        </h3>
-                                                        <span
-                                                            className={`px-2 py-1 rounded-full text-xs font-medium ${notification.priority === 'high'
-                                                                    ? 'bg-red-100 text-red-800'
-                                                                    : notification.priority === 'low'
-                                                                        ? 'bg-gray-100 text-gray-800'
-                                                                        : 'bg-blue-100 text-blue-800'
+                                                    <div className="flex items-center space-x-3 mb-3">
+                                                        <div className={`p-2 rounded-lg ${
+                                                            !notification.isRead 
+                                                                ? 'bg-blue-100' 
+                                                                : 'bg-gray-100'
+                                                        }`}>
+                                                            {!notification.isRead ? (
+                                                                <Mail className="w-5 h-5 text-blue-600" />
+                                                            ) : (
+                                                                <MailOpen className="w-5 h-5 text-gray-500" />
+                                                            )}
+                                                        </div>
+                                                        <div className="flex-1">
+                                                            <h3 className="font-semibold text-gray-900 text-lg">
+                                                                {notification.subject}
+                                                            </h3>
+                                                            <span
+                                                                className={`inline-block mt-1 px-2 py-0.5 rounded-full text-xs font-medium ${
+                                                                    notification.priority === 'high'
+                                                                        ? 'bg-red-100 text-red-700'
+                                                                        : notification.priority === 'low'
+                                                                        ? 'bg-gray-100 text-gray-700'
+                                                                        : 'bg-blue-100 text-blue-700'
                                                                 }`}
-                                                        >
-                                                            {notification.priority}
-                                                        </span>
+                                                            >
+                                                                {notification.priority}
+                                                            </span>
+                                                        </div>
                                                     </div>
-                                                    <p className="text-gray-600 text-sm mb-3 line-clamp-2">
+                                                    <p className="text-gray-600 text-sm mb-3 line-clamp-2 ml-14">
                                                         {notification.message}
                                                     </p>
-                                                    <div className="flex items-center space-x-4 text-sm text-gray-500">
-                                                        <span>From: {notification.senderName}</span>
-                                                        <span>•</span>
-                                                        <span>
-                                                            {format(notification.createdAt, 'MMM dd, yyyy HH:mm')}
-                                                        </span>
+                                                    <div className="flex items-center space-x-3 text-sm text-gray-500 ml-14">
+                                                        <div className="flex items-center space-x-1">
+                                                            <User className="w-4 h-4" />
+                                                            <span>{notification.senderName}</span>
+                                                        </div>
+                                                        <span className="text-gray-300">|</span>
+                                                        <div className="flex items-center space-x-1">
+                                                            <Clock className="w-4 h-4" />
+                                                            <span>
+                                                                {format(notification.createdAt, 'MMM dd, yyyy HH:mm')}
+                                                            </span>
+                                                        </div>
                                                     </div>
                                                 </div>
                                                 {!notification.isRead && (
-                                                    <span className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0 mt-2"></span>
+                                                    <span className="w-3 h-3 bg-blue-500 rounded-full flex-shrink-0 mt-2 shadow-lg"></span>
                                                 )}
                                             </div>
                                         </div>
@@ -272,73 +296,67 @@ export default function NotificationsPage() {
                         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 sticky top-24">
                             {!selectedNotification ? (
                                 <div className="text-center py-12">
-                                    <MessageSquare className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                                    <p className="text-sm text-gray-500">
+                                    <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                        <MessageSquare className="w-8 h-8 text-purple-600" />
+                                    </div>
+                                    <p className="text-sm text-gray-500 font-medium">
                                         Select a notification to view details
                                     </p>
                                 </div>
                             ) : (
                                 <div>
-                                    <div className="flex items-center justify-between mb-4">
-                                        <h3 className="font-semibold text-gray-900">Details</h3>
+                                    <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-200">
+                                        <h3 className="font-bold text-gray-900 text-lg">Details</h3>
                                         <button
                                             onClick={() => setSelectedNotification(null)}
-                                            className="p-1 hover:bg-gray-100 rounded transition-colors"
+                                            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                                         >
-                                            <X className="w-4 h-4 text-gray-500" />
+                                            <X className="w-5 h-5 text-gray-500" />
                                         </button>
                                     </div>
                                     <div className="space-y-4">
                                         <div>
-                                            <label className="text-xs font-medium text-gray-500 uppercase">
+                                            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
                                                 Subject
                                             </label>
-                                            <p className="text-sm text-gray-900 mt-1">
+                                            <p className="text-sm text-gray-900 mt-2 font-medium">
                                                 {selectedNotification.subject}
                                             </p>
                                         </div>
                                         <div>
-                                            <label className="text-xs font-medium text-gray-500 uppercase">
+                                            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                                Message
+                                            </label>
+                                            <p className="text-sm text-gray-700 mt-2 leading-relaxed">
+                                                {selectedNotification.message}
+                                            </p>
+                                        </div>
+                                        <div>
+                                            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
                                                 From
                                             </label>
-                                            <p className="text-sm text-gray-900 mt-1">
+                                            <p className="text-sm text-gray-900 mt-2">
                                                 {selectedNotification.senderName}
                                             </p>
                                         </div>
                                         <div>
-                                            <label className="text-xs font-medium text-gray-500 uppercase">
-                                                Date
+                                            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                                Received
                                             </label>
-                                            <p className="text-sm text-gray-900 mt-1">
-                                                {format(
-                                                    selectedNotification.createdAt,
-                                                    'MMMM dd, yyyy HH:mm'
-                                                )}
+                                            <p className="text-sm text-gray-900 mt-2">
+                                                {format(selectedNotification.createdAt, 'MMMM dd, yyyy \'at\' HH:mm')}
                                             </p>
                                         </div>
                                         <div>
-                                            <label className="text-xs font-medium text-gray-500 uppercase">
-                                                Priority
+                                            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                                To
                                             </label>
-                                            <p className="text-sm text-gray-900 mt-1 capitalize">
-                                                {selectedNotification.priority}
+                                            <p className="text-sm text-gray-900 mt-2 capitalize">
+                                                {selectedNotification.recipientType === 'all' 
+                                                    ? 'All Users' 
+                                                    : `All ${selectedNotification.recipientType}s`}
                                             </p>
                                         </div>
-                                        <div>
-                                            <label className="text-xs font-medium text-gray-500 uppercase">
-                                                Message
-                                            </label>
-                                            <p className="text-sm text-gray-900 mt-1 whitespace-pre-wrap">
-                                                {selectedNotification.message}
-                                            </p>
-                                        </div>
-                                        <button
-                                            onClick={() => setShowReplyModal(true)}
-                                            className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
-                                        >
-                                            <Reply className="w-4 h-4" />
-                                            <span>Reply</span>
-                                        </button>
                                     </div>
                                 </div>
                             )}
@@ -346,60 +364,6 @@ export default function NotificationsPage() {
                     </div>
                 </div>
             </div>
-
-            {/* Reply Modal */}
-            {showReplyModal && selectedNotification && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-2xl max-w-2xl w-full">
-                        <div className="p-6 border-b border-gray-200">
-                            <div className="flex items-center justify-between">
-                                <h2 className="text-2xl font-bold text-gray-900">Reply</h2>
-                                <button
-                                    onClick={() => {
-                                        setShowReplyModal(false);
-                                        setReplyMessage('');
-                                    }}
-                                    className="text-gray-400 hover:text-gray-600"
-                                >
-                                    <X className="w-6 h-6" />
-                                </button>
-                            </div>
-                        </div>
-                        <div className="p-6">
-                            <div className="mb-4">
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Replying to: {selectedNotification.subject}
-                                </label>
-                                <textarea
-                                    value={replyMessage}
-                                    onChange={(e) => setReplyMessage(e.target.value)}
-                                    placeholder="Type your reply..."
-                                    rows={6}
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                                />
-                            </div>
-                        </div>
-                        <div className="p-6 border-t border-gray-200 flex justify-end space-x-3">
-                            <button
-                                onClick={() => {
-                                    setShowReplyModal(false);
-                                    setReplyMessage('');
-                                }}
-                                className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={handleReply}
-                                className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center space-x-2"
-                            >
-                                <Send className="w-4 h-4" />
-                                <span>Send Reply</span>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
         </div>
     );
 }

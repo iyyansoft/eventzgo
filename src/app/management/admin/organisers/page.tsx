@@ -1,10 +1,13 @@
-"use client";
+﻿"use client";
 
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useState } from "react";
 import DataTable from "@/components/management/DataTable";
 import { useRouter } from "next/navigation";
+
+// Disable static generation for this page
+export const dynamic = 'force-dynamic';
 
 export default function AdminOrganisersPage() {
   const router = useRouter();

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
@@ -7,6 +7,9 @@ import { api } from "@/convex/_generated/api";
 import EventCard from "@/components/events/EventCard";
 import FilterBar from "@/components/shared/FilterBar";
 import { Loader2, Search, X, MapPin, Tag } from "lucide-react";
+
+// Disable static generation for this page
+export const dynamic = 'force-dynamic';
 
 export default function AllEventsPage() {
   const router = useRouter();
@@ -256,7 +259,7 @@ export default function AllEventsPage() {
           </div>
         ) : (
           <div className="text-center py-16">
-            <div className="text-6xl mb-6">🔍</div>
+            <div className="text-6xl mb-6">ðŸ”</div>
             <h3 className="text-2xl font-bold text-gray-900 mb-4">
               No Events Found
             </h3>

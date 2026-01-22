@@ -1,4 +1,4 @@
-
+﻿
 "use client";
 
 import React, { useState } from 'react';
@@ -12,6 +12,9 @@ import LineChart from '@/components/charts/LineChart';
 import BarChart from '@/components/charts/BarChart';
 import PieChart from '@/components/charts/PieChart';
 import AreaChart from '@/components/charts/AreaChart';
+
+// Disable static generation for this page
+export const dynamic = 'force-dynamic';
 
 export default function AdminDashboardPage() {
   const [activeTab, setActiveTab] = useState('overview');

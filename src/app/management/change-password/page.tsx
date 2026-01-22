@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
 import { useMutation } from "convex/react";
@@ -7,6 +7,9 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { CheckCircle, XCircle, Eye, EyeOff, Loader2 } from "lucide-react";
 import { Id } from "@/convex/_generated/dataModel";
+
+// Disable static generation for this page
+export const dynamic = 'force-dynamic';
 
 export default function ChangePasswordPage() {
     const router = useRouter();
@@ -124,7 +127,7 @@ export default function ChangePasswordPage() {
                     <div className="bg-white rounded-2xl shadow-2xl p-8">
                         <div className="text-center mb-8">
                             <div className="w-16 h-16 bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                                <span className="text-3xl">🔐</span>
+                                <span className="text-3xl">ðŸ”</span>
                             </div>
                             <h2 className="text-2xl font-bold text-gray-900 mb-2">
                                 Change Your Password
@@ -208,7 +211,7 @@ export default function ChangePasswordPage() {
                                         className={`text-sm mt-2 ${passwordsMatch ? "text-green-600" : "text-red-600"
                                             }`}
                                     >
-                                        {passwordsMatch ? "✓ Passwords match" : "✗ Passwords do not match"}
+                                        {passwordsMatch ? "âœ“ Passwords match" : "âœ— Passwords do not match"}
                                     </p>
                                 )}
                             </div>
@@ -244,7 +247,7 @@ export default function ChangePasswordPage() {
             <div className="w-full bg-gray-900 text-white py-6 px-6">
                 <div className="max-w-7xl mx-auto text-center">
                     <p className="text-sm text-gray-400">
-                        © 2024 EventzGo Management. All rights reserved.
+                        Â© 2024 EventzGo Management. All rights reserved.
                     </p>
                 </div>
             </div>

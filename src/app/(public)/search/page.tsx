@@ -1,12 +1,14 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { useRouter } from "next/navigation";
-import PageLoader from "@/components/shared/Preloader";
 import EventCard from "@/components/events/EventCard";
-import { Search, X } from "lucide-react";
+import { Search, X, Loader2 } from "lucide-react";
+
+// Disable static generation for this page
+export const dynamic = 'force-dynamic';
 
 export default function SearchPage() {
   const router = useRouter();
@@ -46,7 +48,14 @@ export default function SearchPage() {
   };
 
   if (events === undefined && activeSearch) {
-    return <PageLoader onComplete={() => {}} />;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 text-purple-600 animate-spin mx-auto mb-4" />
+          <p className="text-gray-600">Searching events...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -90,7 +99,7 @@ export default function SearchPage() {
           </div>
         ) : events && events.length === 0 ? (
           <div className="text-center py-20">
-            <div className="text-6xl mb-4">🔍</div>
+            <div className="text-6xl mb-4">ðŸ”</div>
             <h2 className="text-2xl font-bold text-gray-900 mb-2">
               No results found for "{activeSearch}"
             </h2>

@@ -1,4 +1,4 @@
-// src/app/management/onboarding/page.tsx - ENHANCED VERSION
+﻿// src/app/management/onboarding/page.tsx - ENHANCED VERSION
 'use client';
 
 import React, { useState, useEffect, Suspense } from 'react';
@@ -8,6 +8,9 @@ import { api } from '@/convex/_generated/api';
 import { Building, Phone, FileText, ArrowRight, CheckCircle, Upload, CreditCard, File, AlertCircle, Check, X, Loader2, ArrowLeft } from 'lucide-react';
 import Image from 'next/image';
 import { indianStates, citiesByState } from '@/data/indianStates';
+
+// Disable static generation for this page
+export const dynamic = 'force-dynamic';
 
 interface GSTData {
     legalName: string;
@@ -179,13 +182,13 @@ function OnboardingContent() {
                     panNumber: result.data.panNumber,
                 }));
 
-                alert('✅ GST verified! Form auto-filled with GST data.');
+                alert('âœ… GST verified! Form auto-filled with GST data.');
             } else {
-                alert('❌ Failed to verify GST number');
+                alert('âŒ Failed to verify GST number');
             }
         } catch (error) {
             console.error('GST verification error:', error);
-            alert('❌ Error verifying GST number');
+            alert('âŒ Error verifying GST number');
         } finally {
             setGstVerifying(false);
         }
@@ -205,13 +208,13 @@ function OnboardingContent() {
                     bankName: result.data.bank,
                     branchName: result.data.branch,
                 }));
-                alert(`✅ Bank details fetched!\nBank: ${result.data.bank}\nBranch: ${result.data.branch}`);
+                alert(`âœ… Bank details fetched!\nBank: ${result.data.bank}\nBranch: ${result.data.branch}`);
             } else {
-                alert('❌ Invalid IFSC code');
+                alert('âŒ Invalid IFSC code');
             }
         } catch (error) {
             console.error('IFSC verification error:', error);
-            alert('❌ Error verifying IFSC code');
+            alert('âŒ Error verifying IFSC code');
         } finally {
             setLoading(false);
         }
@@ -319,7 +322,7 @@ function OnboardingContent() {
             });
 
             // Show success message
-            alert('✅ Registration successful! Your account is pending admin approval. You will receive an email with your login credentials once approved.');
+            alert('âœ… Registration successful! Your account is pending admin approval. You will receive an email with your login credentials once approved.');
 
             // Clear saved form data from localStorage
             localStorage.removeItem('onboardingFormData');
@@ -332,7 +335,7 @@ function OnboardingContent() {
         } catch (err: any) {
             // Check if it's a duplicate email error
             if (err.message && err.message.includes('already exists')) {
-                setError('⚠️ This email address is already registered. Please use a different email or contact support if you need help accessing your account.');
+                setError('âš ï¸ This email address is already registered. Please use a different email or contact support if you need help accessing your account.');
             } else {
                 setError(err.message || 'Failed to complete registration. Please try again.');
             }
@@ -362,12 +365,12 @@ function OnboardingContent() {
 
     const getRoleEmoji = (role: string) => {
         const emojiMap: Record<string, string> = {
-            organiser: "🏢",
-            vendor: "🛠️",
-            speaker: "🎤",
-            sponsor: "💰",
+            organiser: "ðŸ¢",
+            vendor: "ðŸ› ï¸",
+            speaker: "ðŸŽ¤",
+            sponsor: "ðŸ’°",
         };
-        return emojiMap[role] || "👤";
+        return emojiMap[role] || "ðŸ‘¤";
     };
 
     const getRoleTitle = (role: string) => {
@@ -536,7 +539,7 @@ function OnboardingContent() {
                                         </div>
                                         {checkDataMatch('institutionName') === false && (
                                             <p className="text-xs text-red-600 mt-1">
-                                                ⚠️ Doesn't match GST data: {gstData?.legalName}
+                                                âš ï¸ Doesn't match GST data: {gstData?.legalName}
                                             </p>
                                         )}
                                     </div>
@@ -894,7 +897,7 @@ function OnboardingContent() {
                                                 ) : formData.gstCertificate ? (
                                                     <div className="flex flex-col items-center">
                                                         <Check className="w-8 h-8 text-green-500 mb-2" />
-                                                        <p className="text-sm text-green-600 font-medium">✓ Uploaded</p>
+                                                        <p className="text-sm text-green-600 font-medium">âœ“ Uploaded</p>
                                                         <p className="text-xs text-gray-600 mt-1">{uploadedFiles.gstCertificate}</p>
                                                     </div>
                                                 ) : (
@@ -932,7 +935,7 @@ function OnboardingContent() {
                                                 ) : formData.panCardFront ? (
                                                     <div className="flex flex-col items-center">
                                                         <Check className="w-8 h-8 text-green-500 mb-2" />
-                                                        <p className="text-sm text-green-600 font-medium">✓ Uploaded</p>
+                                                        <p className="text-sm text-green-600 font-medium">âœ“ Uploaded</p>
                                                         <p className="text-xs text-gray-600 mt-1">{uploadedFiles.panCardFront}</p>
                                                     </div>
                                                 ) : (
@@ -970,7 +973,7 @@ function OnboardingContent() {
                                                 ) : formData.panCardBack ? (
                                                     <div className="flex flex-col items-center">
                                                         <Check className="w-8 h-8 text-green-500 mb-2" />
-                                                        <p className="text-sm text-green-600 font-medium">✓ Uploaded</p>
+                                                        <p className="text-sm text-green-600 font-medium">âœ“ Uploaded</p>
                                                         <p className="text-xs text-gray-600 mt-1">{uploadedFiles.panCardBack}</p>
                                                     </div>
                                                 ) : (
@@ -1011,7 +1014,7 @@ function OnboardingContent() {
                                                     ) : formData.cancelledCheque ? (
                                                         <div className="flex flex-col items-center">
                                                             <Check className="w-8 h-8 text-green-500 mb-2" />
-                                                            <p className="text-sm text-green-600 font-medium">✓ Uploaded</p>
+                                                            <p className="text-sm text-green-600 font-medium">âœ“ Uploaded</p>
                                                             <p className="text-xs text-gray-600 mt-1">{uploadedFiles.cancelledCheque}</p>
                                                         </div>
                                                     ) : (
@@ -1035,7 +1038,7 @@ function OnboardingContent() {
                                                     ) : formData.bankStatement ? (
                                                         <div className="flex flex-col items-center">
                                                             <Check className="w-8 h-8 text-green-500 mb-2" />
-                                                            <p className="text-sm text-green-600 font-medium">✓ Uploaded</p>
+                                                            <p className="text-sm text-green-600 font-medium">âœ“ Uploaded</p>
                                                             <p className="text-xs text-gray-600 mt-1">{uploadedFiles.bankStatement}</p>
                                                         </div>
                                                     ) : (
@@ -1054,10 +1057,10 @@ function OnboardingContent() {
                                     <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
                                         <h4 className="font-medium text-blue-900 mb-2">What happens next?</h4>
                                         <ul className="space-y-1 text-sm text-blue-800">
-                                            <li>• Your application will be reviewed by our admin team</li>
-                                            <li>• Documents will be verified against GST data</li>
-                                            <li>• You'll receive an email with your login credentials once approved</li>
-                                            <li>• Approval typically takes 24-48 hours</li>
+                                            <li>â€¢ Your application will be reviewed by our admin team</li>
+                                            <li>â€¢ Documents will be verified against GST data</li>
+                                            <li>â€¢ You'll receive an email with your login credentials once approved</li>
+                                            <li>â€¢ Approval typically takes 24-48 hours</li>
                                         </ul>
                                     </div>
                                 </div>

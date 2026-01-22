@@ -1,4 +1,4 @@
-// src/app/management/pending-approval/page.tsx
+﻿// src/app/management/pending-approval/page.tsx
 'use client';
 
 import React, { useEffect, useState } from 'react';
@@ -8,6 +8,9 @@ import { useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { Clock, CheckCircle, XCircle, Mail, RefreshCw } from 'lucide-react';
 import Image from 'next/image';
+
+// Disable static generation for this page
+export const dynamic = 'force-dynamic';
 
 export default function PendingApprovalPage() {
     const { user } = useUser();
@@ -115,10 +118,10 @@ export default function PendingApprovalPage() {
                                     <p className="text-blue-900 text-sm">
                                         <strong>What you can do:</strong>
                                         <br />
-                                        • Contact our support team for more information
+                                        â€¢ Contact our support team for more information
                                         <br />
-                                        • Reapply with updated information
-                                        <br />• Email us at support@eventzgo.com
+                                        â€¢ Reapply with updated information
+                                        <br />â€¢ Email us at support@eventzgo.com
                                     </p>
                                 </div>
                             </>

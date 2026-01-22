@@ -2,56 +2,7 @@ import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
 export default defineSchema({
-  // Management Users (Custom Auth - No Clerk)
-  managementUsers: defineTable({
-    // Authentication
-    username: v.string(), // Company name (from registration)
-    email: v.string(),
-    passwordHash: v.string(),
-    tempPasswordHash: v.optional(v.string()),
-    tempPasswordExpiry: v.optional(v.number()),
 
-    // Account status
-    accountStatus: v.union(
-      v.literal("pending_approval"),  // Waiting for admin approval
-      v.literal("pending_setup"),     // Approved, waiting for password setup
-      v.literal("active"),            // Active account
-      v.literal("suspended")          // Suspended by admin
-    ),
-    requirePasswordChange: v.boolean(), // Force password change on next login
-
-    // Profile
-    companyName: v.string(),
-    contactPerson: v.string(),
-    phone: v.string(),
-    role: v.union(
-      v.literal("organiser"),
-      v.literal("vendor"),
-      v.literal("speaker"),
-      v.literal("sponsor")
-    ),
-
-    // Onboarding data (from 4-step form)
-    onboardingData: v.optional(v.any()), // Store all onboarding form data
-
-    // Approval
-    approvedBy: v.optional(v.id("users")), // Admin who approved
-    approvedAt: v.optional(v.number()),
-    rejectionReason: v.optional(v.string()),
-
-    // Security
-    failedLoginAttempts: v.number(),
-    lastLoginAt: v.optional(v.number()),
-    passwordChangedAt: v.optional(v.number()),
-
-    // Timestamps
-    createdAt: v.number(),
-    updatedAt: v.number(),
-  })
-    .index("by_username", ["username"])
-    .index("by_email", ["email"])
-    .index("by_accountStatus", ["accountStatus"])
-    .index("by_role", ["role"]),
 
   // Users table (synced from Clerk)
   users: defineTable({
@@ -1066,4 +1017,18 @@ export default defineSchema({
     .index("by_user_id", ["userId"])
     .index("by_event_id", ["eventId"])
     .index("by_used_at", ["usedAt"]),
+
+  // Admins table (for admin portal authentication)
+  admins: defineTable({
+    username: v.string(),
+    password: v.string(), // Bcrypt hashed password
+    email: v.string(),
+    role: v.string(), // "admin", "super_admin", etc.
+    isActive: v.boolean(),
+    createdAt: v.number(),
+    lastLoginAt: v.optional(v.number()),
+  })
+    .index("by_username", ["username"])
+    .index("by_email", ["email"])
+    .index("by_is_active", ["isActive"]),
 });

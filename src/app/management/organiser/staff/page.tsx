@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -25,6 +25,9 @@ import {
     RefreshCw,
     Trash2
 } from "lucide-react";
+
+// Disable static generation for this page
+export const dynamic = 'force-dynamic';
 
 export default function AllStaffPage() {
     const router = useRouter();
@@ -551,7 +554,7 @@ function PasswordDisplay({ password }: { password?: string }) {
     return (
         <div className="flex items-center gap-2">
             <code className="px-2 py-1 bg-gray-100 rounded text-sm w-[100px] block truncate font-mono text-purple-600">
-                {show ? password : '••••••••'}
+                {show ? password : 'â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢'}
             </code>
             <button
                 onClick={() => setShow(!show)}

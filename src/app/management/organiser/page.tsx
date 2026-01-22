@@ -1,7 +1,10 @@
-"use client";
+﻿"use client";
 
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+
+// Disable static generation for this page
+export const dynamic = 'force-dynamic';
 
 export default function OrganiserPage() {
   const router = useRouter();

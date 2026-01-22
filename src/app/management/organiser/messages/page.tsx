@@ -1,6 +1,9 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
+
+// Disable static generation for this page
+export const dynamic = 'force-dynamic';
 
 export default function OrganiserMessagesPage() {
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);

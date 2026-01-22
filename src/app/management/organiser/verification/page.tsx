@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -16,6 +16,9 @@ import {
     Shield,
     TrendingUp
 } from "lucide-react";
+
+// Disable static generation for this page
+export const dynamic = 'force-dynamic';
 
 export default function VerificationDashboardPage() {
     const router = useRouter();

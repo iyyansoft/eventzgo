@@ -1,10 +1,13 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useMemo, useEffect } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Calendar, Users, Clock, CheckCircle, XCircle, AlertCircle, Ticket, Download, ChevronDown, ChevronUp, FileSpreadsheet, Filter } from "lucide-react";
 import * as XLSX from 'xlsx';
+
+// Disable static generation for this page
+export const dynamic = 'force-dynamic';
 
 export default function OrganiserBookingsPage() {
     const [userId, setUserId] = useState<string | null>(null);
@@ -120,7 +123,7 @@ export default function OrganiserBookingsPage() {
                 'Email': booking.guestDetails?.email || '',
                 'Phone': booking.guestDetails?.phone || '',
                 'Tickets': booking.tickets.map((t: any) => `${t.quantity}x ${t.ticketTypeName}`).join(', '),
-                'Total Amount': `₹${booking.totalAmount}`,
+                'Total Amount': `â‚¹${booking.totalAmount}`,
                 'Status': booking.status,
                 'Booking Date': new Date(booking._creationTime).toLocaleString(),
             };
@@ -212,7 +215,7 @@ export default function OrganiserBookingsPage() {
                                     {event.name}
                                 </div>
                                 <div className="text-xs text-gray-500 mt-1">
-                                    {new Date(event.date).toLocaleDateString()} • {eventBookings.length} bookings
+                                    {new Date(event.date).toLocaleDateString()} â€¢ {eventBookings.length} bookings
                                 </div>
                                 <button
                                     onClick={(e) => {
@@ -359,7 +362,7 @@ export default function OrganiserBookingsPage() {
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4 text-sm font-semibold text-gray-900">
-                                                ₹{booking.totalAmount.toLocaleString()}
+                                                â‚¹{booking.totalAmount.toLocaleString()}
                                             </td>
                                             <td className="px-6 py-4">
                                                 <span

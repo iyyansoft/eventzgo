@@ -1,10 +1,13 @@
-'use client';
+﻿'use client';
 
 import React, { useState } from 'react';
 import { useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { Building2, Mail, Phone, MapPin, Eye, Calendar, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
+
+// Disable static generation for this page
+export const dynamic = 'force-dynamic';
 
 export default function DeletedOrganisersPage() {
     const [selectedOrganiser, setSelectedOrganiser] = useState<any>(null);
@@ -150,7 +153,7 @@ export default function DeletedOrganisersPage() {
                                 onClick={() => setShowDetailsModal(false)}
                                 className="text-gray-500 hover:text-gray-700 text-2xl"
                             >
-                                ×
+                                Ã—
                             </button>
                         </div>
 

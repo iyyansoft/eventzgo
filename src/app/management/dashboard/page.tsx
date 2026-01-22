@@ -1,8 +1,11 @@
-"use client";
+﻿"use client";
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useManagementAuth } from "@/contexts/ManagementAuthContext";
+
+// Disable static generation for this page
+export const dynamic = 'force-dynamic';
 
 export default function ManagementDashboard() {
     const router = useRouter();

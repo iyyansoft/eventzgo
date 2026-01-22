@@ -1,4 +1,4 @@
-// src/app/management/page.tsx - Management landing with NextAuth
+﻿// src/app/management/page.tsx - Management landing with NextAuth
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -21,6 +21,9 @@ import {
 } from "lucide-react";
 import ManagementHeader from "@/components/management/ManagementHeader";
 import ManagementFooter from "@/components/management/ManagementFooter";
+
+// Disable static generation for this page
+export const dynamic = 'force-dynamic';
 
 export default function ManagementLanding() {
     const router = useRouter();
@@ -62,7 +65,7 @@ export default function ManagementLanding() {
             description:
                 "Complete event orchestration with AI-powered insights and automation",
             gradient: "from-blue-600 via-purple-600 to-indigo-700",
-            icon: "🎯",
+            icon: "ðŸŽ¯",
         },
         {
             id: 2,
@@ -80,7 +83,7 @@ export default function ManagementLanding() {
             description:
                 "Smart vendor matching with automated booking and payment systems",
             gradient: "from-green-500 via-emerald-600 to-teal-700",
-            icon: "🏪",
+            icon: "ðŸª",
         },
         {
             id: 3,
@@ -98,7 +101,7 @@ export default function ManagementLanding() {
             description:
                 "Elite speaker network with AI-powered topic matching and audience analytics",
             gradient: "from-purple-600 via-pink-600 to-rose-700",
-            icon: "🎤",
+            icon: "ðŸŽ¤",
         },
         {
             id: 4,
@@ -116,7 +119,7 @@ export default function ManagementLanding() {
             description:
                 "Advanced sponsorship platform with real-time ROI tracking and brand analytics",
             gradient: "from-yellow-500 via-orange-600 to-red-700",
-            icon: "💎",
+            icon: "ðŸ’Ž",
         },
     ];
 

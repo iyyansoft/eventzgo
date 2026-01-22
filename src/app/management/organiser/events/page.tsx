@@ -1,10 +1,13 @@
-"use client";
+﻿"use client";
 
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useState, useEffect } from "react";
 import EventsTable from "@/components/organiser/EventsTable";
 import { useRouter } from "next/navigation";
+
+// Disable static generation for this page
+export const dynamic = 'force-dynamic';
 
 export default function OrganiserEventsPage() {
   const router = useRouter();

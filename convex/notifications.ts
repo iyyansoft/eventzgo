@@ -44,7 +44,17 @@ export const getAdminNotifications = query({
             ? `${recipient.firstName} ${recipient.lastName}`
             : notification.recipientType === "all"
               ? "All Users"
-              : `All ${notification.recipientType}s`,
+              : notification.recipientType === "user"
+                ? "All End Users"
+                : notification.recipientType === "organiser"
+                  ? "All Organisers"
+                  : notification.recipientType === "vendor"
+                    ? "All Vendors"
+                    : notification.recipientType === "speaker"
+                      ? "All Speakers"
+                      : notification.recipientType === "sponsor"
+                        ? "All Sponsors"
+                        : `All ${notification.recipientType}s`,
           replyCount: replies.length,
         };
       })
@@ -116,17 +126,36 @@ export const sendNotification = mutation({
     subject: v.string(),
     message: v.string(),
     priority: v.optional(v.string()), // "low", "normal", "high"
+    senderId: v.optional(v.id("users")), // Admin user ID from frontend
   },
   handler: async (ctx, args) => {
-    // Get admin user (in production, get from auth context)
-    const adminUser = await ctx.db.query("users").first(); // Placeholder
+    // Get sender user - either from args or find an admin
+    let senderUser;
+    
+    if (args.senderId) {
+      senderUser = await ctx.db.get(args.senderId);
+    } else {
+      // Fallback: find first admin user
+      senderUser = await ctx.db
+        .query("users")
+        .filter((q) => q.eq(q.field("role"), "admin"))
+        .first();
+    }
 
-    if (!adminUser) throw new Error("Admin user not found");
+    if (!senderUser) {
+      throw new Error("Admin user not found");
+    }
+
+    console.log("📤 Sending notification:", {
+      from: `${senderUser.firstName} ${senderUser.lastName}`,
+      recipientType: args.recipientType,
+      subject: args.subject
+    });
 
     // If sending to all or a specific role, create broadcast notification
     if (args.recipientType !== "individual") {
-      await ctx.db.insert("notifications", {
-        senderId: adminUser._id,
+      const notificationId = await ctx.db.insert("notifications", {
+        senderId: senderUser._id,
         recipientId: args.recipientId,
         recipientType: args.recipientType,
         subject: args.subject,
@@ -135,12 +164,14 @@ export const sendNotification = mutation({
         isRead: false,
         createdAt: Date.now(),
       });
+      
+      console.log("✅ Notification created:", notificationId);
     } else {
       // Send to individual user
       if (!args.recipientId) throw new Error("Recipient ID required for individual notifications");
 
       await ctx.db.insert("notifications", {
-        senderId: adminUser._id,
+        senderId: senderUser._id,
         recipientId: args.recipientId,
         recipientType: "individual",
         subject: args.subject,
@@ -271,19 +302,47 @@ export const getUserNotifications = query({
     const user = await ctx.db.get(args.userId);
     if (!user) throw new Error("User not found");
 
+    console.log("🔍 Fetching notifications for user:", {
+      userId: args.userId,
+      userRole: user.role,
+      userName: `${user.firstName} ${user.lastName}`
+    });
+
     // Get notifications for this user
     // Either sent to them individually or sent to their role or to all users
     const allNotifications = await ctx.db.query("notifications").order("desc").collect();
 
+    console.log("📬 Total notifications in database:", allNotifications.length);
+
     const userNotifications = allNotifications.filter((n) => {
       // Individual notifications
-      if (n.recipientId && n.recipientId === args.userId) return true;
-      // Role-based notifications
-      if (n.recipientType === user.role) return true;
+      if (n.recipientId && n.recipientId === args.userId) {
+        console.log("✅ Individual notification matched:", n.subject);
+        return true;
+      }
+      
+      // Role-based notifications - handle both 'user' and 'attendee' roles
+      const userRole = user.role.toLowerCase();
+      const recipientType = n.recipientType.toLowerCase();
+      
+      // Match exact role or if notification is for 'user' and user is 'attendee'
+      if (recipientType === userRole || 
+          (recipientType === 'user' && userRole === 'attendee') ||
+          (recipientType === 'attendee' && userRole === 'user')) {
+        console.log("✅ Role-based notification matched:", n.subject, "for role:", recipientType);
+        return true;
+      }
+      
       // Broadcast to all
-      if (n.recipientType === "all") return true;
+      if (n.recipientType === "all") {
+        console.log("✅ Broadcast notification matched:", n.subject);
+        return true;
+      }
+      
       return false;
     });
+
+    console.log("📨 Filtered notifications for user:", userNotifications.length);
 
     const paginatedNotifications = userNotifications.slice(offset, offset + limit);
 
@@ -323,10 +382,18 @@ export const getUserUnreadCount = query({
       .withIndex("by_is_read", (q) => q.eq("isRead", false))
       .collect();
 
-    // Filter for this user
+    // Filter for this user with improved role matching
     const userUnreadNotifications = allNotifications.filter((n) => {
       if (n.recipientId && n.recipientId === args.userId) return true;
-      if (n.recipientType === user.role) return true;
+      
+      // Role-based matching with case-insensitive comparison
+      const userRole = user.role.toLowerCase();
+      const recipientType = n.recipientType.toLowerCase();
+      
+      if (recipientType === userRole || 
+          (recipientType === 'user' && userRole === 'attendee') ||
+          (recipientType === 'attendee' && userRole === 'user')) return true;
+      
       if (n.recipientType === "all") return true;
       return false;
     });

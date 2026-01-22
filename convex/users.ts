@@ -169,9 +169,9 @@ export const getCurrentUser = query({
 export const updateProfile = mutation({
   args: {
     clerkId: v.string(),
-    firstName: v.optional(v.string()),
-    lastName: v.optional(v.string()),
-    phone: v.optional(v.string()),
+    firstName: v.string(),
+    lastName: v.string(),
+    phone: v.string(),
     city: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
@@ -184,14 +184,45 @@ export const updateProfile = mutation({
       throw new Error("User not found");
     }
 
+    // Validate required fields
+    if (!args.firstName || args.firstName.trim() === "") {
+      throw new Error("First name is required");
+    }
+    if (!args.lastName || args.lastName.trim() === "") {
+      throw new Error("Last name is required");
+    }
+    if (!args.phone || args.phone.trim() === "") {
+      throw new Error("Phone number is required");
+    }
+
+    // Validate phone number format (Indian format: 10 digits starting with 6-9)
+    const phoneRegex = /^[6-9]\d{9}$/;
+    const cleanPhone = args.phone.replace(/\s+/g, '').replace(/^(\+91|91)/, '');
+    if (!phoneRegex.test(cleanPhone)) {
+      throw new Error("Invalid phone number. Please enter a valid 10-digit Indian mobile number");
+    }
+
     await ctx.db.patch(user._id, {
-      firstName: args.firstName,
-      lastName: args.lastName,
-      phone: args.phone,
-      city: args.city,
+      firstName: args.firstName.trim(),
+      lastName: args.lastName.trim(),
+      phone: cleanPhone,
+      city: args.city?.trim(),
       updatedAt: Date.now(),
     });
 
     return user._id;
+  },
+});
+
+// Query to get all Clerk users for admin management
+export const getAllClerkUsers = query({
+  handler: async (ctx) => {
+    const users = await ctx.db
+      .query("users")
+      .filter((q) => q.eq(q.field("role"), "user"))
+      .order("desc")
+      .collect();
+    
+    return users;
   },
 });

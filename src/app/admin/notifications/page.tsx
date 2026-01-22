@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState } from 'react';
 import { useQuery, useMutation } from 'convex/react';
@@ -23,6 +23,9 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Id } from '@/convex/_generated/dataModel';
+
+// Disable static generation for this page
+export const dynamic = 'force-dynamic';
 
 export default function NotificationsPage() {
     const [showComposer, setShowComposer] = useState(false);

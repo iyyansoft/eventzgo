@@ -1,7 +1,10 @@
-"use client";
+﻿"use client";
 
 import React from "react";
 import { useRouter } from "next/navigation";
+
+// Disable static generation for this page
+export const dynamic = 'force-dynamic';
 
 export default function AdminAnalyticsPage() {
   const router = useRouter();
@@ -10,7 +13,7 @@ export default function AdminAnalyticsPage() {
     <div className="min-h-screen bg-gray-50 py-8 pt-24">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="bg-white rounded-2xl shadow-xl p-12 text-center">
-          <div className="text-6xl mb-6">📊</div>
+          <div className="text-6xl mb-6">ðŸ“Š</div>
           <h1 className="text-3xl font-bold text-gray-900 mb-4">
             Analytics Dashboard
           </h1>

@@ -1,7 +1,10 @@
-"use client";
+﻿"use client";
 
 import React from "react";
 import { useRouter } from "next/navigation";
+
+// Disable static generation for this page
+export const dynamic = 'force-dynamic';
 
 export default function ManagementError({ error, reset }: { error: Error; reset?: () => void }) {
   const router = useRouter();

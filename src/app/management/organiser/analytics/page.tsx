@@ -1,9 +1,12 @@
-"use client";
+﻿"use client";
 
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { TrendingUp, Users, DollarSign, Calendar, ArrowUp, ArrowDown, Ticket, Eye } from "lucide-react";
 import { useMemo, useState, useEffect } from "react";
+
+// Disable static generation for this page
+export const dynamic = 'force-dynamic';
 
 export default function OrganiserAnalyticsPage() {
     const [userId, setUserId] = useState<string | null>(null);
@@ -87,7 +90,7 @@ export default function OrganiserAnalyticsPage() {
     const stats = [
         {
             label: "Total Revenue",
-            value: `₹${analytics.totalRevenue.toLocaleString()}`,
+            value: `â‚¹${analytics.totalRevenue.toLocaleString()}`,
             subtext: `${analytics.confirmedBookings} confirmed bookings`,
             icon: DollarSign,
             color: "green",
@@ -188,7 +191,7 @@ export default function OrganiserAnalyticsPage() {
                         <h3 className="font-semibold text-gray-900">Avg. Revenue per Event</h3>
                     </div>
                     <p className="text-2xl font-bold text-gray-900">
-                        ₹{events.length > 0 ? Math.round(analytics.totalRevenue / events.length).toLocaleString() : 0}
+                        â‚¹{events.length > 0 ? Math.round(analytics.totalRevenue / events.length).toLocaleString() : 0}
                     </p>
                     <p className="text-sm text-gray-600 mt-1">
                         Based on {events.length} events
@@ -226,13 +229,13 @@ export default function OrganiserAnalyticsPage() {
                                                 {event.title}
                                             </h4>
                                             <p className="text-sm text-gray-600">
-                                                {event.bookings} bookings • {event.soldTickets}/{event.capacity} tickets
+                                                {event.bookings} bookings â€¢ {event.soldTickets}/{event.capacity} tickets
                                             </p>
                                         </div>
                                     </div>
                                     <div className="text-right">
                                         <p className="font-semibold text-gray-900">
-                                            ₹{event.revenue.toLocaleString()}
+                                            â‚¹{event.revenue.toLocaleString()}
                                         </p>
                                         <p className="text-sm text-purple-600">
                                             {event.occupancy.toFixed(1)}% filled

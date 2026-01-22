@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -6,6 +6,9 @@ import { useState, useEffect } from "react";
 import StatsCard from "@/components/management/StatsCard";
 import SalesChart from "@/components/organiser/SalesChart";
 import { formatCurrencyCompact } from "@/lib/currency-utils";
+
+// Disable static generation for this page
+export const dynamic = 'force-dynamic';
 
 export default function OrganiserSalesPage() {
   const [userId, setUserId] = useState<string | null>(null);

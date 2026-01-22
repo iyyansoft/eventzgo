@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -6,6 +6,9 @@ import { useMutation, useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { Mail, AlertCircle, Loader2, CheckCircle, Clock } from 'lucide-react';
 import { Id } from '@/convex/_generated/dataModel';
+
+// Disable static generation for this page
+export const dynamic = 'force-dynamic';
 
 function EmailNotVerifiedContent() {
     const router = useRouter();

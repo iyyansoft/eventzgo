@@ -9,6 +9,7 @@
  */
 
 import type * as admin from "../admin.js";
+import type * as adminAuth from "../adminAuth.js";
 import type * as adminNavigation from "../adminNavigation.js";
 import type * as adminOrganisers from "../adminOrganisers.js";
 import type * as adminPayouts from "../adminPayouts.js";
@@ -32,16 +33,17 @@ import type * as lib_security from "../lib/security.js";
 import type * as mail from "../mail.js";
 import type * as management from "../management.js";
 import type * as managementApprovals from "../managementApprovals.js";
-import type * as managementAuth from "../managementAuth.js";
-import type * as managementUsers from "../managementUsers.js";
 import type * as notifications from "../notifications.js";
 import type * as organisers from "../organisers.js";
+import type * as organisersAuth from "../organisersAuth.js";
 import type * as payments from "../payments.js";
 import type * as payouts from "../payouts.js";
 import type * as refunds from "../refunds.js";
 import type * as roleBasedAuth from "../roleBasedAuth.js";
+import type * as roles from "../roles.js";
 import type * as scanAnalytics from "../scanAnalytics.js";
 import type * as scripts from "../scripts.js";
+import type * as seedAdmin from "../seedAdmin.js";
 import type * as setup_setupTicketsHub from "../setup/setupTicketsHub.js";
 import type * as support from "../support.js";
 import type * as users from "../users.js";
@@ -56,6 +58,7 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   admin: typeof admin;
+  adminAuth: typeof adminAuth;
   adminNavigation: typeof adminNavigation;
   adminOrganisers: typeof adminOrganisers;
   adminPayouts: typeof adminPayouts;
@@ -79,16 +82,17 @@ declare const fullApi: ApiFromModules<{
   mail: typeof mail;
   management: typeof management;
   managementApprovals: typeof managementApprovals;
-  managementAuth: typeof managementAuth;
-  managementUsers: typeof managementUsers;
   notifications: typeof notifications;
   organisers: typeof organisers;
+  organisersAuth: typeof organisersAuth;
   payments: typeof payments;
   payouts: typeof payouts;
   refunds: typeof refunds;
   roleBasedAuth: typeof roleBasedAuth;
+  roles: typeof roles;
   scanAnalytics: typeof scanAnalytics;
   scripts: typeof scripts;
+  seedAdmin: typeof seedAdmin;
   "setup/setupTicketsHub": typeof setup_setupTicketsHub;
   support: typeof support;
   users: typeof users;

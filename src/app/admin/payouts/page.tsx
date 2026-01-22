@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
@@ -20,6 +20,9 @@ import {
     Send,
     FileText,
 } from "lucide-react";
+
+// Disable static generation for this page
+export const dynamic = 'force-dynamic';
 
 export default function AdminPayoutsPage() {
     const { sessionToken } = useAdminAuth();
@@ -156,7 +159,7 @@ export default function AdminPayoutsPage() {
                     </div>
                     <p className="text-3xl font-bold text-gray-900">{stats.counts.underReview}</p>
                     <p className="text-sm text-gray-500 mt-1">
-                        ₹{stats.amounts.underReview.toLocaleString()}
+                        â‚¹{stats.amounts.underReview.toLocaleString()}
                     </p>
                 </div>
 
@@ -175,7 +178,7 @@ export default function AdminPayoutsPage() {
                         <TrendingUp className="w-5 h-5 text-green-600" />
                     </div>
                     <p className="text-3xl font-bold text-gray-900">
-                        ₹{stats.amounts.todayPaid.toLocaleString()}
+                        â‚¹{stats.amounts.todayPaid.toLocaleString()}
                     </p>
                     <p className="text-sm text-gray-500 mt-1">
                         {stats.counts.paid} total this month
@@ -188,7 +191,7 @@ export default function AdminPayoutsPage() {
                         <DollarSign className="w-5 h-5 text-purple-600" />
                     </div>
                     <p className="text-3xl font-bold text-gray-900">
-                        ₹{stats.amounts.monthlyPaid.toLocaleString()}
+                        â‚¹{stats.amounts.monthlyPaid.toLocaleString()}
                     </p>
                     <p className="text-sm text-gray-500 mt-1">This month</p>
                 </div>
@@ -204,7 +207,7 @@ export default function AdminPayoutsPage() {
                                 High-Value Payouts Pending
                             </h3>
                             <p className="text-sm text-orange-700 mt-1">
-                                {highValuePayouts.length} payout request(s) over ₹50,000 require manual review
+                                {highValuePayouts.length} payout request(s) over â‚¹50,000 require manual review
                             </p>
                         </div>
                     </div>
@@ -280,7 +283,7 @@ export default function AdminPayoutsPage() {
                                         {payout.eventTitle}
                                     </td>
                                     <td className="px-6 py-4 text-right font-bold text-gray-900">
-                                        ₹{payout.eligibleAmount.toLocaleString()}
+                                        â‚¹{payout.eligibleAmount.toLocaleString()}
                                     </td>
                                     <td className="px-6 py-4 text-sm text-gray-600">
                                         {new Date(payout.requestedAt).toLocaleDateString()}
@@ -355,7 +358,7 @@ export default function AdminPayoutsPage() {
                     <div className="bg-white rounded-2xl p-6 w-full max-w-md">
                         <h2 className="text-2xl font-bold text-gray-900 mb-4">Approve Payout</h2>
                         <p className="text-gray-600 mb-6">
-                            Approve payout of <strong>₹{selectedPayout.eligibleAmount.toLocaleString()}</strong> to{" "}
+                            Approve payout of <strong>â‚¹{selectedPayout.eligibleAmount.toLocaleString()}</strong> to{" "}
                             <strong>{selectedPayout.organiserName}</strong>?
                         </p>
                         <div className="flex gap-3">
@@ -501,31 +504,31 @@ export default function AdminPayoutsPage() {
                                     <div className="flex justify-between">
                                         <span className="text-gray-600">Total Revenue:</span>
                                         <span className="font-medium">
-                                            ₹{selectedPayout.breakdown.totalRevenue.toLocaleString()}
+                                            â‚¹{selectedPayout.breakdown.totalRevenue.toLocaleString()}
                                         </span>
                                     </div>
                                     <div className="flex justify-between">
                                         <span className="text-gray-600">Platform Fee:</span>
                                         <span className="text-red-600">
-                                            -₹{selectedPayout.breakdown.platformFee.toLocaleString()}
+                                            -â‚¹{selectedPayout.breakdown.platformFee.toLocaleString()}
                                         </span>
                                     </div>
                                     <div className="flex justify-between">
                                         <span className="text-gray-600">GST:</span>
                                         <span className="text-red-600">
-                                            -₹{selectedPayout.breakdown.gst.toLocaleString()}
+                                            -â‚¹{selectedPayout.breakdown.gst.toLocaleString()}
                                         </span>
                                     </div>
                                     <div className="flex justify-between">
                                         <span className="text-gray-600">Gateway Fees:</span>
                                         <span className="text-red-600">
-                                            -₹{selectedPayout.breakdown.gatewayFees.toLocaleString()}
+                                            -â‚¹{selectedPayout.breakdown.gatewayFees.toLocaleString()}
                                         </span>
                                     </div>
                                     <div className="flex justify-between border-t pt-2 font-bold">
                                         <span>Net Payable:</span>
                                         <span className="text-green-600">
-                                            ₹{selectedPayout.breakdown.netPayable.toLocaleString()}
+                                            â‚¹{selectedPayout.breakdown.netPayable.toLocaleString()}
                                         </span>
                                     </div>
                                 </div>

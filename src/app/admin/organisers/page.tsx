@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState } from 'react';
 import { useQuery, useMutation } from 'convex/react';
@@ -9,6 +9,9 @@ import { Id } from '@/convex/_generated/dataModel';
 import { useRouter } from 'next/navigation';
 
 import { useAdminAuth } from "@/components/admin/AdminAuthProvider";
+
+// Disable static generation for this page
+export const dynamic = 'force-dynamic';
 
 export default function OrganisersPage() {
     const router = useRouter();

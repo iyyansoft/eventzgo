@@ -1,7 +1,10 @@
-'use client';
+﻿'use client';
 
 import React from 'react';
 import { FileText, Download, Filter, Calendar } from 'lucide-react';
+
+// Disable static generation for this page
+export const dynamic = 'force-dynamic';
 
 export default function ReportsPage() {
     return (

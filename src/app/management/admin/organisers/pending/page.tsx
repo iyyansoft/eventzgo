@@ -1,9 +1,12 @@
-"use client";
+﻿"use client";
 
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useRouter } from "next/navigation";
 import OrganiserApproval from "@/components/admin/OrganiserApproval";
+
+// Disable static generation for this page
+export const dynamic = 'force-dynamic';
 
 export default function PendingOrganisersPage() {
   const router = useRouter();

@@ -133,7 +133,7 @@ export const createEvent = mutation({
         platformFee,
         totalPrice,
       },
-      status: args.status || "pending",
+      status: args.status || "published",
       isFeatured: false,
       isActive: true,
       createdAt: now,
@@ -162,11 +162,17 @@ export const getEventById = query({
 export const getEventsByOrganiser = query({
   args: { organiserId: v.id("organisers") },
   handler: async (ctx, args) => {
-    return await ctx.db
+    const events = await ctx.db
       .query("events")
       .withIndex("by_organiser_id", (q) => q.eq("organiserId", args.organiserId))
       .order("desc")
       .collect();
+    
+    // Add revenue calculation to each event
+    return events.map(event => ({
+      ...event,
+      revenue: event.soldTickets * (event.pricing?.totalPrice || 0),
+    }));
   },
 });
 

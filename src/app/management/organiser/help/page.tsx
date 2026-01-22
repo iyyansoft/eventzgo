@@ -9,6 +9,9 @@ import {
     Calendar, Users, DollarSign, BarChart3, ChevronRight
 } from "lucide-react";
 
+// Disable static generation for this page
+export const dynamic = 'force-dynamic';
+
 export default function OrganiserHelpPage() {
     const [organiserId, setOrganiserId] = useState<string | null>(null);
     const [activeTab, setActiveTab] = useState<'tickets' | 'faq'>('tickets');

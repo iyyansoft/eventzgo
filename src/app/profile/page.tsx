@@ -1,10 +1,13 @@
-"use client";
+﻿"use client";
 
 import React from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { User, Mail, Phone, Calendar, Ticket, Loader2, Settings } from "lucide-react";
 import Image from "next/image";
+
+// Disable static generation for this page
+export const dynamic = 'force-dynamic';
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -36,7 +39,7 @@ export default function ProfilePage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center max-w-md px-4">
-          <div className="text-6xl mb-4">👤</div>
+          <div className="text-6xl mb-4">ðŸ‘¤</div>
           <h1 className="text-3xl font-bold text-gray-900 mb-4">
             Sign In Required
           </h1>
@@ -223,7 +226,7 @@ export default function ProfilePage() {
                       className="w-full flex items-center justify-between px-4 py-3 bg-white/10 backdrop-blur-sm rounded-xl hover:bg-white/20 transition-colors"
                     >
                       <span className="font-medium">Organiser Dashboard</span>
-                      <span>→</span>
+                      <span>â†’</span>
                     </button>
                   )}
                   {role === "admin" && (
@@ -232,7 +235,7 @@ export default function ProfilePage() {
                       className="w-full flex items-center justify-between px-4 py-3 bg-white/10 backdrop-blur-sm rounded-xl hover:bg-white/20 transition-colors"
                     >
                       <span className="font-medium">Admin Dashboard</span>
-                      <span>→</span>
+                      <span>â†’</span>
                     </button>
                   )}
                 </div>

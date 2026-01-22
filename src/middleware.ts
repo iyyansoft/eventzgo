@@ -75,7 +75,8 @@ export default clerkMiddleware(async (auth, req) => {
   }
 
   // Check for admin portal routes - use Clerk authentication
-  if (isAdminPortalRoute(req)) {
+  // BUT exclude the login page itself
+  if (isAdminPortalRoute(req) && !pathname.startsWith('/admin/login')) {
     if (!userId) {
       const signInUrl = new URL('/admin/login', req.url);
       signInUrl.searchParams.set('redirect_url', req.url);

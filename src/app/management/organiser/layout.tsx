@@ -6,6 +6,9 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import OrganiserSidebar from '@/components/management/OrganiserSidebar';
 
+// Disable static generation for all organiser pages
+export const dynamic = 'force-dynamic';
+
 export default function OrganiserLayout({
   children,
 }: {

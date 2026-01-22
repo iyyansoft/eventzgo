@@ -1,9 +1,12 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import Link from "next/link";
+
+// Disable static generation for this page
+export const dynamic = 'force-dynamic';
 
 export default function ForgotPasswordPage() {
     const [email, setEmail] = useState("");

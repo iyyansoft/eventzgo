@@ -1,10 +1,13 @@
-"use client";
+﻿"use client";
 
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useState } from "react";
 import PayoutManagement from "@/components/admin/PayoutManagement";
 import { formatCurrency, formatCurrencyCompact } from "@/lib/currency-utils";
+
+// Disable static generation for this page
+export const dynamic = 'force-dynamic';
 
 export default function AdminPayoutsPage() {
   const [filter, setFilter] = useState<"all" | "pending" | "processing" | "completed" | "failed">("all");

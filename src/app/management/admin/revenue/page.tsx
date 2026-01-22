@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -8,6 +8,9 @@ import RevenueChart from "@/components/admin/RevenueChart";
 import PlatformStats from "@/components/admin/PlatformStats";
 import { APP_CONFIG } from "@/constants/config";
 import { formatCurrency, formatCurrencyCompact } from "@/lib/currency-utils";
+
+// Disable static generation for this page
+export const dynamic = 'force-dynamic';
 
 export default function AdminRevenuePage() {
   const [dateRange, setDateRange] = useState<"7days" | "30days" | "90days" | "1year">("30days");

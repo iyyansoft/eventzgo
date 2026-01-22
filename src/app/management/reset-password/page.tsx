@@ -1,10 +1,13 @@
-"use client";
+﻿"use client";
 
 import { useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import Link from "next/link";
+
+// Disable static generation for this page
+export const dynamic = 'force-dynamic';
 
 function ResetPasswordForm() {
     const searchParams = useSearchParams();
@@ -89,7 +92,7 @@ function ResetPasswordForm() {
                     <input
                         type="password"
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 transition"
-                        placeholder="••••••••"
+                        placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                         value={password}
                         onChange={e => setPassword(e.target.value)}
                         required
@@ -101,7 +104,7 @@ function ResetPasswordForm() {
                     <input
                         type="password"
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 transition"
-                        placeholder="••••••••"
+                        placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                         value={confirm}
                         onChange={e => setConfirm(e.target.value)}
                         required

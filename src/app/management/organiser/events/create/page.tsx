@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { useMutation } from "convex/react";
@@ -6,6 +6,9 @@ import { api } from "@/convex/_generated/api";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import EventForm from "@/components/organiser/EventForm";
+
+// Disable static generation for this page
+export const dynamic = 'force-dynamic';
 
 export default function CreateEventPage() {
   const router = useRouter();
@@ -22,19 +25,19 @@ export default function CreateEventPage() {
       const now = new Date();
 
       if (startDateTime < now) {
-        alert("❌ Cannot create events in the past! Please select a future date.");
+        alert("âŒ Cannot create events in the past! Please select a future date.");
         setIsSubmitting(false);
         return;
       }
 
       if (endDateTime < now) {
-        alert("❌ End date cannot be in the past! Please select a future date.");
+        alert("âŒ End date cannot be in the past! Please select a future date.");
         setIsSubmitting(false);
         return;
       }
 
       if (endDateTime <= startDateTime) {
-        alert("❌ End date must be after start date!");
+        alert("âŒ End date must be after start date!");
         setIsSubmitting(false);
         return;
       }

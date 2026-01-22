@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React from "react";
 import { useRouter } from "next/navigation";
@@ -7,6 +7,9 @@ import { api } from "@/convex/_generated/api";
 import { useAuth } from "@/hooks/useAuth";
 import { Calendar, MapPin, Ticket, Loader2, ChevronRight } from "lucide-react";
 import Image from "next/image";
+
+// Disable static generation for this page
+export const dynamic = 'force-dynamic';
 
 export default function MyBookingsPage() {
   const router = useRouter();
@@ -172,11 +175,6 @@ export default function MyBookingsPage() {
                           </div>
 
                           <div className="flex items-center space-x-3">
-                            <div className="w-5 h-5 flex items-center justify-center">
-                              <span className="text-purple-600 font-bold">
-                                ₹
-                              </span>
-                            </div>
                             <div>
                               <p className="text-sm text-gray-500">
                                 Total Amount

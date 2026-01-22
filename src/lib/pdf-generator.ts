@@ -185,9 +185,9 @@ export async function generateTicketPDF(data: TicketData): Promise<Blob> {
   pdf.text("S.No", margin + 3, yPos);
   pdf.text("Ticket Type", margin + 15, yPos);
   pdf.text("Qty", margin + 90, yPos);
-  pdf.text("Price (₹)", margin + 110, yPos);
+  pdf.text("Price (\\u20B9)", margin + 110, yPos);
   pdf.text("GST (18%)", margin + 135, yPos);
-  pdf.text("Total (₹)", margin + 165, yPos);
+  pdf.text("Total (\\u20B9)", margin + 165, yPos);
 
   yPos += 8;
 

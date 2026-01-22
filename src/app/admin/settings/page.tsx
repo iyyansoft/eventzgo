@@ -3,6 +3,9 @@
 import React from 'react';
 import { Settings, Save, Lock, Globe, Mail, Bell } from 'lucide-react';
 
+// Disable static generation for this page
+export const dynamic = 'force-dynamic';
+
 export default function SettingsPage() {
     return (
         <div className="p-8">

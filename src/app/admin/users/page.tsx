@@ -15,6 +15,9 @@ export default function UserManagementPage() {
 
     // Fetch all organisers from Convex
     const organisersData = useQuery(api.organisers.getAllOrganisers, {});
+    
+    // Fetch all Clerk users (end users/customers)
+    const clerkUsersData = useQuery(api.users.getAllClerkUsers);
 
     // Filter organisers based on search and status
     const filteredOrganisers = organisersData?.filter((org) => {
@@ -95,8 +98,21 @@ export default function UserManagementPage() {
             <div className="mb-8">
                 <h1 className="text-3xl font-bold text-gray-900">User Management</h1>
                 <p className="text-gray-600 mt-2">
-                    View all registered organisers and their account status
+                    View all registered organisers and end users
                 </p>
+                <div className="mt-4 flex items-center space-x-4 text-sm">
+                    <div className="flex items-center space-x-2">
+                        <Building2 className="w-4 h-4 text-purple-600" />
+                        <span className="font-semibold text-gray-700">{organisersData?.length || 0}</span>
+                        <span className="text-gray-500">Organisers</span>
+                    </div>
+                    <div className="w-px h-4 bg-gray-300"></div>
+                    <div className="flex items-center space-x-2">
+                        <Users className="w-4 h-4 text-blue-600" />
+                        <span className="font-semibold text-gray-700">{clerkUsersData?.length || 0}</span>
+                        <span className="text-gray-500">End Users</span>
+                    </div>
+                </div>
             </div>
 
             {/* Statistics Cards */}
@@ -294,6 +310,161 @@ export default function UserManagementPage() {
                                 Next
                             </button>
                         </div>
+                    </div>
+                )}
+            </div>
+
+            {/* End Users Section */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mt-6">
+                <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-purple-50">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h2 className="text-xl font-bold text-gray-900 flex items-center">
+                                <Users className="w-6 h-6 mr-2 text-blue-600" />
+                                End Users (Clerk)
+                            </h2>
+                            <p className="text-sm text-gray-600 mt-1">Customers and attendees registered via Clerk authentication</p>
+                        </div>
+                        <div className="text-right">
+                            <p className="text-3xl font-bold text-blue-600">{clerkUsersData?.length || 0}</p>
+                            <p className="text-xs text-gray-500">Total Users</p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Search Bar for End Users */}
+                <div className="p-4 bg-gray-50 border-b border-gray-200">
+                    <div className="relative max-w-md">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                        <input
+                            type="text"
+                            placeholder="Search by name, email, phone, or ID..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                        {searchTerm && (
+                            <button
+                                onClick={() => setSearchTerm('')}
+                                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                            >
+                                <XCircle className="w-5 h-5" />
+                            </button>
+                        )}
+                    </div>
+                </div>
+
+                {!clerkUsersData ? (
+                    <div className="p-12 text-center">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                        <p className="text-gray-500 mt-4">Loading end users...</p>
+                    </div>
+                ) : clerkUsersData.length === 0 ? (
+                    <div className="p-12 text-center">
+                        <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                        <p className="text-gray-500">No end users found</p>
+                        <p className="text-sm text-gray-400 mt-1">Users will appear here when they sign up</p>
+                    </div>
+                ) : (
+                    <div className="overflow-x-auto">
+                        <table className="w-full">
+                            <thead className="bg-gray-50 border-b border-gray-200">
+                                <tr>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                        User
+                                    </th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                        Email
+                                    </th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                        Phone
+                                    </th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                        Role
+                                    </th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                        Status
+                                    </th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                        Joined
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-200">
+                                {clerkUsersData
+                                    .filter(user => {
+                                        if (!searchTerm) return true;
+                                        const search = searchTerm.toLowerCase();
+                                        return (
+                                            user.firstName?.toLowerCase().includes(search) ||
+                                            user.lastName?.toLowerCase().includes(search) ||
+                                            user.email?.toLowerCase().includes(search) ||
+                                            user.phone?.toLowerCase().includes(search) ||
+                                            user.clerkId?.toLowerCase().includes(search)
+                                        );
+                                    })
+                                    .slice(0, 50)
+                                    .map((user) => (
+                                    <tr key={user._id} className="hover:bg-gray-50 transition-colors">
+                                        <td className="px-6 py-4">
+                                            <div className="flex items-center">
+                                                <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center text-white font-semibold">
+                                                    {user.firstName?.[0]?.toUpperCase() || user.email?.[0]?.toUpperCase() || 'U'}
+                                                </div>
+                                                <div className="ml-4">
+                                                    <div className="font-medium text-gray-900">
+                                                        {user.firstName && user.lastName 
+                                                            ? `${user.firstName} ${user.lastName}`
+                                                            : user.firstName || user.lastName || 'No name'}
+                                                    </div>
+                                                    <div className="text-sm text-gray-500 font-mono">
+                                                        {user.clerkId.substring(0, 16)}...
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <div className="text-sm text-gray-900">{user.email || 'No email'}</div>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <div className="text-sm text-gray-900">{user.phone || 'Not provided'}</div>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 capitalize">
+                                                {user.role || 'user'}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border ${
+                                                user.isActive 
+                                                    ? 'bg-green-100 text-green-800 border-green-200'
+                                                    : 'bg-gray-100 text-gray-800 border-gray-200'
+                                            }`}>
+                                                {user.isActive ? (
+                                                    <>
+                                                        <CheckCircle className="w-3.5 h-3.5" />
+                                                        Active
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <XCircle className="w-3.5 h-3.5" />
+                                                        Inactive
+                                                    </>
+                                                )}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4 text-sm text-gray-500">
+                                            {format(new Date(user.createdAt), 'MMM dd, yyyy')}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                        {clerkUsersData.length > 50 && (
+                            <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 text-center text-sm text-gray-600">
+                                Showing first 50 of {clerkUsersData.length} users
+                            </div>
+                        )}
                     </div>
                 )}
             </div>

@@ -1,9 +1,12 @@
-'use client';
+﻿'use client';
 
 import React, { useState } from 'react';
 import { useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { Database, Table, Search, Download, Eye, RefreshCw } from 'lucide-react';
+
+// Disable static generation for this page
+export const dynamic = 'force-dynamic';
 
 export default function DatabaseViewerPage() {
     const [selectedTable, setSelectedTable] = useState<string | null>(null);
@@ -260,7 +263,7 @@ export default function DatabaseViewerPage() {
                                 onClick={() => setShowRecordModal(false)}
                                 className="text-gray-500 hover:text-gray-700 text-2xl"
                             >
-                                ×
+                                Ã—
                             </button>
                         </div>
 

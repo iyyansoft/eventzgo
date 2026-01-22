@@ -30,9 +30,11 @@ export const ManagementAuthProvider = ({ children }: { children: ReactNode }) =>
     const { signOut } = useClerk();
 
     // Fetch user profile from Convex if Clerk user exists
+    // Note: Management users (organisers, vendors, etc.) use custom auth, not Clerk
+    // This context is for regular Clerk users only
     const userProfile = useQuery(
-        api.managementUsers.getUserProfile,
-        clerkUser?.id ? { clerkId: clerkUser.id } : "skip"
+        api.users.getCurrentUser,
+        clerkUser?.id ? {} : "skip"
     );
 
     const user: User | null = clerkUser && userProfile

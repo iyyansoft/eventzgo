@@ -1,9 +1,12 @@
-"use client";
+﻿"use client";
 
 import { useSearchParams, useRouter } from "next/navigation";
 import { useState, Suspense } from "react";
 import Image from "next/image";
 import { Copy, Check, Eye, EyeOff, Loader2 } from "lucide-react";
+
+// Disable static generation for this page
+export const dynamic = 'force-dynamic';
 
 function RevealPasswordContent() {
     const searchParams = useSearchParams();
@@ -67,7 +70,7 @@ function RevealPasswordContent() {
                     <div className="bg-white p-8 rounded-2xl shadow-2xl">
                         <div className="text-center mb-8">
                             <div className="w-20 h-20 bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                                <span className="text-4xl">🔓</span>
+                                <span className="text-4xl">ðŸ”“</span>
                             </div>
                             <h1 className="text-2xl font-bold text-gray-900 mb-2">
                                 Your Temporary Password
@@ -90,7 +93,7 @@ function RevealPasswordContent() {
                             </div>
                             <div className="bg-white p-4 rounded-lg mb-4">
                                 <p className="text-2xl font-mono text-center text-gray-900 select-all">
-                                    {showPassword ? password : "••••••••••••"}
+                                    {showPassword ? password : "â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"}
                                 </p>
                             </div>
                             <button
@@ -114,13 +117,13 @@ function RevealPasswordContent() {
                         {/* Warning */}
                         <div className="bg-red-50 border-2 border-red-200 rounded-xl p-4 mb-6">
                             <p className="text-sm font-bold text-red-900 mb-2">
-                                ⚠️ IMPORTANT SECURITY NOTICE
+                                âš ï¸ IMPORTANT SECURITY NOTICE
                             </p>
                             <ul className="space-y-1 text-sm text-red-800">
-                                <li>• This password expires in 30 minutes</li>
-                                <li>• You MUST change it after first login</li>
-                                <li>• Do NOT share this password with anyone</li>
-                                <li>• Delete this page after copying</li>
+                                <li>â€¢ This password expires in 30 minutes</li>
+                                <li>â€¢ You MUST change it after first login</li>
+                                <li>â€¢ Do NOT share this password with anyone</li>
+                                <li>â€¢ Delete this page after copying</li>
                             </ul>
                         </div>
 
@@ -152,7 +155,7 @@ function RevealPasswordContent() {
             <div className="w-full bg-gray-900 text-white py-6 px-6">
                 <div className="max-w-7xl mx-auto text-center">
                     <p className="text-sm text-gray-400">
-                        © 2024 EventzGo Management. All rights reserved.
+                        Â© 2024 EventzGo Management. All rights reserved.
                     </p>
                 </div>
             </div>

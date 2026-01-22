@@ -1,4 +1,10 @@
+'use client';
+
 import { ManagementAuthProvider } from "@/contexts/ManagementAuthContext";
+import SessionProvider from "@/components/providers/SessionProvider";
+
+// Disable static generation for all management pages
+export const dynamic = 'force-dynamic';
 
 export default function ManagementLayout({
   children,
@@ -6,8 +12,10 @@ export default function ManagementLayout({
   children: React.ReactNode;
 }) {
   return (
-    <ManagementAuthProvider>
-      {children}
-    </ManagementAuthProvider>
+    <SessionProvider>
+      <ManagementAuthProvider>
+        {children}
+      </ManagementAuthProvider>
+    </SessionProvider>
   );
 }

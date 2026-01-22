@@ -6,6 +6,9 @@ import { useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 import AdminSidebar from '@/components/management/AdminSidebar';
 
+// Disable static generation for all management admin pages
+export const dynamic = 'force-dynamic';
+
 export default function AdminLayout({
   children,
 }: {

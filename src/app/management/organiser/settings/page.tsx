@@ -1,10 +1,13 @@
-"use client";
+﻿"use client";
 
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useState, useEffect } from "react";
 import BankDetailsForm from "@/components/organiser/BankDetailsForm";
 import DocumentUpload from "@/components/organiser/DocumentUpload";
+
+// Disable static generation for this page
+export const dynamic = 'force-dynamic';
 
 export default function OrganiserSettingsPage() {
   const [userId, setUserId] = useState<string | null>(null);

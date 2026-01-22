@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
 import Header from "@/components/shared/Header";
@@ -14,6 +14,9 @@ import BestLiveEvents from "@/components/home/BestLiveEvents";
 import OutdoorEvents from "@/components/home/OutdoorEvents";
 import LocationBasedEvents from "@/components/home/LocationBasedEvents";
 import { useLocation } from "@/contexts/LocationContext";
+
+// Disable static generation for this page
+export const dynamic = 'force-dynamic';
 
 export default function HomePage() {
   const [loading, setLoading] = useState(true);

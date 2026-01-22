@@ -1,10 +1,13 @@
-"use client";
+﻿"use client";
 
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useState } from "react";
 import DataTable from "@/components/management/DataTable";
 import UserManagement from "@/components/admin/UserManagement";
+
+// Disable static generation for this page
+export const dynamic = 'force-dynamic';
 
 export default function AdminUsersPage() {
   const [filter, setFilter] = useState<"all" | "user" | "organiser" | "admin">("all");

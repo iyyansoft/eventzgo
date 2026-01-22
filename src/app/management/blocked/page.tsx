@@ -1,10 +1,13 @@
-
+﻿
 "use client";
 
 import React, { useState } from 'react';
 import { Building, Briefcase, Award, DollarSign, ArrowRight, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { SignUp } from '@clerk/nextjs';
+
+// Disable static generation for this page
+export const dynamic = 'force-dynamic';
 
 export default function BlockedPage() {
     const router = useRouter();
@@ -15,7 +18,7 @@ export default function BlockedPage() {
         {
             id: 'organiser' as const,
             icon: Building,
-            emoji: '🏢',
+            emoji: 'ðŸ¢',
             title: 'Event Organizer',
             description: 'Create and manage professional events',
             features: ['Event Creation', 'Attendee Management', 'Analytics Dashboard', 'Partner Network'],
@@ -25,7 +28,7 @@ export default function BlockedPage() {
         {
             id: 'vendor' as const,
             icon: Briefcase,
-            emoji: '🛠️',
+            emoji: 'ðŸ› ï¸',
             title: 'Service Vendor',
             description: 'Offer services to event organizers',
             features: ['Service Listings', 'Quote Management', 'Booking System', 'Portfolio Showcase'],
@@ -35,7 +38,7 @@ export default function BlockedPage() {
         {
             id: 'speaker' as const,
             icon: Award,
-            emoji: '🎤',
+            emoji: 'ðŸŽ¤',
             title: 'Professional Speaker',
             description: 'Share your expertise at events',
             features: ['Speaker Profile', 'Topic Management', 'Booking Calendar', 'Engagement Analytics'],
@@ -45,7 +48,7 @@ export default function BlockedPage() {
         {
             id: 'sponsor' as const,
             icon: DollarSign,
-            emoji: '💰',
+            emoji: 'ðŸ’°',
             title: 'Event Sponsor',
             description: 'Partner with events for brand visibility',
             features: ['Sponsorship Packages', 'Brand Exposure', 'ROI Analytics', 'Direct Connections'],
@@ -75,7 +78,7 @@ export default function BlockedPage() {
                 {/* Header */}
                 <div className="text-center mb-8">
                     <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-red-500 to-pink-600 rounded-2xl shadow-2xl mb-6">
-                        <span className="text-4xl">🚫</span>
+                        <span className="text-4xl">ðŸš«</span>
                     </div>
                     <h1 className="text-4xl font-bold text-gray-900 mb-4">
                         Management Portal Access Required
@@ -145,21 +148,21 @@ export default function BlockedPage() {
                                 <div className="mt-6 p-4 bg-blue-50 border-2 border-blue-200 rounded-xl">
                                     <div className="flex items-start space-x-3">
                                         <div className={`w-10 h-10 bg-gradient-to-br ${roles.find(r => r.id === selectedRole)?.gradient} rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg`}>
-                                            <span className="text-xl">✨</span>
+                                            <span className="text-xl">âœ¨</span>
                                         </div>
                                         <div className="flex-1">
                                             <h4 className="font-bold text-gray-900 mb-2">What's Next?</h4>
                                             <ul className="space-y-1.5 text-sm text-gray-700">
                                                 <li className="flex items-start">
-                                                    <span className="text-blue-600 mr-2 mt-0.5">✓</span>
+                                                    <span className="text-blue-600 mr-2 mt-0.5">âœ“</span>
                                                     <span>Complete your professional profile</span>
                                                 </li>
                                                 <li className="flex items-start">
-                                                    <span className="text-blue-600 mr-2 mt-0.5">✓</span>
+                                                    <span className="text-blue-600 mr-2 mt-0.5">âœ“</span>
                                                     <span>Admin verification (quick process)</span>
                                                 </li>
                                                 <li className="flex items-start">
-                                                    <span className="text-blue-600 mr-2 mt-0.5">✓</span>
+                                                    <span className="text-blue-600 mr-2 mt-0.5">âœ“</span>
                                                     <span>Access your personalized dashboard</span>
                                                 </li>
                                             </ul>
@@ -172,7 +175,7 @@ export default function BlockedPage() {
                                     onClick={handleBackToRoles}
                                     className="mt-4 w-full text-gray-600 hover:text-gray-900 font-medium py-2 rounded-xl hover:bg-gray-100 transition-all duration-200 flex items-center justify-center space-x-2"
                                 >
-                                    <span>←</span>
+                                    <span>â†</span>
                                     <span>Back to role selection</span>
                                 </button>
                             </div>

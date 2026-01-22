@@ -55,9 +55,9 @@ const ManagementAuthModal: React.FC<ManagementAuthModalProps> = ({
     const [sponsorshipBudget, setSponsorshipBudget] = useState("");
     const [preferredEvents, setPreferredEvents] = useState("");
 
-    const createVendor = useMutation(api.managementUsers.createOrUpdateVendor);
-    const createSpeaker = useMutation(api.managementUsers.createOrUpdateSpeaker);
-    const createSponsor = useMutation(api.managementUsers.createOrUpdateSponsor);
+    const createVendor = useMutation(api.roles.createOrUpdateVendor);
+    const createSpeaker = useMutation(api.roles.createOrUpdateSpeaker);
+    const createSponsor = useMutation(api.roles.createOrUpdateSponsor);
 
     const handleSignIn = async (e: React.FormEvent) => {
         e.preventDefault();

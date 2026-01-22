@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState } from 'react';
 import { useQuery, useMutation } from 'convex/react';
@@ -7,6 +7,9 @@ import StatCard from '@/components/admin/StatCard';
 import { UserCheck, Building2, Mic, Award, CheckCircle, XCircle, Eye, Mail, Phone, MapPin, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Id } from '@/convex/_generated/dataModel';
+
+// Disable static generation for this page
+export const dynamic = 'force-dynamic';
 
 export default function ManagementApprovalPage() {
     const [activeCategory, setActiveCategory] = useState('all');
@@ -350,7 +353,7 @@ export default function ManagementApprovalPage() {
                             {/* Basic Information */}
                             <div className="mb-6">
                                 <h3 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b">
-                                    📋 Basic Information
+                                    ðŸ“‹ Basic Information
                                 </h3>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
@@ -376,7 +379,7 @@ export default function ManagementApprovalPage() {
                             {selectedItem.address && (
                                 <div className="mb-6">
                                     <h3 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b">
-                                        📍 Address
+                                        ðŸ“ Address
                                     </h3>
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="col-span-2">
@@ -402,7 +405,7 @@ export default function ManagementApprovalPage() {
                             {/* Tax Details */}
                             <div className="mb-6">
                                 <h3 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b">
-                                    💼 Tax Details
+                                    ðŸ’¼ Tax Details
                                 </h3>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
@@ -426,7 +429,7 @@ export default function ManagementApprovalPage() {
                             {selectedItem.bankDetails && (
                                 <div className="mb-6">
                                     <h3 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b">
-                                        🏦 Bank Details
+                                        ðŸ¦ Bank Details
                                     </h3>
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
@@ -457,7 +460,7 @@ export default function ManagementApprovalPage() {
                             {selectedItem.documents && Object.keys(selectedItem.documents).length > 0 && (
                                 <div className="mb-6">
                                     <h3 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b">
-                                        📄 Uploaded Documents
+                                        ðŸ“„ Uploaded Documents
                                     </h3>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         {selectedItem.documents.gstCertificate && (
@@ -467,14 +470,14 @@ export default function ManagementApprovalPage() {
                                                     <div>
                                                         {selectedItem.documents.gstCertificate.includes('.pdf') ? (
                                                             <div className="bg-white p-4 rounded border">
-                                                                <p className="text-gray-600 mb-2">📄 PDF Document</p>
+                                                                <p className="text-gray-600 mb-2">ðŸ“„ PDF Document</p>
                                                                 <a
                                                                     href={selectedItem.documents.gstCertificate}
                                                                     target="_blank"
                                                                     rel="noopener noreferrer"
                                                                     className="inline-block bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
                                                                 >
-                                                                    📥 View/Download PDF
+                                                                    ðŸ“¥ View/Download PDF
                                                                 </a>
                                                             </div>
                                                         ) : (
@@ -491,7 +494,7 @@ export default function ManagementApprovalPage() {
                                                                     rel="noopener noreferrer"
                                                                     className="text-blue-600 text-sm mt-2 inline-block hover:underline"
                                                                 >
-                                                                    🔍 View Full Size
+                                                                    ðŸ” View Full Size
                                                                 </a>
                                                             </div>
                                                         )}
@@ -500,19 +503,19 @@ export default function ManagementApprovalPage() {
                                                     <div>
                                                         <embed src={selectedItem.documents.gstCertificate} type="application/pdf" width="100%" height="400px" className="rounded" />
                                                         <a href={selectedItem.documents.gstCertificate} download="gst-certificate.pdf" className="text-blue-600 text-sm mt-2 inline-block hover:underline">
-                                                            📥 Download PDF
+                                                            ðŸ“¥ Download PDF
                                                         </a>
                                                     </div>
                                                 ) : selectedItem.documents.gstCertificate.startsWith('data:image/') ? (
                                                     <div>
                                                         <img src={selectedItem.documents.gstCertificate} alt="GST Certificate" className="w-full h-auto rounded border" />
                                                         <a href={selectedItem.documents.gstCertificate} download="gst-certificate.jpg" className="text-blue-600 text-sm mt-2 inline-block hover:underline">
-                                                            📥 Download Image
+                                                            ðŸ“¥ Download Image
                                                         </a>
                                                     </div>
                                                 ) : (
                                                     <div className="text-center py-8 bg-gray-100 rounded">
-                                                        <p className="text-gray-600 mb-2">📄 Document uploaded</p>
+                                                        <p className="text-gray-600 mb-2">ðŸ“„ Document uploaded</p>
                                                         <p className="text-xs text-gray-500 mb-3 break-all">{selectedItem.documents.gstCertificate}</p>
                                                     </div>
                                                 )}
@@ -525,30 +528,30 @@ export default function ManagementApprovalPage() {
                                                     <div>
                                                         {selectedItem.documents.panCard.includes('.pdf') ? (
                                                             <div className="bg-white p-4 rounded border">
-                                                                <p className="text-gray-600 mb-2">📄 PDF Document</p>
+                                                                <p className="text-gray-600 mb-2">ðŸ“„ PDF Document</p>
                                                                 <a href={selectedItem.documents.panCard} target="_blank" rel="noopener noreferrer" className="inline-block bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors">
-                                                                    📥 View/Download PDF
+                                                                    ðŸ“¥ View/Download PDF
                                                                 </a>
                                                             </div>
                                                         ) : (
                                                             <div>
                                                                 <img src={selectedItem.documents.panCard} alt="PAN Card" className="w-full h-auto rounded border shadow-sm hover:shadow-md transition-shadow cursor-pointer" onClick={() => window.open(selectedItem.documents.panCard, '_blank')} />
-                                                                <a href={selectedItem.documents.panCard} target="_blank" rel="noopener noreferrer" className="text-blue-600 text-sm mt-2 inline-block hover:underline">🔍 View Full Size</a>
+                                                                <a href={selectedItem.documents.panCard} target="_blank" rel="noopener noreferrer" className="text-blue-600 text-sm mt-2 inline-block hover:underline">ðŸ” View Full Size</a>
                                                             </div>
                                                         )}
                                                     </div>
                                                 ) : selectedItem.documents.panCard.startsWith('data:application/pdf') ? (
                                                     <div>
                                                         <embed src={selectedItem.documents.panCard} type="application/pdf" width="100%" height="400px" className="rounded" />
-                                                        <a href={selectedItem.documents.panCard} download="pan-card.pdf" className="text-blue-600 text-sm mt-2 inline-block hover:underline">📥 Download PDF</a>
+                                                        <a href={selectedItem.documents.panCard} download="pan-card.pdf" className="text-blue-600 text-sm mt-2 inline-block hover:underline">ðŸ“¥ Download PDF</a>
                                                     </div>
                                                 ) : selectedItem.documents.panCard.startsWith('data:image/') ? (
                                                     <div>
                                                         <img src={selectedItem.documents.panCard} alt="PAN Card" className="w-full h-auto rounded border" />
-                                                        <a href={selectedItem.documents.panCard} download="pan-card.jpg" className="text-blue-600 text-sm mt-2 inline-block hover:underline">📥 Download Image</a>
+                                                        <a href={selectedItem.documents.panCard} download="pan-card.jpg" className="text-blue-600 text-sm mt-2 inline-block hover:underline">ðŸ“¥ Download Image</a>
                                                     </div>
                                                 ) : (
-                                                    <a href={selectedItem.documents.panCard} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">View Document →</a>
+                                                    <a href={selectedItem.documents.panCard} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">View Document â†’</a>
                                                 )}
                                             </div>
                                         )}
@@ -559,30 +562,30 @@ export default function ManagementApprovalPage() {
                                                     <div>
                                                         {selectedItem.documents.cancelledCheque.includes('.pdf') ? (
                                                             <div className="bg-white p-4 rounded border">
-                                                                <p className="text-gray-600 mb-2">📄 PDF Document</p>
+                                                                <p className="text-gray-600 mb-2">ðŸ“„ PDF Document</p>
                                                                 <a href={selectedItem.documents.cancelledCheque} target="_blank" rel="noopener noreferrer" className="inline-block bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors">
-                                                                    📥 View/Download PDF
+                                                                    ðŸ“¥ View/Download PDF
                                                                 </a>
                                                             </div>
                                                         ) : (
                                                             <div>
                                                                 <img src={selectedItem.documents.cancelledCheque} alt="Cancelled Cheque" className="w-full h-auto rounded border shadow-sm hover:shadow-md transition-shadow cursor-pointer" onClick={() => window.open(selectedItem.documents.cancelledCheque, '_blank')} />
-                                                                <a href={selectedItem.documents.cancelledCheque} target="_blank" rel="noopener noreferrer" className="text-blue-600 text-sm mt-2 inline-block hover:underline">🔍 View Full Size</a>
+                                                                <a href={selectedItem.documents.cancelledCheque} target="_blank" rel="noopener noreferrer" className="text-blue-600 text-sm mt-2 inline-block hover:underline">ðŸ” View Full Size</a>
                                                             </div>
                                                         )}
                                                     </div>
                                                 ) : selectedItem.documents.cancelledCheque.startsWith('data:application/pdf') ? (
                                                     <div>
                                                         <embed src={selectedItem.documents.cancelledCheque} type="application/pdf" width="100%" height="400px" className="rounded" />
-                                                        <a href={selectedItem.documents.cancelledCheque} download="cancelled-cheque.pdf" className="text-blue-600 text-sm mt-2 inline-block hover:underline">📥 Download PDF</a>
+                                                        <a href={selectedItem.documents.cancelledCheque} download="cancelled-cheque.pdf" className="text-blue-600 text-sm mt-2 inline-block hover:underline">ðŸ“¥ Download PDF</a>
                                                     </div>
                                                 ) : selectedItem.documents.cancelledCheque.startsWith('data:image/') ? (
                                                     <div>
                                                         <img src={selectedItem.documents.cancelledCheque} alt="Cancelled Cheque" className="w-full h-auto rounded border" />
-                                                        <a href={selectedItem.documents.cancelledCheque} download="cancelled-cheque.jpg" className="text-blue-600 text-sm mt-2 inline-block hover:underline">📥 Download Image</a>
+                                                        <a href={selectedItem.documents.cancelledCheque} download="cancelled-cheque.jpg" className="text-blue-600 text-sm mt-2 inline-block hover:underline">ðŸ“¥ Download Image</a>
                                                     </div>
                                                 ) : (
-                                                    <a href={selectedItem.documents.cancelledCheque} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">View Document →</a>
+                                                    <a href={selectedItem.documents.cancelledCheque} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">View Document â†’</a>
                                                 )}
                                             </div>
                                         )}
@@ -593,19 +596,19 @@ export default function ManagementApprovalPage() {
                                                     <div>
                                                         <embed src={selectedItem.documents.bankStatement} type="application/pdf" width="100%" height="400px" className="rounded" />
                                                         <a href={selectedItem.documents.bankStatement} download="bank-statement.pdf" className="text-blue-600 text-sm mt-2 inline-block hover:underline">
-                                                            📥 Download PDF
+                                                            ðŸ“¥ Download PDF
                                                         </a>
                                                     </div>
                                                 ) : selectedItem.documents.bankStatement.startsWith('data:image/') ? (
                                                     <div>
                                                         <img src={selectedItem.documents.bankStatement} alt="Bank Statement" className="w-full h-auto rounded border" />
                                                         <a href={selectedItem.documents.bankStatement} download="bank-statement.jpg" className="text-blue-600 text-sm mt-2 inline-block hover:underline">
-                                                            📥 Download Image
+                                                            ðŸ“¥ Download Image
                                                         </a>
                                                     </div>
                                                 ) : (
                                                     <a href={selectedItem.documents.bankStatement} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
-                                                        View Document →
+                                                        View Document â†’
                                                     </a>
                                                 )}
                                             </div>
@@ -617,7 +620,7 @@ export default function ManagementApprovalPage() {
                             {/* Metadata */}
                             <div className="mb-6">
                                 <h3 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b">
-                                    ℹ️ Application Info
+                                    â„¹ï¸ Application Info
                                 </h3>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>

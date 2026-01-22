@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -19,6 +19,9 @@ import {
     Calendar,
     MapPin
 } from "lucide-react";
+
+// Disable static generation for this page
+export const dynamic = 'force-dynamic';
 
 export default function ScannerPage() {
     const router = useRouter();
@@ -429,7 +432,7 @@ export default function ScannerPage() {
                                         }}
                                         className="w-full py-3 bg-yellow-50 text-yellow-700 border border-yellow-200 rounded-xl font-medium hover:bg-yellow-100"
                                     >
-                                        ⚠️ Override Verification
+                                        âš ï¸ Override Verification
                                     </button>
                                 )}
                             </div>
@@ -440,7 +443,7 @@ export default function ScannerPage() {
                 {/* Footer Info */}
                 <div className="text-center text-xs text-gray-400 space-y-1">
                     <p>Logged in as {staffSession.organiserName}</p>
-                    <p>EventzGo Scanner v1.2 • Secure Connection</p>
+                    <p>EventzGo Scanner v1.2 â€¢ Secure Connection</p>
                 </div>
             </main>
 

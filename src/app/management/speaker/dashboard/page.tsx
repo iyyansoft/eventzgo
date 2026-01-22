@@ -1,9 +1,12 @@
-"use client";
+﻿"use client";
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useManagementAuth } from "@/contexts/ManagementAuthContext";
 import { Award, Calendar, TrendingUp, Users } from "lucide-react";
+
+// Disable static generation for this page
+export const dynamic = 'force-dynamic';
 
 export default function SpeakerDashboard() {
     const router = useRouter();
@@ -68,7 +71,7 @@ export default function SpeakerDashboard() {
                                 <TrendingUp className="w-6 h-6 text-green-600" />
                             </div>
                         </div>
-                        <h3 className="text-2xl font-bold text-gray-900 mb-1">₹3.5L</h3>
+                        <h3 className="text-2xl font-bold text-gray-900 mb-1">â‚¹3.5L</h3>
                         <p className="text-gray-600 text-sm">Total Earnings</p>
                     </div>
 

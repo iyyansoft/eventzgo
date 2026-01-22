@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState } from 'react';
 import { useQuery } from 'convex/react';
@@ -14,6 +14,9 @@ import DashboardOnboarding from "@/components/organiser/DashboardOnboarding";
 import {
     AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell as RechartsCell
 } from 'recharts';
+
+// Disable static generation for this page
+export const dynamic = 'force-dynamic';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
 
@@ -146,7 +149,7 @@ const OrganizerDashboard = () => {
         },
         {
             title: 'Total Revenue',
-            value: `₹${totalRevenue.toLocaleString()}`,
+            value: `â‚¹${totalRevenue.toLocaleString()}`,
             change: '',
             icon: CreditCard,
             color: 'bg-purple-500'
@@ -225,7 +228,7 @@ const OrganizerDashboard = () => {
                     <div>
                         <h1 className="text-3xl font-bold text-gray-900">Event Organizer Hub</h1>
                         <p className="text-gray-600 mt-1">
-                            Welcome back, {organiserData?.institutionName || session.user?.companyName || 'Organiser'}! 👋
+                            Welcome back, {organiserData?.institutionName || session.user?.companyName || 'Organiser'}! ðŸ‘‹
                         </p>
                     </div>
                     <button
@@ -336,10 +339,10 @@ const OrganizerDashboard = () => {
                                 <BarChart data={revenueData}>
                                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
                                     <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#9ca3af' }} />
-                                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#9ca3af' }} tickFormatter={(value) => `₹${value / 1000}k`} />
+                                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#9ca3af' }} tickFormatter={(value) => `â‚¹${value / 1000}k`} />
                                     <Tooltip
                                         contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                                        formatter={(value: number) => [`₹${value.toLocaleString()}`, 'Revenue']}
+                                        formatter={(value: number) => [`â‚¹${value.toLocaleString()}`, 'Revenue']}
                                     />
                                     <Bar dataKey="value" fill="#22c55e" radius={[4, 4, 0, 0]} barSize={40} />
                                 </BarChart>

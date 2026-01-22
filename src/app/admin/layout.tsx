@@ -5,6 +5,9 @@ import { usePathname } from 'next/navigation';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { AdminAuthProvider, useAdminAuth } from '@/components/admin/AdminAuthProvider';
 
+// Disable static generation for all admin pages
+export const dynamic = 'force-dynamic';
+
 function AdminLayoutContent({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
     const isLoginPage = pathname === '/admin/login';

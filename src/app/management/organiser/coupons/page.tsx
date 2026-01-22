@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -12,6 +12,9 @@ import {
     Calendar,
     ArrowRight
 } from "lucide-react";
+
+// Disable static generation for this page
+export const dynamic = 'force-dynamic';
 
 export default function AllCouponsPage() {
     const router = useRouter();
@@ -78,7 +81,7 @@ export default function AllCouponsPage() {
                     <div className="flex items-center justify-between">
                         <div>
                             <p className="text-gray-600 text-sm">Total Discount</p>
-                            <p className="text-3xl font-bold text-orange-600 mt-1">₹0</p>
+                            <p className="text-3xl font-bold text-orange-600 mt-1">â‚¹0</p>
                         </div>
                         <div className="p-3 bg-orange-100 rounded-lg">
                             <Percent className="w-6 h-6 text-orange-600" />
@@ -90,7 +93,7 @@ export default function AllCouponsPage() {
                     <div className="flex items-center justify-between">
                         <div>
                             <p className="text-gray-600 text-sm">Total Revenue</p>
-                            <p className="text-3xl font-bold text-blue-600 mt-1">₹0</p>
+                            <p className="text-3xl font-bold text-blue-600 mt-1">â‚¹0</p>
                         </div>
                         <div className="p-3 bg-blue-100 rounded-lg">
                             <DollarSign className="w-6 h-6 text-blue-600" />

@@ -536,7 +536,7 @@ export default function OrganiserDetailPage() {
                                                     {req.eventTitle}
                                                 </td>
                                                 <td className="px-6 py-4 font-bold text-gray-900">
-                                                    ₹{req.amount.toLocaleString()}
+                                                    ₹{(req.amount || 0).toLocaleString()}
                                                 </td>
                                                 <td className="px-6 py-4 text-sm">
                                                     <p className="font-medium text-gray-900">{req.bankDetails?.accountHolderName}</p>

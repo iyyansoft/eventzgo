@@ -1,9 +1,12 @@
-"use client";
+﻿"use client";
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Mail, Bell } from "lucide-react";
 import Link from "next/link";
+
+// Disable static generation for this page
+export const dynamic = 'force-dynamic';
 
 export default function ComingSoonPage() {
   const router = useRouter();
@@ -40,7 +43,7 @@ export default function ComingSoonPage() {
         {/* Logo / Icon */}
         <div className="mb-6 sm:mb-8 inline-block">
           <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-yellow-400 to-pink-500 rounded-2xl flex items-center justify-center shadow-2xl">
-            <span className="text-3xl sm:text-4xl">🚀</span>
+            <span className="text-3xl sm:text-4xl">ðŸš€</span>
           </div>
         </div>
 
@@ -90,7 +93,7 @@ export default function ComingSoonPage() {
             </div>
             {submitted && (
               <p className="text-green-400 text-xs sm:text-sm font-semibold animate-fade-in">
-                ✓ Thanks! We'll notify you when we launch.
+                âœ“ Thanks! We'll notify you when we launch.
               </p>
             )}
           </form>
@@ -99,17 +102,17 @@ export default function ComingSoonPage() {
         {/* Features Preview */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-8 sm:mb-12 px-2">
           <div className="bg-white/10 backdrop-blur-md rounded-lg sm:rounded-xl p-4 sm:p-6 border border-white/20 hover:border-pink-500/50 transition-all duration-200 hover:bg-white/20">
-            <div className="text-2xl sm:text-3xl mb-2 sm:mb-3">📊</div>
+            <div className="text-2xl sm:text-3xl mb-2 sm:mb-3">ðŸ“Š</div>
             <h3 className="text-base sm:text-lg font-semibold text-white mb-1 sm:mb-2">Analytics</h3>
             <p className="text-white/70 text-xs sm:text-sm">Track event performance and sales data</p>
           </div>
           <div className="bg-white/10 backdrop-blur-md rounded-lg sm:rounded-xl p-4 sm:p-6 border border-white/20 hover:border-pink-500/50 transition-all duration-200 hover:bg-white/20">
-            <div className="text-2xl sm:text-3xl mb-2 sm:mb-3">🎫</div>
+            <div className="text-2xl sm:text-3xl mb-2 sm:mb-3">ðŸŽ«</div>
             <h3 className="text-base sm:text-lg font-semibold text-white mb-1 sm:mb-2">Event Management</h3>
             <p className="text-white/70 text-xs sm:text-sm">Create and manage events effortlessly</p>
           </div>
           <div className="bg-white/10 backdrop-blur-md rounded-lg sm:rounded-xl p-4 sm:p-6 border border-white/20 hover:border-pink-500/50 transition-all duration-200 hover:bg-white/20">
-            <div className="text-2xl sm:text-3xl mb-2 sm:mb-3">🤝</div>
+            <div className="text-2xl sm:text-3xl mb-2 sm:mb-3">ðŸ¤</div>
             <h3 className="text-base sm:text-lg font-semibold text-white mb-1 sm:mb-2">Connect</h3>
             <p className="text-white/70 text-xs sm:text-sm">Network with vendors and sponsors</p>
           </div>

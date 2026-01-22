@@ -1,9 +1,12 @@
-"use client";
+﻿"use client";
 
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useState } from "react";
 import RefundApproval from "@/components/admin/RefundApproval";
+
+// Disable static generation for this page
+export const dynamic = 'force-dynamic';
 
 export default function AdminRefundsPage() {
   const [filter, setFilter] = useState<"all" | "requested" | "approved" | "rejected" | "processed">("all");

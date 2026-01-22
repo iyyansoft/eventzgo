@@ -1,10 +1,13 @@
-'use client';
+﻿'use client';
 
 import React, { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { CheckCircle, XCircle, Loader2, Mail } from 'lucide-react';
+
+// Disable static generation for this page
+export const dynamic = 'force-dynamic';
 
 function VerifyEmailContent() {
     const searchParams = useSearchParams();

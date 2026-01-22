@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState } from 'react';
 import { useQuery } from 'convex/react';
@@ -20,6 +20,9 @@ import {
     Legend,
     ResponsiveContainer,
 } from 'recharts';
+
+// Disable static generation for this page
+export const dynamic = 'force-dynamic';
 
 export default function AnalyticsPage() {
     const [dateRange, setDateRange] = useState<{ start?: number; end?: number }>({});
@@ -69,7 +72,7 @@ export default function AnalyticsPage() {
                         />
                         <StatCard
                             title="Total Revenue"
-                            value={`₹${(analytics.overview.totalRevenue / 1000).toFixed(1)}K`}
+                            value={`₹${analytics.overview.totalRevenue.toLocaleString()}`}
                             icon={DollarSign}
                             color="orange"
                             subtitle="Platform revenue"
@@ -246,7 +249,7 @@ export default function AnalyticsPage() {
                                             </td>
                                             <td className="px-6 py-4">
                                                 <span className="font-semibold text-green-600">
-                                                    ₹{event.revenue.toLocaleString()}
+                                                    â‚¹{event.revenue.toLocaleString()}
                                                 </span>
                                             </td>
                                         </tr>

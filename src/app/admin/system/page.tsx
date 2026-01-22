@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { useQuery } from 'convex/react';
@@ -41,6 +41,9 @@ import {
     Tooltip,
     ResponsiveContainer,
 } from 'recharts';
+
+// Disable static generation for this page
+export const dynamic = 'force-dynamic';
 
 export default function SystemMonitorPage() {
     const [systemHealth, setSystemHealth] = useState({

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState } from 'react';
 import { useQuery, useMutation } from 'convex/react';
@@ -27,6 +27,9 @@ import {
     ResponsiveContainer,
 } from 'recharts';
 import { format } from 'date-fns';
+
+// Disable static generation for this page
+export const dynamic = 'force-dynamic';
 
 const COLORS = ['#3b82f6', '#10b981', '#8b5cf6', '#f59e0b', '#ef4444'];
 
@@ -97,7 +100,7 @@ const AdminDashboard = () => {
         },
         {
             title: 'Total Revenue',
-            value: `₹${((dashboardStats?.revenue?.total || 0) / 1000).toFixed(1)}K`,
+            value: `₹${(dashboardStats?.revenue?.total || 0).toLocaleString()}`,
             change: `${dashboardStats?.bookings?.total || 0} bookings`,
             icon: DollarSign,
             color: 'bg-purple-500',
@@ -187,10 +190,10 @@ const AdminDashboard = () => {
                                 />
                                 <StatCard
                                     title="Platform Revenue"
-                                    value={`₹${((dashboardStats?.revenue?.total || 0) / 100).toLocaleString()}`}
+                                    value={`₹${(dashboardStats?.revenue?.total || 0).toLocaleString()}`}
                                     icon={DollarSign}
                                     color="purple"
-                                    subtitle={`₹${((dashboardStats?.revenue?.net || 0) / 100).toLocaleString()} net`}
+                                    subtitle={`₹${(dashboardStats?.revenue?.net || 0).toLocaleString()} net`}
                                 />
                             </div>
                         </div>
@@ -249,7 +252,7 @@ const AdminDashboard = () => {
                                                     {/* Uploaded Documents */}
                                                     {organiser.documents && (
                                                         <div className="mt-4 pt-4 border-t border-gray-200">
-                                                            <p className="text-xs font-medium text-gray-500 mb-3">📎 Uploaded Documents</p>
+                                                            <p className="text-xs font-medium text-gray-500 mb-3">ðŸ“Ž Uploaded Documents</p>
                                                             <div className="grid grid-cols-2 gap-2">
                                                                 {organiser.documents?.gstCertificate && (
                                                                     <button

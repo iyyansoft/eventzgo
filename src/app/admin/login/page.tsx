@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import Image from "next/image";
@@ -7,6 +7,9 @@ import { useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useAdminAuth } from "@/components/admin/AdminAuthProvider";
 
+// Disable static generation for this page
+export const dynamic = 'force-dynamic';
+
 export default function AdminLoginPage() {
     const [identifier, setIdentifier] = useState("");
     const [password, setPassword] = useState("");
@@ -14,7 +17,7 @@ export default function AdminLoginPage() {
     const [error, setError] = useState("");
     const [showPassword, setShowPassword] = useState(false);
 
-    const signIn = useAction(api.auth.authActions.signInAction);
+    const adminSignIn = useAction(api.adminAuth.adminSignIn);
     const { login } = useAdminAuth();
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -23,14 +26,14 @@ export default function AdminLoginPage() {
         setError("");
 
         try {
-            // Direct Client-Side Login (Bypassing Server Fetch issues)
-            const result = await signIn({
+            // Admin Login using dedicated admin action
+            const result = await adminSignIn({
                 username: identifier,
                 password: password,
             });
 
-            // result contains sessionToken, role, etc.
-            if (result && result.sessionToken) {
+            // Check if login was successful
+            if (result && result.success && result.sessionToken) {
                 // Enforce Admin Role
                 if (result.role !== "admin") {
                     setError("Access denied. Admin privileges required.");
@@ -41,7 +44,9 @@ export default function AdminLoginPage() {
                 // Login successful
                 login(result.sessionToken, result);
             } else {
-                throw new Error("Invalid response from server");
+                // Login failed
+                setError(result?.message || "Invalid credentials");
+                setIsLoading(false);
             }
         } catch (err: any) {
             console.error("Login failed:", err);
@@ -115,7 +120,7 @@ export default function AdminLoginPage() {
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     className="w-full bg-black/50 border border-white/10 rounded-xl px-12 py-3.5 text-white placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-white/20 transition-all hover:bg-black/70 pr-12"
-                                    placeholder="••••••••••••"
+                                    placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                                     required
                                 />
                                 <button

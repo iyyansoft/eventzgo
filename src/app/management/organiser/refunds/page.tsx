@@ -1,9 +1,12 @@
-"use client";
+﻿"use client";
 
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useState } from "react";
 import RefundRequest from "@/components/organiser/RefundRequest";
+
+// Disable static generation for this page
+export const dynamic = 'force-dynamic';
 
 export default function OrganiserRefundsPage() {
   const [filter, setFilter] = useState<"all" | "pending" | "approved" | "rejected">("all");

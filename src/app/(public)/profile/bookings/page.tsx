@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -10,6 +10,9 @@ import Image from "next/image";
 import { generateTicketPDF, downloadTicketPDF, TicketData } from "@/lib/pdf-generator";
 import QRCode from "qrcode";
 
+// Disable static generation for this page
+export const dynamic = 'force-dynamic';
+
 export default function MyBookingsPage() {
   const router = useRouter();
   const { isSignedIn, convexUser, isLoaded } = useAuth();
@@ -20,7 +23,7 @@ export default function MyBookingsPage() {
   );
 
   // Debug logging
-  console.log("🔍 Bookings Debug:", {
+  console.log("ðŸ” Bookings Debug:", {
     isSignedIn,
     isLoaded,
     convexUser: convexUser?._id,
@@ -64,7 +67,7 @@ export default function MyBookingsPage() {
     console.log("📄 Starting PDF generation for booking:", booking);
 
     if (!booking.event) {
-      console.error("❌ No event data in booking");
+      console.error("âŒ No event data in booking");
       alert("Cannot generate PDF: Event data is missing");
       return;
     }
@@ -99,7 +102,7 @@ export default function MyBookingsPage() {
       const pdfBlob = await generateTicketPDF(ticketData);
       downloadTicketPDF(pdfBlob, `ticket-${booking.bookingNumber}.pdf`);
     } catch (error) {
-      console.error("❌ Error generating PDF:", error);
+      console.error("âŒ Error generating PDF:", error);
       alert(`Failed to generate PDF: ${error instanceof Error ? error.message : "Unknown error"}`);
     } finally {
       setDownloadingPDF(null);
@@ -231,11 +234,6 @@ export default function MyBookingsPage() {
                           </div>
 
                           <div className="flex items-center space-x-3">
-                            <div className="w-5 h-5 flex items-center justify-center">
-                              <span className="text-purple-600 font-bold">
-                                ₹
-                              </span>
-                            </div>
                             <div>
                               <p className="text-sm text-gray-500">
                                 Total Amount

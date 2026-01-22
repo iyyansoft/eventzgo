@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "convex/react";
@@ -17,6 +17,9 @@ import {
   CreditCard,
   FileText,
 } from "lucide-react";
+
+// Disable static generation for this page
+export const dynamic = 'force-dynamic';
 
 export default function OrganiserPayoutsPage() {
   const [userId, setUserId] = useState<string | null>(null);
@@ -148,7 +151,7 @@ export default function OrganiserPayoutsPage() {
             <DollarSign className="w-5 h-5 text-green-600" />
           </div>
           <p className="text-3xl font-bold text-gray-900">
-            ₹{balance.availableBalance.toLocaleString()}
+            â‚¹{balance.availableBalance.toLocaleString()}
           </p>
           <p className="text-xs text-gray-500 mt-1">Ready to withdraw</p>
         </div>
@@ -159,7 +162,7 @@ export default function OrganiserPayoutsPage() {
             <Clock className="w-5 h-5 text-yellow-600" />
           </div>
           <p className="text-3xl font-bold text-gray-900">
-            ₹{balance.pendingBalance.toLocaleString()}
+            â‚¹{balance.pendingBalance.toLocaleString()}
           </p>
           <p className="text-xs text-gray-500 mt-1">In processing</p>
         </div>
@@ -170,7 +173,7 @@ export default function OrganiserPayoutsPage() {
             <TrendingUp className="w-5 h-5 text-purple-600" />
           </div>
           <p className="text-3xl font-bold text-gray-900">
-            ₹{balance.totalEarnings.toLocaleString()}
+            â‚¹{balance.totalEarnings.toLocaleString()}
           </p>
           <p className="text-xs text-gray-500 mt-1">Lifetime revenue</p>
         </div>
@@ -181,9 +184,9 @@ export default function OrganiserPayoutsPage() {
             <FileText className="w-5 h-5 text-gray-600" />
           </div>
           <p className="text-3xl font-bold text-gray-900">
-            ₹{balance.breakdown.platformFee.toLocaleString()}
+            â‚¹{balance.breakdown.platformFee.toLocaleString()}
           </p>
-          <p className="text-xs text-gray-500 mt-1">+ GST ₹{balance.breakdown.gst.toLocaleString()}</p>
+          <p className="text-xs text-gray-500 mt-1">+ GST â‚¹{balance.breakdown.gst.toLocaleString()}</p>
         </div>
       </div>
 
@@ -212,13 +215,13 @@ export default function OrganiserPayoutsPage() {
                       </p>
                     </td>
                     <td className="text-right font-medium text-gray-900">
-                      ₹{event.revenue.toLocaleString()}
+                      â‚¹{event.revenue.toLocaleString()}
                     </td>
                     <td className="text-right text-green-600">
-                      ₹{event.paidOut.toLocaleString()}
+                      â‚¹{event.paidOut.toLocaleString()}
                     </td>
                     <td className="text-right font-bold text-purple-600">
-                      ₹{event.pending.toLocaleString()}
+                      â‚¹{event.pending.toLocaleString()}
                     </td>
                     <td className="text-right">
                       {event.pending > 1000 && (
@@ -300,7 +303,7 @@ export default function OrganiserPayoutsPage() {
                       <div>
                         <span className="text-gray-500">Amount:</span>
                         <p className="font-bold text-purple-600">
-                          ₹{request.eligibleAmount.toLocaleString()}
+                          â‚¹{request.eligibleAmount.toLocaleString()}
                         </p>
                       </div>
                       {request.utrNumber && (
@@ -398,7 +401,7 @@ export default function OrganiserPayoutsPage() {
                     <option value="">Choose an event...</option>
                     {eventBreakdowns?.map((event: any) => (
                       <option key={event.eventId} value={event.eventId}>
-                        {event.eventTitle} - ₹{event.pending.toLocaleString()} available
+                        {event.eventTitle} - â‚¹{event.pending.toLocaleString()} available
                       </option>
                     ))}
                   </select>
@@ -409,10 +412,10 @@ export default function OrganiserPayoutsPage() {
               <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
                 <p className="text-sm text-gray-600 mb-2">Withdrawal Amount</p>
                 <p className="text-3xl font-bold text-purple-600">
-                  ₹{balance.availableBalance.toLocaleString()}
+                  â‚¹{balance.availableBalance.toLocaleString()}
                 </p>
                 <p className="text-xs text-gray-500 mt-2">
-                  Minimum withdrawal: ₹1,000 • Auto-approved if &lt; ₹50,000
+                  Minimum withdrawal: â‚¹1,000 â€¢ Auto-approved if &lt; â‚¹50,000
                 </p>
               </div>
 

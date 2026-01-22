@@ -105,7 +105,7 @@ export async function sendBookingConfirmation(
                 ${data.tickets.map(t => `<li>${t.name} × ${t.quantity}</li>`).join('')}
               </ul>
               
-              <p><strong>Total Amount:</strong> ₹${data.totalAmount}</p>
+              <p><strong>Total Amount:</strong> &#8377;${data.totalAmount}</p>
             </div>
             
             <div class="qr-code">
@@ -190,36 +190,36 @@ export async function sendGSTInvoice(
                   <tr>
                     <td>${t.name}</td>
                     <td>${t.quantity}</td>
-                    <td>₹${t.price}</td>
-                    <td>₹${t.total}</td>
+                    <td>&#8377;${t.price}</td>
+                    <td>&#8377;${t.total}</td>
                   </tr>
                 `).join('')}
                 <tr>
                   <td colspan="3"><strong>Subtotal</strong></td>
-                  <td>₹${invoiceData.subtotal}</td>
+                  <td>&#8377;${invoiceData.subtotal}</td>
                 </tr>
                 <tr>
                   <td colspan="3">Platform Fee (${APP_CONFIG.platformCommission}%)</td>
-                  <td>₹${invoiceData.platformFee}</td>
+                  <td>&#8377;${invoiceData.platformFee}</td>
                 </tr>
                 ${invoiceData.cgst > 0 ? `
                   <tr>
                     <td colspan="3">CGST (${invoiceData.totalGST / invoiceData.subtotal * 50}%)</td>
-                    <td>₹${invoiceData.cgst}</td>
+                    <td>&#8377;${invoiceData.cgst}</td>
                   </tr>
                   <tr>
                     <td colspan="3">SGST (${invoiceData.totalGST / invoiceData.subtotal * 50}%)</td>
-                    <td>₹${invoiceData.sgst}</td>
+                    <td>&#8377;${invoiceData.sgst}</td>
                   </tr>
                 ` : `
                   <tr>
                     <td colspan="3">IGST (${(invoiceData.totalGST / invoiceData.subtotal * 100).toFixed(2)}%)</td>
-                    <td>₹${invoiceData.igst}</td>
+                    <td>&#8377;${invoiceData.igst}</td>
                   </tr>
                 `}
                 <tr class="total-row">
                   <td colspan="3"><strong>Grand Total</strong></td>
-                  <td><strong>₹${invoiceData.grandTotal}</strong></td>
+                  <td><strong>&#8377;${invoiceData.grandTotal}</strong></td>
                 </tr>
               </tbody>
             </table>

@@ -1,9 +1,12 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect } from "react";
 import DashboardOnboarding from "@/components/organiser/DashboardOnboarding";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+
+// Disable static generation for this page
+export const dynamic = 'force-dynamic';
 
 const OnboardingPage = () => {
   const { data: nextAuthSession, status } = useSession();

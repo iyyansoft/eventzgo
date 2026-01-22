@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useRef, useEffect } from "react";
 import { useQuery, useMutation } from "convex/react";
@@ -8,6 +8,9 @@ import {
     MessageCircle, Send, Search, Filter, CheckCircle,
     AlertCircle, Clock, User
 } from "lucide-react";
+
+// Disable static generation for this page
+export const dynamic = 'force-dynamic';
 
 export default function AdminSupportPage() {
     const { sessionToken } = useAdminAuth(); // Typically we'd use this for auth
@@ -139,7 +142,7 @@ export default function AdminSupportPage() {
                                         <User className="w-4 h-4" />
                                         {(ticketDetails.ticket as any).organiserName || "Unknown Organiser"}
                                     </span>
-                                    <span>•</span>
+                                    <span>â€¢</span>
                                     <span className="uppercase text-xs font-semibold px-2 py-0.5 bg-gray-100 rounded">
                                         {ticketDetails.ticket.ticketId}
                                     </span>
@@ -174,7 +177,7 @@ export default function AdminSupportPage() {
                                                 <p className="text-sm whitespace-pre-wrap">{msg.message}</p>
                                             </div>
                                             <span className="text-[10px] text-gray-400 mt-1 px-1">
-                                                {isAdmin ? 'You' : 'Organiser'} • {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                {isAdmin ? 'You' : 'Organiser'} â€¢ {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                             </span>
                                         </div>
                                     </div>
