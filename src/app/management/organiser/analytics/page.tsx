@@ -23,12 +23,10 @@ export default function OrganiserAnalyticsPage() {
         }
     }, []);
 
-    // @ts-expect-error - Type mismatch with Convex generated types
     const events = (useQuery as any)(
         api.events.getOrganiserEvents,
         userId ? { organiserId: userId } : "skip"
     );
-    // @ts-expect-error - Type mismatch with Convex generated types
     const bookings = (useQuery as any)(
         api.bookings.getOrganiserBookings,
         userId ? { organiserId: userId } : "skip"
@@ -38,8 +36,8 @@ export default function OrganiserAnalyticsPage() {
         if (!events || !bookings) return null;
 
         const totalRevenue = bookings
-            .filter(b => b.status === "confirmed")
-            .reduce((sum, b) => sum + b.totalAmount, 0);
+            .filter((b: any) => b.status === "confirmed")
+            .reduce((sum: any, b: any) => sum + b.totalAmount, 0);
 
         const totalBookings = bookings.length;
         const confirmedBookings = bookings.filter(b => b.status === "confirmed").length;

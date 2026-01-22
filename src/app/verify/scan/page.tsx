@@ -32,8 +32,8 @@ export default function ScannerPage() {
     const [scanning, setScanning] = useState(false);
     const [selectedEventId, setSelectedEventId] = useState<Id<"events"> | "">("");
 
-    const verifyTicket = useMutation(api.verification.verifyTicket);
-    const overrideScan = useMutation(api.verification.overrideScan);
+    const verifyTicket = (useMutation as any)(api.verification.verifyTicket);
+    const overrideScan = (useMutation as any)(api.verification.overrideScan);
 
     // Fetch allowed events
     const allowedEvents = useQuery(
