@@ -6,47 +6,56 @@ import { v } from "convex/values";
  */
 export const getDashboardStats = query({
   handler: async (ctx) => {
-    // Get all data
-    const users = await ctx.db.query("users").collect();
-    const organisers = await ctx.db.query("organisers").collect();
-    const events = await ctx.db.query("events").collect();
-    const bookings = await ctx.db.query("bookings").collect();
-    const payments = await ctx.db.query("payments").collect();
-    const refunds = await ctx.db.query("refunds").collect();
-    const payouts = await ctx.db.query("payouts").collect();
+    // Parallel queries for better performance
+    const [
+      users,
+      approvedOrganisers,
+      pendingOrganisers,
+      events,
+      approvedEvents,
+      pendingEvents,
+      bookings,
+      confirmedBookings,
+      cancelledBookings,
+      capturedPayments,
+      processedRefunds,
+      payouts,
+    ] = await Promise.all([
+      ctx.db.query("users").collect(),
+      ctx.db.query("organisers").withIndex("by_approval_status", (q) => q.eq("approvalStatus", "approved")).collect(),
+      ctx.db.query("organisers").withIndex("by_approval_status", (q) => q.eq("approvalStatus", "pending")).collect(),
+      ctx.db.query("events").collect(),
+      ctx.db.query("events").withIndex("by_status", (q) => q.eq("status", "approved")).collect(),
+      ctx.db.query("events").withIndex("by_status", (q) => q.eq("status", "pending")).collect(),
+      ctx.db.query("bookings").collect(),
+      ctx.db.query("bookings").withIndex("by_status", (q) => q.eq("status", "confirmed")).collect(),
+      ctx.db.query("bookings").withIndex("by_status", (q) => q.eq("status", "cancelled")).collect(),
+      ctx.db.query("payments").withIndex("by_status", (q) => q.eq("status", "captured")).collect(),
+      ctx.db.query("refunds").withIndex("by_status", (q) => q.eq("status", "processed")).collect(),
+      ctx.db.query("payouts").collect(),
+    ]);
 
     // User stats
     const totalUsers = users.length;
     const activeUsers = users.filter((u) => u.isActive).length;
-    const totalOrganisers = organisers.filter((o) => o.approvalStatus === "approved")
-      .length;
-    const pendingOrganisers = organisers.filter((o) => o.approvalStatus === "pending")
-      .length;
+    const totalOrganisers = approvedOrganisers.length;
+    const pendingOrganisersCount = pendingOrganisers.length;
 
     // Event stats
     const totalEvents = events.length;
-    const approvedEvents = events.filter((e) => e.status === "approved").length;
-    const pendingEvents = events.filter((e) => e.status === "pending").length;
-    const activeEvents = events.filter(
-      (e) => e.status === "approved" && e.dateTime.end > Date.now()
-    ).length;
+    const approvedEventsCount = approvedEvents.length;
+    const pendingEventsCount = pendingEvents.length;
+    const activeEvents = approvedEvents.filter((e) => e.dateTime.end > Date.now()).length;
 
     // Booking stats
     const totalBookings = bookings.length;
-    const confirmedBookings = bookings.filter((b) => b.status === "confirmed").length;
-    const cancelledBookings = bookings.filter((b) => b.status === "cancelled").length;
+    const confirmedBookingsCount = confirmedBookings.length;
+    const cancelledBookingsCount = cancelledBookings.length;
 
-    // Revenue stats
-    const totalRevenue = payments
-      .filter((p) => p.status === "captured")
-      .reduce((sum, p) => sum + p.amount, 0);
-
+    // Revenue stats (using pre-filtered data)
+    const totalRevenue = capturedPayments.reduce((sum, p) => sum + p.amount, 0);
     const platformFee = payouts.reduce((sum, p) => sum + p.platformFee, 0);
-
-    const refundedAmount = refunds
-      .filter((r) => r.status === "processed")
-      .reduce((sum, r) => sum + r.amount, 0);
-
+    const refundedAmount = processedRefunds.reduce((sum, r) => sum + r.amount, 0);
     const netRevenue = totalRevenue - refundedAmount;
 
     // Payout stats
@@ -58,26 +67,27 @@ export const getDashboardStats = query({
       .reduce((sum, p) => sum + p.netAmount, 0);
 
     // Refund stats
-    const totalRefunds = refunds.length;
-    const pendingRefunds = refunds.filter((r) => r.status === "requested").length;
+    const allRefunds = await ctx.db.query("refunds").collect();
+    const totalRefunds = allRefunds.length;
+    const pendingRefundsCount = allRefunds.filter((r) => r.status === "requested").length;
 
     return {
       users: {
         total: totalUsers,
         active: activeUsers,
         organisers: totalOrganisers,
-        pendingOrganisers,
+        pendingOrganisers: pendingOrganisersCount,
       },
       events: {
         total: totalEvents,
-        approved: approvedEvents,
-        pending: pendingEvents,
+        approved: approvedEventsCount,
+        pending: pendingEventsCount,
         active: activeEvents,
       },
       bookings: {
         total: totalBookings,
-        confirmed: confirmedBookings,
-        cancelled: cancelledBookings,
+        confirmed: confirmedBookingsCount,
+        cancelled: cancelledBookingsCount,
       },
       revenue: {
         total: totalRevenue,
@@ -93,7 +103,7 @@ export const getDashboardStats = query({
       },
       refunds: {
         total: totalRefunds,
-        pending: pendingRefunds,
+        pending: pendingRefundsCount,
         amount: refundedAmount,
       },
     };
