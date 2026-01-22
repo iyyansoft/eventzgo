@@ -44,7 +44,6 @@ export const ManagementAuthProvider = ({ children }: { children: ReactNode }) =>
             email: clerkUser.emailAddresses[0]?.emailAddress || "",
             role: userProfile.role,
             avatar: clerkUser.imageUrl,
-            roleData: userProfile.roleData,
         }
         : null;
 

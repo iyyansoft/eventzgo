@@ -3,6 +3,8 @@
  * Uses encoding-safe methods to prevent corruption
  */
 
+import React from 'react';
+
 // Rupee symbol using Unicode escape (encoding-safe)
 export const RUPEE_SYMBOL = '\u20B9';
 
@@ -59,6 +61,6 @@ export function formatCompactCurrency(amount: number): string {
  * React component for rupee symbol
  * Uses HTML entity for maximum compatibility
  */
-export function Rupee() {
+export function Rupee(): React.ReactElement {
   return <>&#8377;</>;
 }

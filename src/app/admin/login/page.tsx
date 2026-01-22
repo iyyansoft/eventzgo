@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { Shield, Lock, Mail, ArrowRight, Loader2, AlertCircle, Eye, EyeOff } from "lucide-react";
-import { useAction } from "convex/react";
+import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useAdminAuth } from "@/components/admin/AdminAuthProvider";
 
@@ -17,7 +17,7 @@ export default function AdminLoginPage() {
     const [error, setError] = useState("");
     const [showPassword, setShowPassword] = useState(false);
 
-    const adminSignIn = useAction(api.adminAuth.adminSignIn);
+    const adminSignIn = useMutation(api.adminAuth.adminSignIn);
     const { login } = useAdminAuth();
 
     const handleSubmit = async (e: React.FormEvent) => {

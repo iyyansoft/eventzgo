@@ -30,7 +30,7 @@ export default function ProfileSettings() {
     setIsSaving(true);
     try {
       const [firstName, ...rest] = formData.name.split(" ");
-      const lastName = rest.join(" ") || undefined;
+      const lastName = rest.join(" ") || "";
       await updateUser({
         clerkId: userData.clerkId,
         firstName,

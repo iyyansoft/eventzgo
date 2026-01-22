@@ -8,16 +8,25 @@ import * as bcrypt from "bcryptjs";
 /**
  * Admin Sign In Action
  */
-export const adminSignIn = action({
+export const adminSignIn = mutation({
     args: {
         username: v.string(),
         password: v.string(),
     },
     handler: async (ctx, args) => {
-        // Find admin by username or email
-        const admin = await ctx.runQuery(api.adminAuth.findAdminByUsername, {
-            username: args.username,
-        });
+        // Try to find by username
+        let admin = await ctx.db
+            .query("admins")
+            .filter((q) => q.eq(q.field("username"), args.username))
+            .first();
+
+        // If not found, try by email
+        if (!admin) {
+            admin = await ctx.db
+                .query("admins")
+                .filter((q) => q.eq(q.field("email"), args.username))
+                .first();
+        }
 
         if (!admin) {
             return { 
@@ -94,6 +103,3 @@ export const getAdminById = query({
         return await ctx.db.get(args.adminId);
     },
 });
-
-// Import api for type safety
-import { api } from "./_generated/api";
