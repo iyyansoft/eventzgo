@@ -7,29 +7,32 @@ export const getPendingApprovals = query({
         category: v.optional(v.string()), // "all", "organiser", "vendor", "speaker", "sponsor"
     },
     handler: async (ctx, args) => {
-        // Fetch organisers with accountStatus: pending_approval (onboarding submitted)
-        const organisers = await ctx.db
-            .query("organisers")
-            .filter((q) => q.eq(q.field("accountStatus"), "pending_approval"))
-            .collect();
-
-        // Fetch pending vendors
-        const vendors = await ctx.db
-            .query("vendors")
-            .withIndex("by_approval_status", (q) => q.eq("approvalStatus", "pending"))
-            .collect();
-
-        // Fetch pending speakers
-        const speakers = await ctx.db
-            .query("speakers")
-            .withIndex("by_approval_status", (q) => q.eq("approvalStatus", "pending"))
-            .collect();
-
-        // Fetch pending sponsors
-        const sponsors = await ctx.db
-            .query("sponsors")
-            .withIndex("by_approval_status", (q) => q.eq("approvalStatus", "pending"))
-            .collect();
+        // Parallel queries for better performance
+        const [organisers, vendors, speakers, sponsors] = await Promise.all([
+            // Fetch organisers with pending status (check both fields for compatibility)
+            ctx.db
+                .query("organisers")
+                .filter((q) => q.or(
+                    q.eq(q.field("accountStatus"), "pending_approval"),
+                    q.eq(q.field("approvalStatus"), "pending")
+                ))
+                .collect(),
+            // Fetch pending vendors
+            ctx.db
+                .query("vendors")
+                .withIndex("by_approval_status", (q) => q.eq("approvalStatus", "pending"))
+                .collect(),
+            // Fetch pending speakers
+            ctx.db
+                .query("speakers")
+                .withIndex("by_approval_status", (q) => q.eq("approvalStatus", "pending"))
+                .collect(),
+            // Fetch pending sponsors
+            ctx.db
+                .query("sponsors")
+                .withIndex("by_approval_status", (q) => q.eq("approvalStatus", "pending"))
+                .collect(),
+        ]);
 
         // Get user details for each pending approval
         const organisersWithUsers = organisers.map((org) => {
