@@ -75,7 +75,7 @@ export default class ErrorBoundary extends React.Component<ErrorBoundaryProps, E
               {/* Support Link */}
               <p className="text-sm text-gray-500 mt-6">
                 If the problem persists, please {" "}
-                <a href="mailto:support@ticketshub.com" className="text-purple-600 hover:text-purple-700 font-medium">
+                <a href="mailto:support@eventzgo.com" className="text-purple-600 hover:text-purple-700 font-medium">
                   contact support
                 </a>
               </p>

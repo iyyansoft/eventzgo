@@ -49,6 +49,7 @@ export default function AllStaffPage() {
         eventId: "all" as string // "all" means global staff (no specific event)
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [showEndedEvents, setShowEndedEvents] = useState(false);
 
     useEffect(() => {
         const stored = localStorage.getItem("organiser_session");
@@ -430,19 +431,75 @@ export default function AllStaffPage() {
 
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Assign Event</label>
-                                <select
-                                    value={formData.eventId}
-                                    onChange={(e) => setFormData({ ...formData, eventId: e.target.value })}
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                >
-                                    <option value="all">All Events (Global Access)</option>
-                                    {events?.map(event => (
-                                        <option key={event._id} value={event._id}>{event.title}</option>
-                                    ))}
-                                </select>
-                                <p className="mt-1 text-xs text-gray-500">
-                                    Select "All Events" to allow scanning for any event organized by you.
-                                </p>
+                                
+                                {/* Filter active/ended events */}
+                                {(() => {
+                                    const now = Date.now();
+                                    const activeEvents = events?.filter(event => {
+                                        const eventEndTime = event.dateTime?.end || 0;
+                                        return eventEndTime > now;
+                                    }) || [];
+                                    
+                                    const endedEvents = events?.filter(event => {
+                                        const eventEndTime = event.dateTime?.end || 0;
+                                        return eventEndTime <= now;
+                                    }) || [];
+
+                                    return (
+                                        <>
+                                            <select
+                                                value={formData.eventId}
+                                                onChange={(e) => setFormData({ ...formData, eventId: e.target.value })}
+                                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            >
+                                                <option value="all">All Events (Global Access)</option>
+                                                
+                                                {/* Active Events */}
+                                                {activeEvents.length > 0 && (
+                                                    <optgroup label="Active Events">
+                                                        {activeEvents.map(event => (
+                                                            <option key={event._id} value={event._id}>
+                                                                {event.title}
+                                                            </option>
+                                                        ))}
+                                                    </optgroup>
+                                                )}
+                                                
+                                                {/* Ended Events - Only show if toggle is enabled */}
+                                                {showEndedEvents && endedEvents.length > 0 && (
+                                                    <optgroup label="Ended Events">
+                                                        {endedEvents.map(event => (
+                                                            <option key={event._id} value={event._id}>
+                                                                {event.title} (Ended)
+                                                            </option>
+                                                        ))}
+                                                    </optgroup>
+                                                )}
+                                            </select>
+                                            
+                                            <div className="mt-2 flex items-center justify-between">
+                                                <p className="text-xs text-gray-500">
+                                                    Select "All Events" to allow scanning for any event organized by you.
+                                                </p>
+                                                
+                                                {/* Toggle for ended events */}
+                                                {endedEvents.length > 0 && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setShowEndedEvents(!showEndedEvents)}
+                                                        className={`ml-2 px-3 py-1 text-xs font-medium rounded-full transition-all ${
+                                                            showEndedEvents 
+                                                                ? 'bg-orange-100 text-orange-700 hover:bg-orange-200' 
+                                                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                                        }`}
+                                                    >
+                                                        {showEndedEvents ? 'Hide' : 'Show'} Ended Events ({endedEvents.length})
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </>
+                                    );
+                                })()}
                             </div>
 
                             <div className="pt-4 flex gap-3">
@@ -511,8 +568,8 @@ export default function AllStaffPage() {
                                 <div>
                                     <label className="text-xs font-semibold text-gray-500 uppercase">Login URL</label>
                                     <div className="mt-1">
-                                        <a href="/verify/login" target="_blank" className="text-sm text-blue-600 hover:underline break-all">
-                                            {window.location.origin}/verify/login
+                                        <a href="https://eventzgo.com/verify/login" target="_blank" className="text-sm text-blue-600 hover:underline break-all">
+                                            https://eventzgo.com/verify/login
                                         </a>
                                     </div>
                                 </div>

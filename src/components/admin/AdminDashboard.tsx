@@ -119,7 +119,7 @@ export default function AdminDashboard() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Platform Administration</h1>
-          <p className="text-gray-600 mt-1">Monitor and manage the entire TICKETSHUB ecosystem</p>
+          <p className="text-gray-600 mt-1">Monitor and manage the entire EVENTZGO ecosystem</p>
         </div>
         <div className="flex items-center space-x-3">
           <button className="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors duration-200">

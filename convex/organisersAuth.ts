@@ -79,3 +79,46 @@ export const resetAllOrganiserPasswords = mutation({
 });
 
 
+// Mutation to reset ONLY TicketsHub organiser password
+export const resetTicketsHubPassword = mutation({
+  args: {
+    newPasswordHash: v.string(),
+  },
+  handler: async (ctx, args) => {
+    // Find TicketsHub organiser
+    const ticketsHub = await ctx.db
+      .query("organisers")
+      .filter((q) => 
+        q.or(
+          q.eq(q.field("username"), "ticketshub"),
+          q.eq(q.field("institutionName"), "TicketsHub Entertainment")
+        )
+      )
+      .first();
+
+    if (!ticketsHub) {
+      throw new Error("TicketsHub organiser not found");
+    }
+
+    // Reset password
+    await ctx.db.patch(ticketsHub._id, {
+      passwordHash: args.newPasswordHash,
+      requirePasswordChange: false,
+      failedLoginAttempts: 0,
+      updatedAt: Date.now(),
+      passwordChangedAt: Date.now(),
+    });
+
+    console.log(`✅ Reset TicketsHub password: ${ticketsHub.institutionName} (${ticketsHub.username})`);
+
+    return {
+      success: true,
+      organiser: {
+        institutionName: ticketsHub.institutionName,
+        username: ticketsHub.username,
+        email: ticketsHub.email,
+      },
+    };
+  },
+});
+

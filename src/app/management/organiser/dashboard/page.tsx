@@ -5,6 +5,7 @@ import { useQuery } from 'convex/react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/convex/_generated/api';
+import { formatCurrency, RUPEE_SYMBOL } from '@/lib/currency';
 import {
     Calendar, Plus, Users, TrendingUp, Clock, MapPin,
     Star, Eye, Edit, Trash2, CheckCircle, Target,
@@ -149,7 +150,7 @@ const OrganizerDashboard = () => {
         },
         {
             title: 'Total Revenue',
-            value: `â‚¹${totalRevenue.toLocaleString()}`,
+            value: formatCurrency(totalRevenue),
             change: '',
             icon: CreditCard,
             color: 'bg-purple-500'
@@ -339,10 +340,10 @@ const OrganizerDashboard = () => {
                                 <BarChart data={revenueData}>
                                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
                                     <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#9ca3af' }} />
-                                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#9ca3af' }} tickFormatter={(value) => `â‚¹${value / 1000}k`} />
+                                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#9ca3af' }} tickFormatter={(value) => `${RUPEE_SYMBOL}${value / 1000}k`} />
                                     <Tooltip
                                         contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                                        formatter={(value: number) => [`â‚¹${value.toLocaleString()}`, 'Revenue']}
+                                        formatter={(value: number) => [`${RUPEE_SYMBOL}${value.toLocaleString()}`, 'Revenue']}
                                     />
                                     <Bar dataKey="value" fill="#22c55e" radius={[4, 4, 0, 0]} barSize={40} />
                                 </BarChart>
