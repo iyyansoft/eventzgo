@@ -56,6 +56,13 @@ export const createEvent = mutation({
       deadlineHoursBeforeStart: v.number(),
       description: v.optional(v.string()),
     })),
+    // Mega Event fields
+    isMegaEvent: v.optional(v.boolean()),
+    megaEventConfig: v.optional(v.object({
+      allowSubEvents: v.boolean(),
+      maxSubEvents: v.optional(v.number()),
+      sharedTicketing: v.optional(v.boolean()),
+    })),
   },
   handler: async (ctx, args) => {
     // TEMPORARY: Get organiser ID (bypassing auth for now)
@@ -140,6 +147,8 @@ export const createEvent = mutation({
       updatedAt: now,
       ...(args.customFields && { customFields: args.customFields }), // Add custom fields if provided
       ...(args.cancellationPolicy && { cancellationPolicy: args.cancellationPolicy }),
+      ...(args.isMegaEvent && { isMegaEvent: args.isMegaEvent }),
+      ...(args.megaEventConfig && { megaEventConfig: args.megaEventConfig }),
     });
 
     return eventId;
@@ -310,6 +319,13 @@ export const updateEvent = mutation({
         })
       )
     ),
+    // Mega Event fields
+    isMegaEvent: v.optional(v.boolean()),
+    megaEventConfig: v.optional(v.object({
+      allowSubEvents: v.boolean(),
+      maxSubEvents: v.optional(v.number()),
+      sharedTicketing: v.optional(v.boolean()),
+    })),
   },
   handler: async (ctx, args) => {
     const { eventId, ...updates } = args;
@@ -406,6 +422,35 @@ export const cancelEvent = mutation({
     });
 
     return args.eventId;
+  },
+});
+
+/**
+ * Delete event (permanently remove from database)
+ */
+export const deleteEvent = mutation({
+  args: { eventId: v.id("events") },
+  handler: async (ctx, args) => {
+    // Check if event exists
+    const event = await ctx.db.get(args.eventId);
+    if (!event) {
+      throw new Error("Event not found");
+    }
+
+    // Check if event has any bookings
+    const bookings = await ctx.db
+      .query("bookings")
+      .withIndex("by_event_id", (q) => q.eq("eventId", args.eventId))
+      .collect();
+
+    if (bookings.length > 0) {
+      throw new Error("Cannot delete event with existing bookings. Please cancel the event instead.");
+    }
+
+    // Delete the event
+    await ctx.db.delete(args.eventId);
+
+    return { success: true, message: "Event deleted successfully" };
   },
 });
 

@@ -546,7 +546,7 @@ export default function ManagementLanding() {
                     </p>
                     <div className="flex flex-col sm:flex-row gap-4 justify-center">
                         <button
-                            onClick={handleGetStarted}
+                            onClick={() => router.push("/management/sign-up?role=organiser")}
                             className="bg-white text-purple-600 px-8 py-4 rounded-xl font-bold text-lg hover:bg-gray-100 transition-all duration-200 transform hover:scale-105"
                         >
                             Start Free Trial

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Calendar,
   MapPin,
@@ -70,6 +70,30 @@ interface EventFormData {
     deadlineHoursBeforeStart: number;
     description: string;
   };
+  // Mega Event Fields
+  isMegaEvent: boolean;
+  organizationName?: string; // For mega events (e.g., "Anna University Tech Fest")
+  departments?: Department[]; // List of departments with their events
+}
+
+interface Department {
+  id: string;
+  name: string; // CSE, EEE, ECE, MECH, etc.
+  eventCount: number; // How many events this department will create
+  events: SubEvent[]; // The actual events for this department
+}
+
+interface SubEvent {
+  id: string;
+  title: string;
+  description: string;
+  startDate: string;
+  endDate: string;
+  startTime: string;
+  endTime: string;
+  venue: string;
+  ticketTypes: TicketType[];
+  coverImage: string;
 }
 
 const EventForm: React.FC<EventFormProps> = ({
@@ -134,6 +158,11 @@ const EventForm: React.FC<EventFormProps> = ({
         deadlineHoursBeforeStart: 24,
         description: ""
       },
+
+      // Mega Event
+      isMegaEvent: d.isMegaEvent || false,
+      organizationName: d.organizationName || "",
+      departments: d.departments || [],
     };
   });
 
@@ -163,6 +192,70 @@ const EventForm: React.FC<EventFormProps> = ({
     { value: "radio", label: "Multiple Choice", icon: Circle },
     { value: "checkbox", label: "Checkboxes", icon: CheckSquare },
   ];
+
+  // Cookie helper functions
+  const setCookie = (name: string, value: string, days: number = 7) => {
+    const expires = new Date();
+    expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
+    document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/`;
+  };
+
+  const getCookie = (name: string): string | null => {
+    const nameEQ = name + "=";
+    const ca = document.cookie.split(';');
+    for (let i = 0; i < ca.length; i++) {
+      let c = ca[i];
+      while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+      if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+    }
+    return null;
+  };
+
+  const deleteCookie = (name: string) => {
+    document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;`;
+  };
+
+  // Load saved form data from cookie on mount
+  useEffect(() => {
+    if (!isEditing) {
+      const savedData = getCookie('eventFormDraft');
+      const savedCustomFields = getCookie('eventFormCustomFields');
+      
+      if (savedData) {
+        try {
+          const parsedData = JSON.parse(decodeURIComponent(savedData));
+          setFormData(parsedData);
+        } catch (e) {
+          console.error('Failed to parse saved form data');
+        }
+      }
+      
+      if (savedCustomFields) {
+        try {
+          const parsedFields = JSON.parse(decodeURIComponent(savedCustomFields));
+          setCustomFields(parsedFields);
+        } catch (e) {
+          console.error('Failed to parse saved custom fields');
+        }
+      }
+    }
+  }, [isEditing]);
+
+  // Auto-save form data to cookie whenever it changes
+  useEffect(() => {
+    if (!isEditing && formData.title) { // Only save if there's some content
+      const dataToSave = JSON.stringify(formData);
+      setCookie('eventFormDraft', encodeURIComponent(dataToSave), 7);
+    }
+  }, [formData, isEditing]);
+
+  // Auto-save custom fields to cookie
+  useEffect(() => {
+    if (!isEditing && customFields.length > 0) {
+      const fieldsToSave = JSON.stringify(customFields);
+      setCookie('eventFormCustomFields', encodeURIComponent(fieldsToSave), 7);
+    }
+  }, [customFields, isEditing]);
 
   const handleInputChange = (field: string, value: any) => {
     setFormData({ ...formData, [field]: value });
@@ -253,8 +346,17 @@ const EventForm: React.FC<EventFormProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Only allow submission on the final step (step 6)
+    if (currentStep !== 6) {
+      return;
+    }
+    
     if (onSubmit) {
       await onSubmit({ ...formData, customFields });
+      // Clear saved draft after successful submission
+      deleteCookie('eventFormDraft');
+      deleteCookie('eventFormCustomFields');
     }
   };
 
@@ -267,8 +369,44 @@ const EventForm: React.FC<EventFormProps> = ({
     { number: 6, title: "Policies", icon: Shield },
   ];
 
+  const clearDraft = () => {
+    if (confirm('Are you sure you want to clear your saved draft?')) {
+      deleteCookie('eventFormDraft');
+      deleteCookie('eventFormCustomFields');
+      window.location.reload();
+    }
+  };
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-8">
+    <form 
+      onSubmit={handleSubmit} 
+      className="space-y-8"
+      onKeyDown={(e) => {
+        // Prevent form submission on Enter key press in any input field
+        if (e.key === 'Enter' && (e.target as HTMLElement).tagName !== 'TEXTAREA') {
+          e.preventDefault();
+        }
+      }}
+    >
+      {/* Auto-save indicator */}
+      {!isEditing && formData.title && (
+        <div className="flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded-lg">
+          <div className="flex items-center gap-2 text-sm text-blue-700">
+            <svg className="w-4 h-4 animate-pulse" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+            </svg>
+            <span>Draft auto-saved</span>
+          </div>
+          <button
+            type="button"
+            onClick={clearDraft}
+            className="text-xs text-blue-600 hover:text-blue-800 underline"
+          >
+            Clear Draft
+          </button>
+        </div>
+      )}
+
       {/* Step Indicator */}
       <div className="flex items-center justify-between mb-8">
         {steps.map((step, index) => {
@@ -353,10 +491,160 @@ const EventForm: React.FC<EventFormProps> = ({
               required
               value={formData.description}
               onChange={(e) => handleInputChange("description", e.target.value)}
-              rows={6}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent"
-              placeholder="Describe your event..."
             />
+          </div>
+
+          {/* Mega Event Toggle */}
+          <div className="border-t border-gray-200 pt-6">
+            <div className="flex items-center justify-between p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border border-purple-200">
+              <div className="flex-1">
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.isMegaEvent}
+                    onChange={(e) => handleInputChange("isMegaEvent", e.target.checked)}
+                    className="w-5 h-5 text-purple-600 border-gray-300 rounded focus:ring-purple-600"
+                  />
+                  <div>
+                    <span className="text-lg font-semibold text-gray-900">Create as Mega Event</span>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Perfect for universities, festivals, or conferences with multiple departments/tracks
+                    </p>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            {formData.isMegaEvent && (
+              <div className="mt-4 p-6 bg-white border border-gray-200 rounded-lg space-y-6">
+                <div className="flex items-center gap-2 mb-2">
+                  <Users className="w-5 h-5 text-purple-600" />
+                  <h3 className="font-semibold text-gray-900">Mega Event Configuration</h3>
+                </div>
+                
+                {/* Organization Name */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Organization/Event Name *
+                  </label>
+                  <input
+                    type="text"
+                    required={formData.isMegaEvent}
+                    value={formData.organizationName || ""}
+                    onChange={(e) => handleInputChange("organizationName", e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent"
+                    placeholder="e.g., Anna University Tech Fest 2024"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    The main event name that will contain all department events
+                  </p>
+                </div>
+
+                {/* Department Management */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-3">
+                    Departments & Their Events
+                  </label>
+                  
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const newDept: Department = {
+                        id: `dept-${Date.now()}`,
+                        name: "",
+                        eventCount: 1,
+                        events: []
+                      };
+                      handleInputChange("departments", [...(formData.departments || []), newDept]);
+                    }}
+                    className="mb-4 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium"
+                  >
+                    + Add Department
+                  </button>
+
+                  {/* List of Departments */}
+                  <div className="space-y-4">
+                    {(formData.departments || []).map((dept, deptIndex) => (
+                      <div key={dept.id} className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                        <div className="flex items-start gap-3">
+                          <div className="flex-1 space-y-3">
+                            {/* Department Name */}
+                            <div className="grid grid-cols-2 gap-3">
+                              <div>
+                                <label className="block text-xs font-medium text-gray-600 mb-1">
+                                  Department Name
+                                </label>
+                                <input
+                                  type="text"
+                                  value={dept.name}
+                                  onChange={(e) => {
+                                    const updated = [...(formData.departments || [])];
+                                    updated[deptIndex].name = e.target.value;
+                                    handleInputChange("departments", updated);
+                                  }}
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                                  placeholder="e.g., CSE, EEE, ECE"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-xs font-medium text-gray-600 mb-1">
+                                  Number of Events
+                                </label>
+                                <input
+                                  type="number"
+                                  min="1"
+                                  max="20"
+                                  value={dept.eventCount}
+                                  onChange={(e) => {
+                                    const updated = [...(formData.departments || [])];
+                                    updated[deptIndex].eventCount = parseInt(e.target.value) || 1;
+                                    handleInputChange("departments", updated);
+                                  }}
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                                />
+                              </div>
+                            </div>
+                            
+                            <p className="text-xs text-gray-500">
+                              {dept.name || "This department"} will create {dept.eventCount} event(s)
+                            </p>
+                          </div>
+                          
+                          {/* Remove Department Button */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const updated = (formData.departments || []).filter((_, i) => i !== deptIndex);
+                              handleInputChange("departments", updated);
+                            }}
+                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            title="Remove Department"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {(formData.departments || []).length === 0 && (
+                    <p className="text-sm text-gray-500 text-center py-4 bg-gray-50 rounded-lg border border-dashed border-gray-300">
+                      No departments added yet. Click "Add Department" to get started.
+                    </p>
+                  )}
+                </div>
+
+                {/* Summary */}
+                {(formData.departments || []).length > 0 && (
+                  <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
+                    <p className="text-sm font-medium text-purple-900">
+                      📊 Summary: {(formData.departments || []).length} department(s) will create{" "}
+                      {(formData.departments || []).reduce((sum, d) => sum + d.eventCount, 0)} total event(s)
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -374,6 +662,7 @@ const EventForm: React.FC<EventFormProps> = ({
               <input
                 type="date"
                 required
+                min={new Date().toISOString().split('T')[0]}
                 value={formData.startDate}
                 onChange={(e) => handleInputChange("startDate", e.target.value)}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent"
@@ -400,6 +689,7 @@ const EventForm: React.FC<EventFormProps> = ({
               <input
                 type="date"
                 required
+                min={formData.startDate || new Date().toISOString().split('T')[0]}
                 value={formData.endDate}
                 onChange={(e) => handleInputChange("endDate", e.target.value)}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent"
@@ -849,6 +1139,7 @@ const EventForm: React.FC<EventFormProps> = ({
                           ...formData,
                           cancellationPolicy: { ...formData.cancellationPolicy, refundPercentage: Number(e.target.value) }
                         })}
+                        onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent"
                       />
                       <span className="absolute right-4 top-3 text-gray-500">%</span>
@@ -870,6 +1161,7 @@ const EventForm: React.FC<EventFormProps> = ({
                         ...formData,
                         cancellationPolicy: { ...formData.cancellationPolicy, deadlineHoursBeforeStart: Number(e.target.value) }
                       })}
+                      onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent"
                     />
                     <p className="mt-1 text-xs text-gray-500">
@@ -928,10 +1220,10 @@ const EventForm: React.FC<EventFormProps> = ({
           ))}
         </div>
 
-        {currentStep < 5 ? (
+        {currentStep < 6 ? (
           <button
             type="button"
-            onClick={() => setCurrentStep(Math.min(5, currentStep + 1))}
+            onClick={() => setCurrentStep(Math.min(6, currentStep + 1))}
             className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700"
           >
             Next

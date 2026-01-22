@@ -7,7 +7,7 @@ import "./globals.css";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "EventsGo - Book Events Online",
+  title: "EventzGo - Book Events Online",
   description: "India's premier event ticketing platform",
 };
 

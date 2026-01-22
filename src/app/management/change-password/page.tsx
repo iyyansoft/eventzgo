@@ -247,7 +247,7 @@ export default function ChangePasswordPage() {
             <div className="w-full bg-gray-900 text-white py-6 px-6">
                 <div className="max-w-7xl mx-auto text-center">
                     <p className="text-sm text-gray-400">
-                        Â© 2024 EventzGo Management. All rights reserved.
+                        © 2026 EventzGo Management. All rights reserved.
                     </p>
                 </div>
             </div>

@@ -50,6 +50,18 @@ export default function EditEventPage() {
 
             // Custom fields
             customFields: event.customFields || [],
+
+            // Mega Event Configuration
+            isMegaEvent: event.isMegaEvent || false,
+            megaEventConfig: event.megaEventConfig,
+
+            // Cancellation Policy
+            cancellationPolicy: event.cancellationPolicy || {
+                isCancellable: false,
+                refundPercentage: 0,
+                deadlineHoursBeforeStart: 24,
+                description: "",
+            },
         };
     };
 
@@ -94,6 +106,25 @@ export default function EditEventPage() {
                 }),
 
                 tags: event?.tags || [],
+
+                // Mega Event Configuration
+                isMegaEvent: eventData.isMegaEvent || false,
+                megaEventConfig: eventData.isMegaEvent ? {
+                    allowSubEvents: eventData.allowSubEvents || false,
+                    maxSubEvents: eventData.maxSubEvents || 10,
+                    sharedTicketing: false,
+                } : undefined,
+
+                // Cancellation Policy
+                cancellationPolicy: eventData.cancellationPolicy || {
+                    isCancellable: false,
+                    refundPercentage: 0,
+                    deadlineHoursBeforeStart: 24,
+                    description: "",
+                },
+
+                // Custom fields
+                customFields: eventData.customFields || [],
             };
 
             await updateEvent(transformedData);

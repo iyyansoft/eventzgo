@@ -292,12 +292,22 @@ export default defineSchema({
     })),
     isFeatured: v.boolean(),
     isActive: v.boolean(),
+    // Mega Event Fields
+    isMegaEvent: v.optional(v.boolean()), // True if this is a parent mega event
+    parentEventId: v.optional(v.id("events")), // Reference to parent mega event
+    departmentName: v.optional(v.string()), // Department name for sub-events
+    megaEventConfig: v.optional(v.object({
+      allowSubEvents: v.boolean(),
+      maxSubEvents: v.optional(v.number()),
+      sharedTicketing: v.optional(v.boolean()), // Whether sub-events share tickets with parent
+    })),
     createdAt: v.number(),
     updatedAt: v.number(),
   })
     .index("by_organiser_id", ["organiserId"])
     .index("by_status", ["status"])
     .index("by_category", ["category"])
+    .index("by_parent_event", ["parentEventId"])
     .index("by_state", ["venue.state"])
     .index("by_city", ["venue.city"])
     .index("by_date", ["dateTime.start"])

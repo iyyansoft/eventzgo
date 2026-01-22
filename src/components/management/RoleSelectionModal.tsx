@@ -8,12 +8,14 @@ interface RoleSelectionModalProps {
     isOpen: boolean;
     onClose: () => void;
     onRoleSelected: (role: 'organizer' | 'vendor' | 'speaker' | 'sponsor') => void;
+    mode?: 'signin' | 'signup'; // Controls which buttons to show
 }
 
 const RoleSelectionModal: React.FC<RoleSelectionModalProps> = ({
     isOpen,
     onClose,
-    onRoleSelected
+    onRoleSelected,
+    mode = 'signup' // Default to signup
 }) => {
     const router = useRouter();
 
@@ -25,7 +27,8 @@ const RoleSelectionModal: React.FC<RoleSelectionModalProps> = ({
             icon: Building,
             color: 'from-blue-500 to-blue-600',
             bgColor: 'bg-blue-50',
-            features: ['Create Events', 'Manage Attendees', 'Connect with Partners', 'Analytics Dashboard']
+            features: ['Create Events', 'Manage Attendees', 'Connect with Partners', 'Analytics Dashboard'],
+            isActive: true
         },
         {
             id: 'vendor' as const,
@@ -34,7 +37,8 @@ const RoleSelectionModal: React.FC<RoleSelectionModalProps> = ({
             icon: Briefcase,
             color: 'from-green-500 to-green-600',
             bgColor: 'bg-green-50',
-            features: ['Service Listings', 'Booking Management', 'Client Communication', 'Portfolio Showcase']
+            features: ['Service Listings', 'Booking Management', 'Client Communication', 'Portfolio Showcase'],
+            isActive: false
         },
         {
             id: 'speaker' as const,
@@ -43,7 +47,8 @@ const RoleSelectionModal: React.FC<RoleSelectionModalProps> = ({
             icon: Mic,
             color: 'from-purple-500 to-purple-600',
             bgColor: 'bg-purple-50',
-            features: ['Speaking Opportunities', 'Profile Management', 'Event Invitations', 'Earnings Tracking']
+            features: ['Speaking Opportunities', 'Profile Management', 'Event Invitations', 'Earnings Tracking'],
+            isActive: false
         },
         {
             id: 'sponsor' as const,
@@ -52,7 +57,8 @@ const RoleSelectionModal: React.FC<RoleSelectionModalProps> = ({
             icon: DollarSign,
             color: 'from-yellow-500 to-yellow-600',
             bgColor: 'bg-yellow-50',
-            features: ['Sponsorship Opportunities', 'Brand Exposure', 'ROI Analytics', 'Partnership Management']
+            features: ['Sponsorship Opportunities', 'Brand Exposure', 'ROI Analytics', 'Partnership Management'],
+            isActive: false
         }
     ];
 
@@ -140,18 +146,33 @@ const RoleSelectionModal: React.FC<RoleSelectionModalProps> = ({
 
                                 {/* Action Buttons */}
                                 <div className="space-y-2 pt-4 border-t border-gray-200">
-                                    <button
-                                        onClick={() => handleSignUp(role.id)}
-                                        className={`w-full bg-gradient-to-r ${role.color} text-white px-4 py-3 rounded-lg text-center font-semibold hover:shadow-lg transition-all duration-300`}
-                                    >
-                                        Sign Up as {role.title}
-                                    </button>
-                                    <button
-                                        onClick={() => handleSignIn(role.id)}
-                                        className="w-full bg-white border-2 border-gray-300 text-gray-700 px-4 py-3 rounded-lg text-center font-semibold hover:bg-gray-50 hover:border-gray-400 transition-all duration-300"
-                                    >
-                                        Sign In as {role.title}
-                                    </button>
+                                    {role.isActive ? (
+                                        <>
+                                            {mode === 'signup' && (
+                                                <button
+                                                    onClick={() => handleSignUp(role.id)}
+                                                    className={`w-full bg-gradient-to-r ${role.color} text-white px-4 py-3 rounded-lg text-center font-semibold hover:shadow-lg transition-all duration-300`}
+                                                >
+                                                    Sign Up as {role.title}
+                                                </button>
+                                            )}
+                                            {mode === 'signin' && (
+                                                <button
+                                                    onClick={() => handleSignIn(role.id)}
+                                                    className="w-full bg-white border-2 border-gray-300 text-gray-700 px-4 py-3 rounded-lg text-center font-semibold hover:bg-gray-50 hover:border-gray-400 transition-all duration-300"
+                                                >
+                                                    Sign In as {role.title}
+                                                </button>
+                                            )}
+                                        </>
+                                    ) : (
+                                        <div className="w-full bg-gray-100 text-gray-500 px-4 py-3 rounded-lg text-center font-semibold cursor-not-allowed">
+                                            <div className="flex items-center justify-center gap-2">
+                                                <span>🚀</span>
+                                                <span>Coming Soon</span>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         );

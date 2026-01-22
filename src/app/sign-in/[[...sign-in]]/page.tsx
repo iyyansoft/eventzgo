@@ -139,7 +139,7 @@ export default function SignInPage() {
             <div className="w-full bg-gray-900 text-white py-6 px-6">
                 <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between">
                     <p className="text-sm text-gray-400 mb-2 sm:mb-0">
-                        © 2024 EventzGo. All rights reserved.
+                        © 2026 EventzGo. All rights reserved.
                     </p>
                     <div className="flex items-center space-x-4 text-sm text-gray-400">
                         <button className="hover:text-white transition-colors duration-200">

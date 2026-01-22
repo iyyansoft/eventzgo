@@ -422,7 +422,7 @@ export default function SignUpPage() {
             {/* Footer */}
             <div className="relative z-10 w-full bg-white/10 backdrop-blur-md border-t border-white/20 py-4 px-6">
                 <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between text-white/60 text-sm">
-                    <p>© 2024 EventzGo. All rights reserved.</p>
+                    <p>© 2026 EventzGo. All rights reserved.</p>
                     <div className="flex items-center space-x-4 mt-2 sm:mt-0">
                         <button className="hover:text-white transition-colors">Privacy</button>
                         <button className="hover:text-white transition-colors">Terms</button>

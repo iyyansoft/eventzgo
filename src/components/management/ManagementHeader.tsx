@@ -22,6 +22,7 @@ export default function ManagementHeader() {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showRoleSelection, setShowRoleSelection] = useState(false);
+  const [roleSelectionMode, setRoleSelectionMode] = useState<'signin' | 'signup'>('signup');
 
   // Get user role from Clerk metadata
   const role = user?.publicMetadata?.role as string || "user";
@@ -311,7 +312,10 @@ export default function ManagementHeader() {
               ) : (
                 <div className="flex items-center space-x-2">
                   <button
-                    onClick={() => setShowRoleSelection(true)}
+                    onClick={() => {
+                      setShowRoleSelection(true);
+                      setRoleSelectionMode('signin');
+                    }}
                     className={`flex items-center space-x-1 sm:space-x-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all duration-200 flex-shrink-0 ${isScrolled
                       ? "px-2 py-1 sm:px-3 sm:py-1.5"
                       : "px-3 py-1.5 sm:px-4 sm:py-2"
@@ -331,7 +335,10 @@ export default function ManagementHeader() {
                   </button>
 
                   <button
-                    onClick={() => setShowRoleSelection(true)}
+                    onClick={() => {
+                      setShowRoleSelection(true);
+                      setRoleSelectionMode('signup');
+                    }}
                     className={`flex items-center space-x-1 sm:space-x-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all duration-200 hover:scale-105 flex-shrink-0 ${isScrolled
                       ? "px-2 py-1 sm:px-3 sm:py-1.5"
                       : "px-3 py-1.5 sm:px-4 sm:py-2"
@@ -427,6 +434,7 @@ export default function ManagementHeader() {
       <RoleSelectionModal
         isOpen={showRoleSelection}
         onClose={() => setShowRoleSelection(false)}
+        mode={roleSelectionMode}
         onRoleSelected={(role) => {
           setShowRoleSelection(false);
           const roleMap = {

@@ -119,7 +119,7 @@ export default function ManagementFooter() {
                 </div>
 
                 <div className="border-t border-gray-800 mt-12 pt-8 text-center text-gray-400">
-                    <p>&copy; 2024 EventzGo Management. All rights reserved.</p>
+                    <p>&copy; 2026 EventzGo Management. All rights reserved.</p>
                 </div>
             </div>
         </footer>

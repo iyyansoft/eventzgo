@@ -1,8 +1,11 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
 import { Eye, Edit, Trash2, Calendar, MapPin, Users } from "lucide-react";
+import { Id } from "@/convex/_generated/dataModel";
 
 interface Event {
 	_id: string;
@@ -26,10 +29,34 @@ interface Event {
 
 interface EventsTableProps {
 	events: Event[];
+	onEventDeleted?: () => void;
 }
 
-const EventsTable: React.FC<EventsTableProps> = ({ events = [] }) => {
+const EventsTable: React.FC<EventsTableProps> = ({ events = [], onEventDeleted }) => {
 	const router = useRouter();
+	const deleteEvent = useMutation(api.events.deleteEvent);
+	const [deletingId, setDeletingId] = useState<string | null>(null);
+
+	const handleDelete = async (eventId: string, eventTitle: string) => {
+		if (!confirm(`Are you sure you want to delete "${eventTitle}"? This action cannot be undone.`)) {
+			return;
+		}
+
+		setDeletingId(eventId);
+		try {
+			await deleteEvent({ eventId: eventId as Id<"events"> });
+			alert("Event deleted successfully!");
+			if (onEventDeleted) {
+				onEventDeleted();
+			}
+			// Refresh the page to show updated list
+			router.refresh();
+		} catch (error: any) {
+			alert(error.message || "Failed to delete event. Please try again.");
+		} finally {
+			setDeletingId(null);
+		}
+	};
 
 	const getStatusColor = (status: string) => {
 		switch (status) {
@@ -90,7 +117,7 @@ const EventsTable: React.FC<EventsTableProps> = ({ events = [] }) => {
 							<td className="px-6 py-4">
 								<div className="flex items-center space-x-3">
 									<img
-										src={event.bannerImage}
+										src={event.bannerImage || "https://via.placeholder.com/64?text=No+Image"}
 										alt={event.title}
 										className="w-16 h-16 rounded-lg object-cover"
 										onError={(e) => {
@@ -190,17 +217,9 @@ const EventsTable: React.FC<EventsTableProps> = ({ events = [] }) => {
 										<Edit className="w-4 h-4" />
 									</button>
 									<button
-										onClick={() => {
-											if (
-												confirm(
-													"Are you sure you want to delete this event? This action cannot be undone."
-												)
-											) {
-												// TODO: Implement delete functionality
-												alert("Delete functionality will be implemented soon");
-											}
-										}}
-										className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+										onClick={() => handleDelete(event._id, event.title)}
+										disabled={deletingId === event._id}
+										className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
 										title="Delete Event"
 									>
 										<Trash2 className="w-4 h-4" />

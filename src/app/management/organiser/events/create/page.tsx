@@ -23,21 +23,21 @@ export default function CreateEventPage() {
       const startDateTime = new Date(`${eventData.startDate}T${eventData.startTime}`);
       const endDateTime = new Date(`${eventData.endDate}T${eventData.endTime}`);
       const now = new Date();
+      
+      // Set time to start of day for comparison (only check date, not time)
+      const startDateOnly = new Date(eventData.startDate);
+      startDateOnly.setHours(0, 0, 0, 0);
+      const todayOnly = new Date();
+      todayOnly.setHours(0, 0, 0, 0);
 
-      if (startDateTime < now) {
-        alert("âŒ Cannot create events in the past! Please select a future date.");
-        setIsSubmitting(false);
-        return;
-      }
-
-      if (endDateTime < now) {
-        alert("âŒ End date cannot be in the past! Please select a future date.");
+      if (startDateOnly < todayOnly) {
+        alert("❌ Cannot create events in the past! Please select today or a future date.");
         setIsSubmitting(false);
         return;
       }
 
       if (endDateTime <= startDateTime) {
-        alert("âŒ End date must be after start date!");
+        alert("❌ End date and time must be after start date and time!");
         setIsSubmitting(false);
         return;
       }
@@ -76,10 +76,26 @@ export default function CreateEventPage() {
 
         // Add required fields
         tags: [], // Empty tags for now
-        status: "pending" as const, // Initial status - pending approval
+        status: "published" as const, // Auto-publish - no admin approval required
 
         // Include custom fields
         customFields: eventData.customFields || [],
+
+        // Mega Event Configuration
+        isMegaEvent: eventData.isMegaEvent || false,
+        megaEventConfig: eventData.isMegaEvent ? {
+          allowSubEvents: eventData.allowSubEvents || false,
+          maxSubEvents: eventData.maxSubEvents || 10,
+          sharedTicketing: false, // Each sub-event has separate tickets
+        } : undefined,
+
+        // Cancellation Policy
+        cancellationPolicy: eventData.cancellationPolicy || {
+          isCancellable: false,
+          refundPercentage: 0,
+          deadlineHoursBeforeStart: 24,
+          description: "",
+        },
       };
 
       const eventId = await createEvent(transformedData);

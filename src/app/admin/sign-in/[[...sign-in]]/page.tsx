@@ -65,7 +65,7 @@ export default function AdminSignInPage() {
                 {/* Footer */}
                 <div className="mt-8 text-center text-gray-500 text-xs">
                     <p>EventzGo Admin Portal v1.0</p>
-                    <p className="mt-1">© 2024 EventzGo. All rights reserved.</p>
+                    <p className="mt-1">© 2026 EventzGo. All rights reserved.</p>
                 </div>
             </div>
         </div>

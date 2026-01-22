@@ -219,6 +219,7 @@ export const staffLogin = mutation({
         password: v.string(),
     },
     handler: async (ctx, args) => {
+        // Updated: Returns error objects instead of throwing errors for better UX
         console.log("🔐 Staff login attempt:", args.username);
 
         // Find staff by username
@@ -228,18 +229,35 @@ export const staffLogin = mutation({
             .first();
 
         if (!staff) {
-            throw new Error("Invalid username or password");
+            return {
+                success: false,
+                error: "Invalid username or password",
+            };
         }
 
         // Check if active
         if (!staff.isActive) {
-            throw new Error("Account is inactive. Please contact your organiser.");
+            return {
+                success: false,
+                error: "Your account is inactive. Please contact your organiser to activate your account.",
+            };
+        }
+
+        // Check if deleted
+        if (staff.isDeleted) {
+            return {
+                success: false,
+                error: "This account has been removed. Please contact your organiser.",
+            };
         }
 
         // Verify password
         const passwordValid = bcrypt.compareSync(args.password, staff.passwordHash);
         if (!passwordValid) {
-            throw new Error("Invalid username or password");
+            return {
+                success: false,
+                error: "Invalid username or password",
+            };
         }
 
         // Update last login

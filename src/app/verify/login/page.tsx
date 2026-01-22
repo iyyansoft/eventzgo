@@ -27,7 +27,8 @@ export default function StaffLoginPage() {
         try {
             const result = await staffLogin({ username, password });
 
-            if (result.success) {
+            // Check if login was successful
+            if (result.success && result.staff) {
                 // Store session
                 const sessionData = {
                     staffId: result.staff.staffId,
@@ -48,9 +49,13 @@ export default function StaffLoginPage() {
 
                 // Redirect to scanner
                 router.push('/verify/scan');
+            } else {
+                // Show error message from response
+                setError(result.error || "Login failed. Please check your credentials.");
             }
         } catch (err: any) {
-            setError(err.message || "Login failed. Please check your credentials.");
+            // Handle unexpected errors
+            setError(err.message || "An unexpected error occurred. Please try again.");
         } finally {
             setLoading(false);
         }
