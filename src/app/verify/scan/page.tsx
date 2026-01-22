@@ -19,6 +19,7 @@ import {
     Calendar,
     MapPin
 } from "lucide-react";
+import QRScanner from "@/components/scanner/QRScanner";
 
 // Disable static generation for this page
 export const dynamic = 'force-dynamic';
