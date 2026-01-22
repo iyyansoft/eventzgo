@@ -23,13 +23,13 @@ export default function OrganiserAnalyticsPage() {
         }
     }, []);
 
-    const events = (useQuery as any)(
+    const events = useQuery(
         api.events.getOrganiserEvents,
-        userId ? { organiserId: userId } : "skip"
+        userId ? { organiserId: userId as Id<"organisers"> } : "skip"
     );
-    const bookings = (useQuery as any)(
+    const bookings = useQuery(
         api.bookings.getOrganiserBookings,
-        userId ? { organiserId: userId } : "skip"
+        userId ? { organiserId: userId as Id<"organisers"> } : "skip"
     );
 
     const analytics = useMemo(() => {
