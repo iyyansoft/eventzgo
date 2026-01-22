@@ -23,14 +23,14 @@ export default function OrganiserAnalyticsPage() {
         }
     }, []);
 
-    // @ts-ignore
     const events = useQuery(
         api.events.getOrganiserEvents,
+        // @ts-expect-error - Type mismatch with Convex generated types
         userId ? { organiserId: userId } : "skip"
     );
-    // @ts-ignore
     const bookings = useQuery(
         api.bookings.getOrganiserBookings,
+        // @ts-expect-error - Type mismatch with Convex generated types
         userId ? { organiserId: userId } : "skip"
     );
 
